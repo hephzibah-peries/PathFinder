@@ -43,6 +43,6 @@ Students often struggle to find internships matching their skills, or don't know
 git clone https://github.com/hephzibah-peries/AI-Powered-Internship-Career-Readiness-Platform.git
 cd AI-Powered-Internship-Career-Readiness-Platform
 ```
-(Setup instructions add பண்ணுவோம் backend/frontend ready ஆனதும்)
+
 
                                        

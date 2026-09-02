@@ -1,0 +1,207 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  h1, h2, h3, .font-serif {
+    letter-spacing: -0.01em;
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply rounded-[10px] px-[18px] py-[10px] text-[13.5px] font-semibold transition-colors;
+  }
+  .btn-primary {
+    @apply bg-ink text-white hover:bg-black;
+  }
+  .btn-secondary {
+    @apply border border-ink bg-transparent text-ink;
+  }
+  .btn-ghost {
+    @apply bg-sand text-ink hover:bg-sand-line;
+  }
+  .btn-signal {
+    @apply bg-signal text-white hover:brightness-95;
+  }
+  .card {
+    @apply rounded-m border border-sand-line bg-paper-raised p-[22px];
+  }
+  .badge {
+    @apply inline-block rounded-full px-[10px] py-[3px] text-xs font-semibold;
+  }
+  .badge-success { @apply bg-signal-soft text-signal; }
+  .badge-warn { @apply bg-amber-soft text-amber; }
+  .badge-error { @apply bg-error-soft text-error; }
+  .badge-info { @apply bg-info-soft text-info; }
+
+  /* ── Skill tags ──────────────────────────────────────── */
+  .skill-tag {
+    @apply mb-1.5 mr-1.5 inline-flex items-center gap-1.5 rounded-lg bg-sand px-[11px] py-[5px] text-[12.5px];
+  }
+  .skill-tag-have    { @apply bg-signal-soft text-signal; }
+  .skill-tag-missing { @apply bg-error-soft text-error; }
+
+  /* Source provenance badges inside a skill tag */
+  .skill-source-badge {
+    @apply inline-flex items-center gap-[3px] rounded-[5px] px-[6px] py-[2px] text-[10px] font-semibold leading-none;
+  }
+  .skill-source-self {
+    @apply bg-[#EEF1F8] text-info;
+  }
+  .skill-source-verified {
+    @apply bg-amber-soft text-amber;
+  }
+
+  /* ── Progress bars ───────────────────────────────────── */
+  .progress-track {
+    @apply h-2 overflow-hidden rounded-md bg-sand;
+  }
+  .progress-fill {
+    @apply block h-full rounded-md bg-signal transition-all duration-500;
+  }
+
+  /* ── Why-match box ───────────────────────────────────── */
+  .why-box {
+    @apply mt-3.5 rounded-[10px] bg-signal-soft p-4 text-[13px] text-[#1E4A34];
+  }
+
+  /* ── Sidebar Navigation ──────────────────────────────── */
+  .sidebar {
+    @apply fixed left-0 top-0 z-30 flex h-screen w-[240px] flex-col border-r border-sand-line bg-paper-raised;
+  }
+  .sidebar-brand {
+    @apply flex items-center gap-2.5 border-b border-sand-line px-5 py-5;
+  }
+  .sidebar-nav {
+    @apply flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4;
+  }
+  .sidebar-item {
+    @apply flex items-center gap-3 rounded-[10px] px-3.5 py-2.5 text-[13.5px] text-ink-soft transition-all duration-150 hover:bg-sand hover:text-ink;
+  }
+  .sidebar-item-active {
+    @apply bg-signal-soft font-semibold text-signal;
+  }
+  .sidebar-section-label {
+    @apply mb-1 mt-4 px-3.5 text-[10.5px] font-bold uppercase tracking-widest text-ink-soft/60;
+  }
+  .sidebar-footer {
+    @apply border-t border-sand-line px-4 py-4;
+  }
+
+  /* ── Quick-stat cards (top row) ──────────────────────── */
+  .stat-card {
+    @apply card flex items-start gap-4 p-5;
+  }
+  .stat-card-icon {
+    @apply flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[10px];
+  }
+  .stat-card-value {
+    @apply font-serif text-[26px] font-bold leading-none;
+  }
+  .stat-card-label {
+    @apply mt-0.5 text-[12px] text-ink-soft;
+  }
+  .stat-card-sub {
+    @apply mt-1.5 text-[11.5px] font-medium;
+  }
+
+  /* ── Modal / Drawer overlay ──────────────────────────── */
+  .modal-overlay {
+    @apply fixed inset-0 z-40 bg-ink/30 backdrop-blur-[2px];
+    animation: fadeIn 0.18s ease both;
+  }
+  .modal-panel {
+    @apply fixed left-1/2 top-1/2 z-50 flex max-h-[88vh] w-full max-w-[620px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-l bg-paper-raised shadow-2xl;
+    animation: scaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .modal-overlay-closing {
+    animation: fadeOut 0.18s ease-in both;
+  }
+  .modal-panel-closing {
+    animation: scaleOut 0.18s ease-in both;
+  }
+
+  /* ── Match Explanation Drawer ────────────────────────── */
+  .drawer-overlay {
+    @apply fixed inset-0 z-40 bg-ink/30 backdrop-blur-[2px];
+    animation: fadeIn 0.18s ease both;
+  }
+  .drawer-panel {
+    @apply fixed right-0 top-0 z-50 flex h-full w-[420px] flex-col overflow-hidden bg-paper-raised shadow-2xl;
+    animation: slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .drawer-panel-closing {
+    animation: slideOutRight 0.18s ease-in both;
+  }
+  .drawer-overlay-closing {
+    animation: fadeOut 0.18s ease-in both;
+  }
+
+  /* factor bar in the drawer */
+  .factor-bar-track {
+    @apply h-[6px] flex-1 overflow-hidden rounded-full bg-sand;
+  }
+  .factor-bar-fill {
+    @apply h-full rounded-full bg-signal transition-all duration-700;
+  }
+
+  /* ── Table enhancements ──────────────────────────────── */
+  .table-row-hover:hover {
+    @apply bg-sand/40;
+  }
+
+  /* ── Form inputs ─────────────────────────────────────── */
+  .form-input {
+    @apply w-full rounded-[10px] border border-sand-line bg-paper-raised px-3.5 py-2.5 text-[13.5px] transition-colors focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal/30;
+  }
+  .form-label {
+    @apply mb-1.5 block text-[12.5px] font-semibold text-ink;
+  }
+  .form-hint {
+    @apply mt-1 text-[11.5px] text-ink-soft;
+  }
+  .form-select {
+    @apply form-input appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEuNSAxLjVMNiA2bDQuNS00LjUiIHN0cm9rZT0iIzQ1NEM1OCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[position:right_12px_center] bg-no-repeat pr-10;
+  }
+  .form-tags-input {
+    @apply form-input flex flex-wrap items-center gap-1.5 py-2;
+  }
+  .form-tag {
+    @apply inline-flex items-center gap-1 rounded-md bg-sand px-2 py-0.5 text-[12px] font-medium;
+  }
+}
+
+@layer utilities {
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  @keyframes slideOutRight {
+    from { transform: translateX(0); }
+    to   { transform: translateX(100%); }
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+  @keyframes scaleOut {
+    from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    to   { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+}

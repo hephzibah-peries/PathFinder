@@ -1,4 +1,4 @@
-# AI-Powered Internship & Career Readiness Platform
+# PathFinder
 
 An intelligent platform that matches students with internships by analyzing their skills, education, projects, and CV using AI/ML — helping identify skill gaps and providing personalized career recommendations.
 

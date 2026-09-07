@@ -40,7 +40,7 @@ Students often struggle to find internships matching their skills, or don't know
 ## 🚀 Getting Started
 
 ```bash
-git clone (https://github.com/hephzibah-peries/PathFinder.git)
+git clone  (https://github.com/hephzibah-peries/PathFinder.git)
 ```
 
 

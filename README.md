@@ -1,39 +1,51 @@
-# Pathfinder — AI Internship & Career Readiness Platform (UI prototype)
 
-Vite + React + TypeScript + Tailwind frontend prototype covering the Student, Company and Admin
-experiences, built from the platform's design system (ink navy / warm paper / signal green,
-Newsreader + Inter type).
+=======
+# PATH FINDER
 
-## Structure
+An intelligent platform that matches students with internships by analyzing their skills, education, projects, and CV using AI/ML — helping identify skill gaps and providing personalized career recommendations.
 
-```
-src/
-  components/   shared UI primitives (ScoreRing, ProgressBar, SkillTag, WhyBox, ...)
-  data/         mock data standing in for the backend/ML service responses
-  layouts/      per-role shells with top navigation (Student / Company / Admin)
-  pages/
-    auth/       login
-    student/    dashboard, internship search, internship details + AI match, applications,
-                skill gap, career readiness, career roadmap
-    company/    dashboard, candidate details + AI match
-    admin/      dashboard (pending company approvals, skill demand)
-  App.tsx       route tree
-```
+## 📌 Overview
 
-## Run it
+Students often struggle to find internships matching their skills, or don't know what skills to improve. This platform connects students and companies through an intelligent internship matching system that analyzes profiles and provides match scores, skill gap analysis, and career readiness scores.
+
+## 🎯 Key Features
+
+- AI-based CV skill extraction (NLP)
+- Internship requirement extraction
+- Student–internship compatibility matching (match score)
+- Matched vs. missing skills breakdown
+- Skill gap analysis
+- Personalized internship recommendations
+- Career readiness score
+
+## 👥 User Roles
+
+- **Student** — profile, skills, CV, apply for internships, view match/skill gaps
+- **Company** — post internships, view matched candidates
+- **Admin** — manage users, approve companies, monitor system
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js, React, Tailwind CSS |
+| Backend | Java, Spring Boot, Spring Security, JWT |
+| Database | PostgreSQL |
+| ML/AI | Python, FastAPI, Scikit-learn, NLP |
+
+## 📁 Project Structure
+
+## 📌 Status
+
+🔧 In development
+
+## 🚀 Getting Started
 
 ```bash
-npm install
-npm run dev
+git clone https://github.com/hephzibah-peries/AI-Powered-Internship-Career-Readiness-Platform.git
+cd AI-Powered-Internship-Career-Readiness-Platform
 ```
 
-## Notes
 
-- All data is mocked in `src/data/mock.ts` — swap for real API/ML-service calls when the backend
-  is ready.
-- AI match/readiness scores are always paired with a "why" explanation box (`WhyBox` component) —
-  keep that pattern wherever a new AI-generated score is added, per the platform's explainability
-  requirement.
-- Not yet built: CV upload + analysis screen, multi-step internship posting form, admin
-  student/company/internship management tables, full analytics charts, responsive breakpoints,
-  and empty/error/loading states.
+                                       
+>>>>>>> develop

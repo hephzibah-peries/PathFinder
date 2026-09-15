@@ -5,37 +5,37 @@ import com.pathfinder.backend.dto.LoginRequest;
 import com.pathfinder.backend.dto.RegisterRequest;
 import com.pathfinder.backend.entity.User;
 import com.pathfinder.backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
+
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already taken!");
         }
 
-        User user = User.builder()
-                .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
-                .build();
+        User user = new User(
+            request.getEmail(),
+            passwordEncoder.encode(request.getPassword()),
+            request.getRole()
+        );
 
         userRepository.save(user);
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
-        return AuthResponse.builder()
-                .token(token)
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .build();
+        return new AuthResponse(token, user.getEmail(), user.getRole().name());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -47,10 +47,6 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
-        return AuthResponse.builder()
-                .token(token)
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .build();
+        return new AuthResponse(token, user.getEmail(), user.getRole().name());
     }
 }

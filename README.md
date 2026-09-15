@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 
 =======
 # PATH FINDER
+=======
+# PathFinder
+>>>>>>> origin/main
 
 An intelligent platform that matches students with internships by analyzing their skills, education, projects, and CV using AI/ML — helping identify skill gaps and providing personalized career recommendations.
 
@@ -42,10 +46,12 @@ Students often struggle to find internships matching their skills, or don't know
 ## 🚀 Getting Started
 
 ```bash
-git clone https://github.com/hephzibah-peries/AI-Powered-Internship-Career-Readiness-Platform.git
-cd AI-Powered-Internship-Career-Readiness-Platform
+git clone  (https://github.com/hephzibah-peries/PathFinder.git)
 ```
 
 
                                        
+<<<<<<< HEAD
 >>>>>>> develop
+=======
+>>>>>>> origin/main

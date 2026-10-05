@@ -39,3 +39,6 @@ PathFinder/
 ├── frontend/      # React/Next.js Client Application
 ├── ml-service/    # AI/ML Recommendation Engine
 └── docs/          # Architecture Diagrams & Documentation
+## AI Features Included
+- Recommendation Engine for Internship Matching
+- Resume Parsing and Skill Gap Analysis

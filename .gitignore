@@ -45,3 +45,5 @@ src/main/resources/application-local.properties
 
 # Maven Target Build Folder
 target/
+node_modules/
+frontend/node_modules/

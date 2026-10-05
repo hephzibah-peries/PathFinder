@@ -9,20 +9,26 @@ import com.pathfinder.backend.repository.ApplicationRepository;
 import com.pathfinder.backend.repository.InternshipRepository;
 import com.pathfinder.backend.repository.StudentProfileRepository;
 import com.pathfinder.backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final InternshipRepository internshipRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
+
+    public ApplicationService(ApplicationRepository applicationRepository, InternshipRepository internshipRepository,
+                              StudentProfileRepository studentProfileRepository, UserRepository userRepository) {
+        this.applicationRepository = applicationRepository;
+        this.internshipRepository = internshipRepository;
+        this.studentProfileRepository = studentProfileRepository;
+        this.userRepository = userRepository;
+    }
 
     public ApplicationDto applyForInternship(String studentEmail, Long internshipId) {
         User user = userRepository.findByEmail(studentEmail)

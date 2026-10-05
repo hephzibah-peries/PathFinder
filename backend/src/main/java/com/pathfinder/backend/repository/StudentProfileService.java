@@ -5,15 +5,18 @@ import com.pathfinder.backend.entity.StudentProfile;
 import com.pathfinder.backend.entity.User;
 import com.pathfinder.backend.repository.StudentProfileRepository;
 import com.pathfinder.backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class StudentProfileService {
 
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
+
+    public StudentProfileService(StudentProfileRepository studentProfileRepository, UserRepository userRepository) {
+        this.studentProfileRepository = studentProfileRepository;
+        this.userRepository = userRepository;
+    }
 
     public StudentProfileDto getProfileByEmail(String email) {
         User user = userRepository.findByEmail(email)
@@ -38,6 +41,7 @@ public class StudentProfileService {
         profile.setUniversity(dto.getUniversity());
         profile.setGpa(dto.getGpa());
         profile.setBio(dto.getBio());
+        profile.setSkills(dto.getSkills());
         profile.setPreferredLocation(dto.getPreferredLocation());
         profile.setPreferredWorkMode(dto.getPreferredWorkMode());
 
@@ -53,6 +57,7 @@ public class StudentProfileService {
                 .university(profile.getUniversity())
                 .gpa(profile.getGpa())
                 .bio(profile.getBio())
+                .skills(profile.getSkills())
                 .preferredLocation(profile.getPreferredLocation())
                 .preferredWorkMode(profile.getPreferredWorkMode())
                 .build();

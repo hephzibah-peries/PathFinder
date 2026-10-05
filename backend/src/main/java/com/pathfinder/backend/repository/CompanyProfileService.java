@@ -5,15 +5,18 @@ import com.pathfinder.backend.entity.CompanyProfile;
 import com.pathfinder.backend.entity.User;
 import com.pathfinder.backend.repository.CompanyProfileRepository;
 import com.pathfinder.backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class CompanyProfileService {
 
     private final CompanyProfileRepository companyProfileRepository;
     private final UserRepository userRepository;
+
+    public CompanyProfileService(CompanyProfileRepository companyProfileRepository, UserRepository userRepository) {
+        this.companyProfileRepository = companyProfileRepository;
+        this.userRepository = userRepository;
+    }
 
     public CompanyProfileDto getProfileByEmail(String email) {
         User user = userRepository.findByEmail(email)

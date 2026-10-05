@@ -7,19 +7,24 @@ import com.pathfinder.backend.entity.User;
 import com.pathfinder.backend.repository.CompanyProfileRepository;
 import com.pathfinder.backend.repository.InternshipRepository;
 import com.pathfinder.backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class InternshipService {
 
     private final InternshipRepository internshipRepository;
     private final CompanyProfileRepository companyProfileRepository;
     private final UserRepository userRepository;
+
+    public InternshipService(InternshipRepository internshipRepository,
+                             CompanyProfileRepository companyProfileRepository, UserRepository userRepository) {
+        this.internshipRepository = internshipRepository;
+        this.companyProfileRepository = companyProfileRepository;
+        this.userRepository = userRepository;
+    }
 
     public InternshipDto createInternship(String companyEmail, InternshipDto dto) {
         User user = userRepository.findByEmail(companyEmail)
@@ -34,6 +39,7 @@ public class InternshipService {
                 .location(dto.getLocation())
                 .workMode(dto.getWorkMode())
                 .requirements(dto.getRequirements())
+                .skills(dto.getSkills())
                 .stipend(dto.getStipend())
                 .deadline(dto.getDeadline())
                 .build();
@@ -68,6 +74,7 @@ public class InternshipService {
                 .location(internship.getLocation())
                 .workMode(internship.getWorkMode())
                 .requirements(internship.getRequirements())
+                .skills(internship.getSkills())
                 .stipend(internship.getStipend())
                 .deadline(internship.getDeadline())
                 .build();

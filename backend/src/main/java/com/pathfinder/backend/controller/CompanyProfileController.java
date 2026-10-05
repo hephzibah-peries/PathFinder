@@ -2,17 +2,19 @@ package com.pathfinder.backend.controller;
 
 import com.pathfinder.backend.dto.CompanyProfileDto;
 import com.pathfinder.backend.service.CompanyProfileService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/companies")
-@RequiredArgsConstructor
 public class CompanyProfileController {
 
     private final CompanyProfileService companyProfileService;
+
+    public CompanyProfileController(CompanyProfileService companyProfileService) {
+        this.companyProfileService = companyProfileService;
+    }
 
     @GetMapping("/me")
     public ResponseEntity<CompanyProfileDto> getMyProfile(Authentication authentication) {

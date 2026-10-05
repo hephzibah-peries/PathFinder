@@ -2,7 +2,6 @@ package com.pathfinder.backend.controller;
 
 import com.pathfinder.backend.dto.InternshipDto;
 import com.pathfinder.backend.service.InternshipService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -11,10 +10,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/internships")
-@RequiredArgsConstructor
 public class InternshipController {
 
     private final InternshipService internshipService;
+
+    public InternshipController(InternshipService internshipService) {
+        this.internshipService = internshipService;
+    }
 
     @PostMapping
     public ResponseEntity<InternshipDto> createInternship(

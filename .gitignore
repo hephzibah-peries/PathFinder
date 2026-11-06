@@ -16,6 +16,7 @@ target/
 
 ### IntelliJ IDEA ###
 .idea/
+.idea
 *.iws
 *.iml
 *.ipr
@@ -36,6 +37,7 @@ build/
 ### Node & Frontend ###
 node_modules/
 **/node_modules/
+frontend/node_modules/
 .next/
 dist/
 *.tsbuildinfo
@@ -51,6 +53,8 @@ dist/
 **/src/main/resources/application-local.properties
 **/src/main/resources/application-supabase.properties
 !**/src/main/resources/application.properties.example
+src/main/resources/application-supabase.properties
+src/main/resources/application-local.properties
 
 # Docker local storage
 postgres_data/

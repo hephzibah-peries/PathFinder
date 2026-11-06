@@ -30,6 +30,11 @@ public class InternshipController {
         return ResponseEntity.ok(internshipService.getAllInternships());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<InternshipDto> getInternshipById(@PathVariable Long id) {
+        return ResponseEntity.ok(internshipService.getInternshipById(id));
+    }
+
     @GetMapping("/my")
     public ResponseEntity<List<InternshipDto>> getMyInternships(Authentication authentication) {
         return ResponseEntity.ok(internshipService.getMyInternships(authentication.getName()));

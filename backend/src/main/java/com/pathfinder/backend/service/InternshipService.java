@@ -30,7 +30,9 @@ public class InternshipService {
         User user = userRepository.findByEmail(companyEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         CompanyProfile company = companyProfileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Company profile not found"));
+                .orElseGet(() -> companyProfileRepository.save(
+                        CompanyProfile.builder().user(user).companyName(user.getEmail().split("@")[0]).build()
+                ));
 
         Internship internship = Internship.builder()
                 .company(company)
@@ -53,11 +55,19 @@ public class InternshipService {
                 .collect(Collectors.toList());
     }
 
+    public InternshipDto getInternshipById(Long id) {
+        Internship internship = internshipRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Internship not found with id: " + id));
+        return mapToDto(internship);
+    }
+
     public List<InternshipDto> getMyInternships(String companyEmail) {
         User user = userRepository.findByEmail(companyEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         CompanyProfile company = companyProfileRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Company profile not found"));
+                .orElseGet(() -> companyProfileRepository.save(
+                        CompanyProfile.builder().user(user).companyName(user.getEmail().split("@")[0]).build()
+                ));
 
         return internshipRepository.findByCompanyId(company.getId()).stream()
                 .map(this::mapToDto)

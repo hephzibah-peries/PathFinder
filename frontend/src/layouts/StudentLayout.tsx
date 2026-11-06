@@ -1,5 +1,5 @@
-import { NavLink, Outlet, Link } from 'react-router-dom';
-import { studentProfile } from '../data/mock';
+import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   {
@@ -57,6 +57,20 @@ const navItems = [
 ];
 
 export default function StudentLayout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const displayName = user?.name || user?.email?.split('@')[0] || 'Student';
+  const displayRole = user?.role ? user.role.replace('ROLE_', '') : 'STUDENT';
+  const initials = user?.name
+    ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : (user?.email ? user.email.slice(0, 2).toUpperCase() : 'ST');
+
   return (
     <div className="flex min-h-screen bg-paper">
       {/* ── Sidebar ── */}
@@ -84,14 +98,27 @@ export default function StudentLayout() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="flex items-center gap-3">
-            <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-signal-soft text-[12px] font-bold text-signal">
-              {studentProfile.avatar}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-signal-soft text-[12px] font-bold text-signal">
+                {initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13px] font-semibold">{displayName}</div>
+                <div className="truncate text-[11px] text-ink-soft">{user?.email || displayRole}</div>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-semibold">{studentProfile.name}</div>
-              <div className="truncate text-[11px] text-ink-soft">{studentProfile.university}</div>
-            </div>
+            <button
+              onClick={handleLogout}
+              title="Logout"
+              className="text-ink-soft hover:text-signal p-1 transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
           </div>
         </div>
       </aside>
@@ -111,8 +138,16 @@ export default function StudentLayout() {
                 Upload CV
               </span>
             </Link>
-            <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-sand text-[12px] font-semibold">
-              {studentProfile.avatar}
+            <div className="flex items-center gap-2">
+              <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-sand text-[12px] font-semibold">
+                {initials}
+              </div>
+              <button
+                onClick={handleLogout}
+                className="text-[12px] text-ink-soft hover:text-signal ml-2 font-medium"
+              >
+                Sign out
+              </button>
             </div>
           </div>
         </header>

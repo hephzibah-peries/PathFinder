@@ -1,5 +1,6 @@
 HELP.md
 target/
+**/target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -14,6 +15,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
+.idea/
 .idea
 *.iws
 *.iml
@@ -32,21 +34,27 @@ build/
 ### VS Code ###
 .vscode/
 
-# Ignore sensitive database properties
+### Node & Frontend ###
+node_modules/
+**/node_modules/
+frontend/node_modules/
+.next/
+dist/
+*.tsbuildinfo
+
+### Environment & Secrets ###
+.env
+.env.*
+!.env.example
+*.env
+
+### Sensitive Database Configuration ###
+**/src/main/resources/application.properties
+**/src/main/resources/application-local.properties
+**/src/main/resources/application-supabase.properties
+!**/src/main/resources/application.properties.example
 src/main/resources/application-supabase.properties
 src/main/resources/application-local.properties
 
-# Ignore docker local storage (if created inside project directory)
+# Docker local storage
 postgres_data/
-
-# Sensitive Database Configuration
-src/main/resources/application-supabase.properties
-src/main/resources/application-local.properties
-
-# Maven Target Build Folder
-target/
-node_modules/
-frontend/node_modules/
-
-node_modules/
-frontend/node_modules/

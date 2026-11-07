@@ -116,26 +116,26 @@ export default function Applicants() {
   });
 
   return (
-    <div>
-      <SectionTitle title="Applicants & Shortlists" />
+    <div className="space-y-6">
+      <SectionTitle title="Applicants & Talent Pipeline" />
 
       {error && (
-        <div className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800 border border-amber-200">
+        <div className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-sm font-semibold text-rose-900">
           {error}
         </div>
       )}
 
       <div className="card p-0 overflow-hidden">
         {/* Filters & Search Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-sand-line bg-sand/20 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E5D5CE] bg-[#FAF6F4] px-6 py-4">
           <div className="flex items-center gap-3">
-            <span className="text-[12.5px] font-semibold text-ink">Filter by role:</span>
+            <span className="text-sm font-semibold uppercase tracking-wider text-[#7A6A65]">Filter Position:</span>
             <select
               value={selectedInternshipId}
               onChange={(e) => handleRoleChange(e.target.value)}
-              className="form-select w-[240px] py-1.5 text-[12.5px] bg-white border border-sand-line rounded-lg"
+              className="form-select w-[280px] py-2 text-sm font-medium"
             >
-              <option value="all">All Internships ({applications.length})</option>
+              <option value="all">All Postings ({applications.length} applicants)</option>
               {internships.map((job) => (
                 <option key={job.id} value={String(job.id)}>
                   {job.title}
@@ -143,11 +143,12 @@ export default function Applicants() {
               ))}
             </select>
           </div>
+
           <div className="relative">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft"
-              width="14"
-              height="14"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A6A65]"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -161,86 +162,100 @@ export default function Applicants() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search candidate or role..."
-              className="form-input py-1.5 pl-9 text-[12.5px] w-[240px] border border-sand-line rounded-lg"
+              placeholder="Search candidate name or status..."
+              className="form-input py-2 pl-10 text-sm w-[280px]"
             />
           </div>
         </div>
 
         {/* Candidate Applications Table */}
         {loading ? (
-          <div className="py-12 text-center text-ink-soft text-sm">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-signal border-t-transparent mx-auto mb-2" />
-            Loading candidates...
+          <div className="py-16 text-center text-[#7A6A65] text-sm">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#7A4B43] border-t-transparent mx-auto mb-3" />
+            Fetching candidate applications...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-ink-soft text-sm">
-            <p>No applicant candidates found.</p>
+          <div className="py-16 text-center text-[#7A6A65] text-sm">
+            <p className="mb-2 text-base">No applicant candidates found for this selection.</p>
             {selectedInternshipId !== 'all' && (
               <button
                 onClick={() => handleRoleChange('all')}
-                className="mt-2 text-xs font-semibold text-signal hover:underline"
+                className="text-sm text-[#7A4B43] font-bold hover:underline"
               >
-                View candidates across all roles
+                Clear filter to view all candidates
               </button>
             )}
           </div>
         ) : (
-          <table className="w-full border-collapse text-[13.5px]">
-            <thead>
-              <tr className="bg-sand/30">
-                {['Candidate', 'Role Applied', 'Applied Date', 'Current Status', 'Review Decision'].map((h) => (
-                  <th
-                    key={h}
-                    className="border-b border-sand-line px-5 py-3.5 text-left text-[11.5px] font-semibold text-ink-soft uppercase tracking-wider"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c) => {
-                const isUpdating = updatingId === c.id;
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-[#E5D5CE] bg-[#FAF6F4] text-[#7A6A65] uppercase tracking-wider font-semibold text-xs">
+                  <th className="px-6 py-4">Candidate</th>
+                  <th className="px-6 py-4">Target Internship</th>
+                  <th className="px-6 py-4">Applied Date</th>
+                  <th className="px-6 py-4">Review Status</th>
+                  <th className="px-6 py-4 text-right">Update Decision</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5D5CE]/70">
+                {filtered.map((app) => {
+                  const initial = (app.studentName || 'S').charAt(0).toUpperCase();
+                  const isUpdating = updatingId === app.id;
 
-                return (
-                  <tr key={c.id} className="table-row-hover transition-colors">
-                    <td className="border-b border-sand-line px-5 py-4 font-semibold text-ink">
-                      {c.studentName || `Student #${c.studentId || c.id}`}
-                    </td>
-                    <td className="border-b border-sand-line px-5 py-4 text-ink">
-                      {c.internshipTitle || 'Internship'}
-                    </td>
-                    <td className="border-b border-sand-line px-5 py-4 text-ink-soft text-[12.5px]">
-                      {c.appliedAt ? new Date(c.appliedAt).toLocaleDateString() : 'Recent'}
-                    </td>
-                    <td className="border-b border-sand-line px-5 py-4">
-                      <Badge kind={statusBadge[c.status] || 'warn'}>{c.status}</Badge>
-                    </td>
-                    <td className="border-b border-sand-line px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <select
-                          disabled={isUpdating}
-                          value={c.status}
-                          onChange={(e) => handleStatusChange(c.id, e.target.value)}
-                          className="text-xs rounded border border-sand-line bg-paper px-2 py-1 font-medium text-ink focus:outline focus:outline-signal disabled:opacity-50"
-                        >
-                          <option value="APPLIED">Applied</option>
-                          <option value="UNDER REVIEW">Under Review</option>
-                          <option value="SHORTLISTED">Shortlist</option>
-                          <option value="APPROVED">Approve / Offer</option>
-                          <option value="REJECTED">Reject</option>
-                        </select>
-                        {isUpdating && (
-                          <span className="text-[11px] text-signal font-semibold animate-pulse">Saving...</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  return (
+                    <tr key={app.id} className="hover:bg-[#FAF6F4]/60 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FAF6F4] border border-[#E5D5CE] text-sm font-bold text-[#2B1B17] shadow-xs">
+                            {initial}
+                          </div>
+                          <div>
+                            <div className="font-bold text-[#2B1B17] text-base">
+                              {app.studentName || `Student #${app.studentId || app.id}`}
+                            </div>
+                            <div className="text-xs text-[#7A6A65] font-medium">Verified PathFinder Profile</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 text-[#7A6A65] font-semibold">
+                        {app.internshipTitle || 'General Application'}
+                      </td>
+
+                      <td className="px-6 py-4 text-[#7A6A65]">
+                        {app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 'Recent'}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <Badge kind={statusBadge[app.status] || 'warn'}>{app.status}</Badge>
+                      </td>
+
+                      <td className="px-6 py-4 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          {isUpdating ? (
+                            <span className="text-sm text-[#7A4B43] animate-pulse font-bold">Updating...</span>
+                          ) : (
+                            <select
+                              value={app.status}
+                              onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                              className="form-select py-1.5 px-3 text-sm font-semibold w-[150px]"
+                            >
+                              <option value="APPLIED">Applied</option>
+                              <option value="UNDER REVIEW">Under Review</option>
+                              <option value="SHORTLISTED">Shortlisted</option>
+                              <option value="APPROVED">Approved</option>
+                              <option value="REJECTED">Rejected</option>
+                            </select>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

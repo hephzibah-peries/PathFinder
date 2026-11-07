@@ -5,7 +5,7 @@ import { SkillTag, SkillSourceBadge } from './ui';
 export interface FactorBreakdown {
   label: string;
   weight: number; // percentage weight in scoring
-  score: number;  // 0–100 actual score for this factor
+  score: number; // 0–100 actual score for this factor
 }
 
 export interface MissingSkillEntry extends SkillEntry {
@@ -41,7 +41,6 @@ export default function MatchExplanationDrawer({
   const [closing, setClosing] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Mount/unmount with animation
   useEffect(() => {
     if (open) {
       setClosing(false);
@@ -59,7 +58,6 @@ export default function MatchExplanationDrawer({
 
   if (!mounted) return null;
 
-  // Compute verified/self counts
   const verifiedCount = matched.filter((s) => s.source === 'verified').length;
 
   return (
@@ -79,61 +77,56 @@ export default function MatchExplanationDrawer({
         aria-label="Match explanation"
       >
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-sand-line px-6 py-5">
+        <div className="flex items-start justify-between border-b border-[#E5D5CE] bg-white px-6 py-5">
           <div>
-            <p className="mb-0.5 text-[11.5px] font-semibold uppercase tracking-widest text-ink-soft">
-              Match Explanation
+            <p className="text-xs font-bold uppercase tracking-wider text-[#7A4B43]">
+              Explainable AI Match Breakdown
             </p>
-            <h2 className="m-0 font-serif text-[18px] leading-snug">{internshipTitle}</h2>
-            <p className="mt-0.5 text-[12.5px] text-ink-soft">{company}</p>
+            <h2 className="mt-1 font-serif text-xl font-bold text-[#2B1B17] leading-snug">{internshipTitle}</h2>
+            <p className="mt-0.5 text-sm text-[#7A6A65]">{company}</p>
           </div>
           <button
             onClick={handleClose}
-            className="ml-4 mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-sand hover:text-ink"
+            className="rounded-lg p-2 text-[#7A6A65] hover:bg-[#FAF6F4] hover:text-[#2B1B17] transition-colors"
             aria-label="Close drawer"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
 
-        {/* Overall score pill */}
-        <div className="flex items-center gap-4 border-b border-sand-line bg-signal-soft/60 px-6 py-4">
-          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-signal text-white">
-            <span className="font-serif text-[20px] font-bold leading-none">{overallMatch}</span>
+        {/* Overall score banner */}
+        <div className="flex items-center gap-4 border-b border-[#E5D5CE] bg-[#FDF2ED] px-6 py-4">
+          <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-[#7A4B43] text-white shadow-sm">
+            <span className="font-serif text-[28px] font-bold leading-none text-white">{overallMatch}%</span>
           </div>
           <div>
-            <p className="m-0 text-[13px] font-semibold text-signal">Overall match score</p>
-            <p className="mt-0.5 text-[12px] text-[#1E4A34]">
-              {verifiedCount} of {matched.length} matched skills are assessment-verified.
+            <p className="text-base font-bold text-[#2B1B17]">Semantic AI Compatibility</p>
+            <p className="mt-0.5 text-sm text-[#7A6A65]">
+              {verifiedCount} of {matched.length} matched skills validated against active profile data.
             </p>
           </div>
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
-
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
           {/* ── Section 1: Matched Skills ── */}
-          <div className="mb-6">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-signal text-white">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </span>
-              <h3 className="m-0 text-[13.5px] font-semibold">
-                Matched Skills <span className="font-normal text-ink-soft">({matched.length})</span>
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-emerald-900 flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                Matched Skills ({matched.length})
               </h3>
             </div>
             <div className="space-y-2">
               {matched.map((skill) => (
                 <div
                   key={skill.name}
-                  className="flex items-center justify-between rounded-[10px] border border-signal-soft bg-signal-soft/40 px-3.5 py-2.5"
+                  className="flex items-center justify-between rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3"
                 >
-                  <span className="text-[13px] font-medium text-signal">{skill.name}</span>
+                  <span className="text-sm font-semibold text-emerald-950">{skill.name}</span>
                   <SkillSourceBadge source={skill.source} />
                 </div>
               ))}
@@ -142,28 +135,23 @@ export default function MatchExplanationDrawer({
 
           {/* ── Section 2: Missing Skills ── */}
           {missing.length > 0 && (
-            <div className="mb-6">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-error text-white">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </span>
-                <h3 className="m-0 text-[13.5px] font-semibold">
-                  Missing Skills <span className="font-normal text-ink-soft">({missing.length})</span>
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-rose-900 flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-rose-600" />
+                  Target Skill Gaps ({missing.length})
                 </h3>
               </div>
               <div className="space-y-2.5">
                 {missing.map((skill) => (
                   <div
                     key={skill.name}
-                    className="rounded-[10px] border border-error-soft bg-error-soft/50 px-3.5 py-3"
+                    className="rounded-xl border border-rose-300 bg-rose-50 p-3.5"
                   >
-                    <div className="mb-1 flex items-center justify-between">
+                    <div className="mb-1.5">
                       <SkillTag label={skill.name} state="missing" />
                     </div>
-                    <p className="m-0 text-[12px] text-error/80">{skill.impact}</p>
+                    <p className="text-xs text-rose-900 leading-relaxed font-medium">{skill.impact}</p>
                   </div>
                 ))}
               </div>
@@ -171,75 +159,33 @@ export default function MatchExplanationDrawer({
           )}
 
           {/* ── Section 3: Weighted Factor Breakdown ── */}
-          <div>
-            <div className="mb-3 flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-info text-white">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="8" y1="6" x2="21" y2="6" />
-                  <line x1="8" y1="12" x2="21" y2="12" />
-                  <line x1="8" y1="18" x2="21" y2="18" />
-                  <line x1="3" y1="6" x2="3.01" y2="6" />
-                  <line x1="3" y1="12" x2="3.01" y2="12" />
-                  <line x1="3" y1="18" x2="3.01" y2="18" />
-                </svg>
-              </span>
-              <h3 className="m-0 text-[13.5px] font-semibold">Weighted Factor Breakdown</h3>
-            </div>
-            <p className="mb-3.5 text-[12px] text-ink-soft">
-              Each factor contributes a weighted share to your overall score. Bar = your score for that factor.
-            </p>
-            <div className="space-y-3.5">
-              {factorBreakdown.map((f) => {
-                const contribution = weightedScore(f);
-                const isStrong = f.score >= 80;
-                return (
-                  <div key={f.label}>
-                    <div className="mb-1.5 flex items-center justify-between">
-                      <span className="text-[12.5px] font-medium">{f.label}</span>
-                      <div className="flex items-center gap-2 text-[11.5px] text-ink-soft">
-                        <span className="rounded bg-sand px-1.5 py-0.5 font-mono text-[10.5px]">
-                          ×{f.weight}%
-                        </span>
-                        <span className={`font-semibold ${isStrong ? 'text-signal' : 'text-amber'}`}>
-                          {f.score}
-                        </span>
-                        <span className="text-ink-soft">→</span>
-                        <span className="font-semibold text-ink">{contribution} pts</span>
-                      </div>
-                    </div>
-                    <div className="factor-bar-track">
-                      <div
-                        className="factor-bar-fill"
-                        style={{
-                          width: `${f.score}%`,
-                          backgroundColor: isStrong ? '#2F6F4F' : '#B7791F',
-                        }}
-                      />
-                    </div>
+          <div className="border-t border-[#E5D5CE] pt-5">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-[#7A6A65] mb-3 flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#7A4B43]" />
+              Scoring Weight Model
+            </h3>
+            <div className="space-y-3">
+              {factorBreakdown.map((factor) => (
+                <div key={factor.label} className="rounded-xl border border-[#E5D5CE] bg-[#FAF6F4] p-3.5">
+                  <div className="flex items-center justify-between text-sm mb-2">
+                    <span className="font-semibold text-[#2B1B17]">{factor.label}</span>
+                    <span className="text-[#7A6A65]">
+                      Score: <b className="text-[#7A4B43]">{factor.score}%</b> (Weight {factor.weight}%)
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* total */}
-            <div className="mt-4 flex items-center justify-between rounded-[10px] bg-sand px-4 py-3">
-              <span className="text-[12.5px] font-semibold">Total weighted score</span>
-              <span className="font-serif text-[18px] font-bold text-signal">{overallMatch}</span>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#E5D5CE]">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#E6A694] to-[#7A4B43] transition-all duration-700"
+                      style={{ width: `${factor.score}%` }}
+                    />
+                  </div>
+                  <div className="mt-1.5 text-right text-xs text-[#7A6A65] font-medium">
+                    Contributes +{weightedScore(factor)} pts to final score
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-
-        {/* Footer CTA */}
-        <div className="border-t border-sand-line px-6 py-4">
-          <p className="mb-2.5 text-[11.5px] text-ink-soft">
-            Tip: Verifying skills via assessments boosts your credibility with employers.
-          </p>
-          <button
-            className="btn btn-ghost w-full text-center"
-            onClick={handleClose}
-          >
-            Close explanation
-          </button>
         </div>
       </aside>
     </>

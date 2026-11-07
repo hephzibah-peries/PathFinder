@@ -52,10 +52,10 @@ export default function ManageInternships() {
         <SectionTitle title="Manage Internships" />
         <button
           onClick={() => setIsPostModalOpen(true)}
-          className="btn btn-signal mb-9 px-5 py-2.5 shadow-md"
+          className="btn btn-primary mb-9 px-6 py-3 text-sm font-semibold shadow-md"
         >
-          <span className="flex items-center gap-1.5">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <span className="flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
@@ -65,44 +65,44 @@ export default function ManageInternships() {
       </div>
 
       {error && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex items-center justify-between">
+        <div className="mb-6 rounded-2xl border border-rose-300 bg-rose-50 p-4 text-sm font-semibold text-rose-900 flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={fetchInternships} className="font-semibold underline ml-3">
+          <button onClick={fetchInternships} className="font-bold underline ml-3 text-[#2B1B17]">
             Retry
           </button>
         </div>
       )}
 
       <div className="card p-0 overflow-hidden">
-        <div className="flex items-center justify-between border-b border-sand-line bg-sand/20 px-5 py-3">
-          <div className="flex gap-4 text-[13px] font-semibold text-ink-soft">
+        <div className="flex items-center justify-between border-b border-[#E5D5CE] bg-[#FAF6F4] px-6 py-4">
+          <div className="flex gap-5 text-sm font-semibold text-[#7A6A65]">
             <button
               onClick={() => setActiveTab('all')}
-              className={`pb-1 ${activeTab === 'all' ? 'text-signal border-b-2 border-signal' : 'hover:text-ink'}`}
+              className={`pb-1 ${activeTab === 'all' ? 'text-[#7A4B43] border-b-2 border-[#7A4B43] font-bold' : 'hover:text-[#2B1B17]'}`}
             >
               All Listings ({internships.length})
             </button>
             <button
               onClick={() => setActiveTab('active')}
-              className={`pb-1 ${activeTab === 'active' ? 'text-signal border-b-2 border-signal' : 'hover:text-ink'}`}
+              className={`pb-1 ${activeTab === 'active' ? 'text-[#7A4B43] border-b-2 border-[#7A4B43] font-bold' : 'hover:text-[#2B1B17]'}`}
             >
               Active
             </button>
             <button
               onClick={() => setActiveTab('drafts')}
-              className={`pb-1 ${activeTab === 'drafts' ? 'text-signal border-b-2 border-signal' : 'hover:text-ink'}`}
+              className={`pb-1 ${activeTab === 'drafts' ? 'text-[#7A4B43] border-b-2 border-[#7A4B43] font-bold' : 'hover:text-[#2B1B17]'}`}
             >
               Drafts
             </button>
             <button
               onClick={() => setActiveTab('closed')}
-              className={`pb-1 ${activeTab === 'closed' ? 'text-signal border-b-2 border-signal' : 'hover:text-ink'}`}
+              className={`pb-1 ${activeTab === 'closed' ? 'text-[#7A4B43] border-b-2 border-[#7A4B43] font-bold' : 'hover:text-[#2B1B17]'}`}
             >
               Closed
             </button>
           </div>
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A6A65]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
@@ -111,18 +111,19 @@ export default function ManageInternships() {
               placeholder="Search roles..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="form-input py-1.5 pl-9 text-[12.5px] w-[200px]" 
+              className="form-input py-2 pl-10 text-sm w-[240px]" 
             />
           </div>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-sm text-ink-soft">
+          <div className="p-16 text-center text-sm text-[#7A6A65]">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#7A4B43] border-t-transparent mx-auto mb-3" />
             Loading company internships from backend...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-sm text-ink-soft mb-3">
+          <div className="p-16 text-center">
+            <p className="text-base text-[#7A6A65] mb-4">
               {searchTerm
                 ? 'No internships match your search filter.'
                 : 'No internships posted yet. Click "Post New Internship" to create your first listing.'}
@@ -130,52 +131,50 @@ export default function ManageInternships() {
             {!searchTerm && (
               <button
                 onClick={() => setIsPostModalOpen(true)}
-                className="btn btn-ghost text-[12.5px] font-semibold"
+                className="btn btn-primary text-sm font-semibold"
               >
                 + Post an Internship
               </button>
             )}
           </div>
         ) : (
-          <table className="w-full border-collapse text-[13.5px]">
+          <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="bg-sand/30">
+              <tr className="border-b border-[#E5D5CE] bg-[#FAF6F4] text-[#7A6A65] uppercase tracking-wider font-semibold text-xs">
                 {['Role Title', 'Location & Mode', 'Stipend', 'Deadline', 'Status', 'Actions'].map((h) => (
-                  <th key={h} className="border-b border-sand-line px-5 py-3.5 text-left text-[11.5px] font-semibold text-ink-soft uppercase tracking-wider">
+                  <th key={h} className="px-6 py-4 text-left">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#E5D5CE]/70">
               {filtered.map((job) => (
-                <tr key={job.id} className="table-row-hover transition-colors">
-                  <td className="border-b border-sand-line px-5 py-4 font-semibold">
-                    <div>{job.title}</div>
+                <tr key={job.id} className="hover:bg-[#FAF6F4]/60 transition-colors">
+                  <td className="px-6 py-4 font-bold text-[#2B1B17]">
+                    <div className="text-base">{job.title}</div>
                     {job.skills && (
-                      <div className="text-[11.5px] text-ink-soft font-normal mt-0.5">
+                      <div className="text-xs text-[#7A6A65] font-normal mt-1">
                         {job.skills}
                       </div>
                     )}
                   </td>
-                  <td className="border-b border-sand-line px-5 py-4 text-ink-soft">
+                  <td className="px-6 py-4 text-[#7A6A65] font-semibold">
                     {job.location || 'Colombo'} · {job.workMode || 'Hybrid'}
                   </td>
-                  <td className="border-b border-sand-line px-5 py-4 text-ink-soft">
+                  <td className="px-6 py-4 text-[#7A6A65]">
                     {job.stipend || 'Competitive'}
                   </td>
-                  <td className="border-b border-sand-line px-5 py-4 text-ink-soft">
+                  <td className="px-6 py-4 text-[#7A6A65]">
                     {job.deadline || 'Rolling'}
                   </td>
-                  <td className="border-b border-sand-line px-5 py-4">
+                  <td className="px-6 py-4">
                     <Badge kind="success">Active</Badge>
                   </td>
-                  <td className="border-b border-sand-line px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <Link to="/company/applicants" className="text-[12.5px] font-semibold text-signal hover:underline">
-                        View Candidates
-                      </Link>
-                    </div>
+                  <td className="px-6 py-4">
+                    <Link to="/company/applicants" className="text-sm font-bold text-[#7A4B43] hover:underline">
+                      View Candidates →
+                    </Link>
                   </td>
                 </tr>
               ))}

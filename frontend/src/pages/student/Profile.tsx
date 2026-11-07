@@ -69,7 +69,7 @@ export default function StudentProfile() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-sm text-ink-soft">Loading profile from backend...</div>
+        <div className="text-base text-[#7A6A65]">Loading profile from backend...</div>
       </div>
     );
   }
@@ -84,54 +84,54 @@ export default function StudentProfile() {
   return (
     <div className="mx-auto max-w-[880px]">
       {error && (
-        <div className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800 border border-amber-200">
+        <div className="mb-4 rounded-xl bg-[#FDF2ED] p-4 text-sm font-semibold text-[#7A4B43] border border-[#E5D5CE]">
           Note: {error} (Displaying local draft mode)
         </div>
       )}
 
       {/* ── Profile Header ── */}
-      <div className="card flex items-center justify-between bg-gradient-to-br from-signal-soft/60 to-paper-raised">
+      <div className="card flex items-center justify-between bg-gradient-to-br from-[#EBF5F0]/60 to-white">
         <div className="flex items-center gap-5">
-          <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-signal text-[22px] font-bold text-white shadow-sm">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#2D6A4F] text-2xl font-bold text-white shadow-sm">
             {avatarInitials}
           </div>
           <div>
-            <h1 className="m-0 font-serif text-[24px] text-ink">{displayName}</h1>
-            <p className="mt-0.5 text-[13.5px] text-ink-soft">
+            <h1 className="m-0 font-serif text-3xl font-bold text-[#2B1B17]">{displayName}</h1>
+            <p className="mt-1 text-base text-[#7A6A65] font-semibold">
               {profile?.university || 'University not specified'} {profile?.gpa != null ? `· GPA ${profile.gpa}` : ''}
             </p>
-            <p className="mt-0.5 text-[12.5px] text-ink-soft">{displayEmail}</p>
+            <p className="mt-0.5 text-sm text-[#7A6A65]">{displayEmail}</p>
           </div>
         </div>
-        <button onClick={() => setIsEditing(true)} className="btn btn-ghost shadow-sm">
+        <button onClick={() => setIsEditing(true)} className="btn btn-secondary shadow-xs">
           Edit Profile
         </button>
       </div>
 
       {/* ── Bio / Summary ── */}
-      <div className="card mt-4">
+      <div className="card mt-5">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="m-0 text-[14px] font-serif font-bold text-ink">About & Bio</h3>
+          <h3 className="m-0 text-base font-serif font-bold text-[#2B1B17]">About & Bio</h3>
         </div>
-        <p className="text-[13.5px] text-ink-soft leading-relaxed">
+        <p className="text-base text-[#7A6A65] leading-relaxed">
           {profile?.bio || 'No bio added yet. Click "Edit Profile" to add your introduction and career goals.'}
         </p>
       </div>
 
       {/* ── Profile Completion ── */}
-      <div className="card mt-4">
+      <div className="card mt-5">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="m-0 text-[14px] font-serif font-bold">Profile Completion</h3>
-            <p className="mt-0.5 text-[12.5px] text-ink-soft">
+            <h3 className="m-0 text-base font-serif font-bold text-[#2B1B17]">Profile Completion</h3>
+            <p className="mt-1 text-sm text-[#7A6A65]">
               {skillsList.length > 0 ? 'Skills and details configured' : 'Add your skills and education to reach 100%'}
             </p>
           </div>
-          <span className="font-serif text-[22px] font-bold text-signal">
+          <span className="font-serif text-2xl font-bold text-[#2D6A4F]">
             {skillsList.length > 0 && profile?.bio ? '90%' : '50%'}
           </span>
         </div>
-        <div className="mt-3">
+        <div className="mt-4">
           <ProgressBar value={skillsList.length > 0 && profile?.bio ? 90 : 50} />
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function StudentProfile() {
       <SectionTitle
         title="Skills"
         action={
-          <button onClick={() => setIsEditing(true)} className="text-[13px] font-semibold text-signal">
+          <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-[#2D6A4F] hover:underline">
             Edit
           </button>
         }
@@ -153,7 +153,7 @@ export default function StudentProfile() {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-ink-soft">No skills added yet. Add comma-separated skills in edit mode.</p>
+          <p className="text-sm text-[#7A6A65]">No skills added yet. Add comma-separated skills in edit mode.</p>
         )}
       </div>
 
@@ -161,104 +161,104 @@ export default function StudentProfile() {
       <SectionTitle
         title="Career & Work Preferences"
         action={
-          <button onClick={() => setIsEditing(true)} className="text-[13px] font-semibold text-signal">
+          <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-[#2D6A4F] hover:underline">
             Edit
           </button>
         }
       />
       <div className="card">
-        <dl className="grid grid-cols-2 gap-4">
+        <dl className="grid grid-cols-2 gap-5">
           <div>
-            <dt className="text-[11.5px] font-semibold uppercase tracking-wider text-ink-soft">Preferred Location</dt>
-            <dd className="mt-0.5 text-[14px] font-medium text-ink">{profile?.preferredLocation || 'Any / Remote'}</dd>
+            <dt className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]">Preferred Location</dt>
+            <dd className="mt-1 text-base font-semibold text-[#2B1B17]">{profile?.preferredLocation || 'Any / Remote'}</dd>
           </div>
           <div>
-            <dt className="text-[11.5px] font-semibold uppercase tracking-wider text-ink-soft">Work Mode</dt>
-            <dd className="mt-0.5 text-[14px] font-medium text-ink">{profile?.preferredWorkMode || 'Hybrid'}</dd>
+            <dt className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]">Work Mode</dt>
+            <dd className="mt-1 text-base font-semibold text-[#2B1B17]">{profile?.preferredWorkMode || 'Hybrid'}</dd>
           </div>
         </dl>
       </div>
 
       {/* ── Edit Profile Modal ── */}
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-xl border border-sand-line bg-paper-raised p-6 shadow-xl">
-            <h2 className="mb-4 font-serif text-xl font-bold">Edit Student Profile</h2>
-            <form onSubmit={handleSaveProfile} className="space-y-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2B1B17]/45 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[#E5D5CE] bg-white p-7 shadow-xl">
+            <h2 className="mb-5 font-serif text-2xl font-bold text-[#2B1B17]">Edit Student Profile</h2>
+            <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-semibold">Full Name</label>
+                <label className="form-label">Full Name</label>
                 <input
                   type="text"
                   value={editFullName}
                   onChange={(e) => setEditFullName(e.target.value)}
-                  className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                  className="form-input"
                   placeholder="e.g. Alex Kumar"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold">University</label>
+                  <label className="form-label">University</label>
                   <input
                     type="text"
                     value={editUniversity}
                     onChange={(e) => setEditUniversity(e.target.value)}
-                    className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                    className="form-input"
                     placeholder="e.g. University of Colombo"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold">GPA</label>
+                  <label className="form-label">GPA</label>
                   <input
                     type="number"
                     step="0.01"
                     value={editGpa}
                     onChange={(e) => setEditGpa(e.target.value)}
-                    className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                    className="form-input"
                     placeholder="e.g. 3.75"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold">Bio / Introduction</label>
+                <label className="form-label">Bio / Introduction</label>
                 <textarea
                   rows={3}
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
-                  className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                  className="form-input"
                   placeholder="Tell recruiters about yourself..."
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold">Skills (Comma-separated)</label>
+                <label className="form-label">Skills (Comma-separated)</label>
                 <input
                   type="text"
                   value={editSkills}
                   onChange={(e) => setEditSkills(e.target.value)}
-                  className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                  className="form-input"
                   placeholder="Java, Spring Boot, React, SQL"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold">Preferred Location</label>
+                  <label className="form-label">Preferred Location</label>
                   <input
                     type="text"
                     value={editLocation}
                     onChange={(e) => setEditLocation(e.target.value)}
-                    className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                    className="form-input"
                     placeholder="Colombo / Remote"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-semibold">Work Mode</label>
+                  <label className="form-label">Work Mode</label>
                   <select
                     value={editWorkMode}
                     onChange={(e) => setEditWorkMode(e.target.value)}
-                    className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                    className="form-select"
                   >
                     <option value="Hybrid">Hybrid</option>
                     <option value="Remote">Remote</option>
@@ -267,18 +267,18 @@ export default function StudentProfile() {
                 </div>
               </div>
 
-              <div className="mt-5 flex justify-end gap-2 pt-2 border-t border-sand-line">
+              <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-[#E5D5CE]">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="btn btn-ghost px-4 py-2 text-sm"
+                  className="btn btn-ghost px-5 py-2.5 text-sm font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="btn btn-primary px-5 py-2 text-sm disabled:opacity-50"
+                  className="btn btn-primary px-6 py-2.5 text-sm font-semibold disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save Profile'}
                 </button>

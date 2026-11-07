@@ -45,16 +45,13 @@ export default function OAuth2Redirect() {
   }, [location, loginWithToken, navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-paper">
-      <div className="card text-center p-8 max-w-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[#FAF6F4] text-[#2B1B17] p-6">
+      <div className="card text-center p-8 max-w-sm rounded-3xl border border-[#E5D5CE] bg-white shadow-md">
         <div className="flex justify-center mb-4">
-          <svg className="animate-spin h-8 w-8 text-signal" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-          </svg>
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#7A4B43] border-t-transparent" />
         </div>
-        <h3 className="font-serif text-[18px] font-bold mb-1">Authenticating with Google...</h3>
-        <p className="text-sm text-ink-soft">Redirecting you to your PathFinder dashboard.</p>
+        <h3 className="font-serif text-2xl font-bold text-[#2B1B17] mb-1.5">Authenticating with Google...</h3>
+        <p className="text-sm text-[#7A6A65]">Securely redirecting you to your PathFinder dashboard.</p>
       </div>
     </div>
   );

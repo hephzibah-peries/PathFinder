@@ -69,7 +69,7 @@ export default function InternshipDetails() {
   if (loading || !internship) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-sm text-ink-soft">Loading internship details...</div>
+        <div className="text-base text-[#7A6A65]">Loading internship details...</div>
       </div>
     );
   }
@@ -89,13 +89,13 @@ export default function InternshipDetails() {
     <>
       <div className="mx-auto max-w-[880px]">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <div className="flex h-[56px] w-[56px] items-center justify-center rounded-xl bg-ink font-serif text-2xl text-white shadow-sm">
+        <div className="flex items-center gap-5">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#7A4B43] font-serif text-3xl font-bold text-white shadow-sm">
             {logo}
           </div>
           <div>
-            <h2 className="m-0 font-serif text-[24px] text-ink">{internship.title}</h2>
-            <p className="mt-0.5 text-sm text-ink-soft">
+            <h2 className="m-0 font-serif text-3xl font-bold text-[#2B1B17]">{internship.title}</h2>
+            <p className="mt-1 text-base text-[#7A6A65] font-semibold">
               {company} · {internship.location || 'Colombo'} · {internship.workMode || 'Hybrid'} ·{' '}
               {internship.stipend ? `Stipend: ${internship.stipend}` : 'Competitive'} · Deadline{' '}
               {internship.deadline || 'Rolling'}
@@ -105,15 +105,15 @@ export default function InternshipDetails() {
 
         {/* Match Card */}
         <div className="card mt-6">
-          <div className="flex items-center gap-6.5">
-            <ScoreRing score={matchScore} label="match" />
-            <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-7">
+            <ScoreRing score={matchScore} label="match" size={132} />
+            <div className="flex-1 space-y-3">
               <div>
-                <div className="mb-1 text-[12.5px] font-medium text-ink">Technical Alignment — 94%</div>
+                <div className="mb-1 text-sm font-semibold text-[#2B1B17]">Technical Alignment — 94%</div>
                 <ProgressBar value={94} />
               </div>
               <div>
-                <div className="mb-1 text-[12.5px] font-medium text-ink">Project Relevance — 88%</div>
+                <div className="mb-1 text-sm font-semibold text-[#2B1B17]">Project Relevance — 88%</div>
                 <ProgressBar value={88} />
               </div>
             </div>
@@ -127,9 +127,9 @@ export default function InternshipDetails() {
           <button
             id="why-match-btn"
             onClick={() => setDrawerOpen(true)}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-info-soft bg-info-soft px-4 py-2 text-[12.5px] font-semibold text-info transition hover:bg-[#d6e0f5]"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[#E5D5CE] bg-[#FDF2ED] px-4 py-2.5 text-sm font-bold text-[#7A4B43] transition hover:bg-[#FBE8DE]"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -139,24 +139,24 @@ export default function InternshipDetails() {
         </div>
 
         {/* Description */}
-        <h2 className="mt-8 mb-3 font-serif text-[21px] text-ink">About this role</h2>
-        <div className="card text-[14px] leading-relaxed text-ink/90">
+        <h2 className="mt-8 mb-3 font-serif text-2xl font-bold text-[#2B1B17]">About this role</h2>
+        <div className="card text-base leading-relaxed text-[#2B1B17]">
           <p>
             {internship.description ||
               `You will work within ${company}'s software engineering team, collaborating on real-world services and backend infrastructure. Expect close mentorship, code reviews, and production deployments.`}
           </p>
 
           {internship.requirements && (
-            <div className="mt-4 pt-4 border-t border-sand-line">
-              <h4 className="font-serif font-bold text-sm text-ink mb-1">Key Requirements</h4>
-              <p className="text-ink-soft text-sm">{internship.requirements}</p>
+            <div className="mt-5 pt-5 border-t border-[#E5D5CE]">
+              <h4 className="font-serif font-bold text-base text-[#2B1B17] mb-1.5">Key Requirements</h4>
+              <p className="text-[#7A6A65] text-sm leading-relaxed">{internship.requirements}</p>
             </div>
           )}
         </div>
 
         {/* Skills */}
-        <div className="mt-6">
-          <h3 className="text-[15px] font-serif font-bold mb-3">Target Skills for This Internship</h3>
+        <div className="mt-7">
+          <h3 className="text-lg font-serif font-bold text-[#2B1B17] mb-3">Target Skills for This Internship</h3>
           <div className="flex flex-wrap gap-2">
             {skillsArray.map((skillName: string) => (
               <SkillTag key={skillName} label={skillName} state="have" source="verified" />
@@ -169,13 +169,13 @@ export default function InternshipDetails() {
           <button
             onClick={handleApply}
             disabled={applying || applied}
-            className={`btn btn-primary px-8 py-3 text-sm font-semibold transition ${
-              applied ? 'bg-green-600 border-green-600 text-white' : ''
+            className={`btn btn-primary px-8 py-3.5 text-base font-semibold transition ${
+              applied ? 'bg-green-700 border-green-700 text-white' : ''
             }`}
           >
             {applied ? '✓ Application Submitted!' : applying ? 'Submitting Application...' : 'Apply Now'}
           </button>
-          <button onClick={() => navigate(-1)} className="btn btn-ghost px-5 py-3 text-sm">
+          <button onClick={() => navigate(-1)} className="btn btn-ghost px-6 py-3.5 text-base font-semibold">
             Back to listings
           </button>
         </div>

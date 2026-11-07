@@ -13,9 +13,9 @@ export default function AdminLayout() {
     <div>
       <div className="flex items-center justify-between border-b border-sand-line bg-paper-raised px-8 py-4">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition">
-          <img src="/logo.svg" alt="SkillBridgePlatform Logo" className="w-10 h-10" />
+          <img src="/logo.svg" alt="PathFinder Logo" className="w-10 h-10" />
           <div className="font-serif text-[18px]">
-            SkillBridgePlatform <span className="font-sans text-xs text-ink-soft">admin</span>
+            PathFinder <span className="font-sans text-xs text-ink-soft">admin</span>
           </div>
         </Link>
         <div className="flex gap-[22px] text-sm text-ink-soft">

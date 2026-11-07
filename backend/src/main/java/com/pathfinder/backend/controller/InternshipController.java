@@ -3,6 +3,7 @@ package com.pathfinder.backend.controller;
 import com.pathfinder.backend.dto.InternshipDto;
 import com.pathfinder.backend.service.InternshipService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,7 @@ public class InternshipController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
     public ResponseEntity<InternshipDto> createInternship(
             Authentication authentication,
             @RequestBody InternshipDto dto) {
@@ -36,6 +38,7 @@ public class InternshipController {
     }
 
     @GetMapping("/my")
+    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
     public ResponseEntity<List<InternshipDto>> getMyInternships(Authentication authentication) {
         return ResponseEntity.ok(internshipService.getMyInternships(authentication.getName()));
     }

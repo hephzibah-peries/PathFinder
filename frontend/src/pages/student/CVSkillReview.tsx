@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { CvExtractedSkill } from '../../data/mock';
-import { cvExtractedSkills } from '../../data/mock';
 import { SkillSourceBadge } from '../../components/ui';
+import { resumeApi, studentApi } from '../../services/api';
 
-// Confidence level label
+export interface ParsedSkill {
+  id: string;
+  name: string;
+  category: string;
+  confidence: number;
+  state: 'pending' | 'confirmed' | 'removed';
+}
+
 function confidenceLabel(pct: number): string {
   if (pct >= 90) return 'Very high confidence';
   if (pct >= 75) return 'High confidence';
@@ -21,12 +27,92 @@ function confidenceColor(pct: number): string {
 
 export default function CVSkillReview() {
   const navigate = useNavigate();
-  const [skills, setSkills] = useState<CvExtractedSkill[]>(cvExtractedSkills);
-  const [saved, setSaved] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const pending   = skills.filter((s) => s.state === 'pending');
+  const [skills, setSkills] = useState<ParsedSkill[]>([]);
+  const [existingSkills, setExistingSkills] = useState<string[]>([]);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load existing profile skills
+  useEffect(() => {
+    async function loadExistingSkills() {
+      try {
+        const profile = await studentApi.getProfile();
+        if (profile?.skills) {
+          const loaded = profile.skills.split(',').map((s) => s.trim()).filter(Boolean);
+          setExistingSkills(loaded);
+          // If no resume uploaded yet, display existing skills as confirmed
+          if (loaded.length > 0) {
+            setSkills(
+              loaded.map((name, idx) => ({
+                id: `existing-${idx}`,
+                name,
+                category: 'Profile Skill',
+                confidence: 95,
+                state: 'confirmed',
+              }))
+            );
+          }
+        }
+      } catch {
+        // Ignored if profile not created yet
+      }
+    }
+    loadExistingSkills();
+  }, []);
+
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+
+    try {
+      setAnalyzing(true);
+      setError(null);
+      setFileName(file.name);
+
+      const result = await resumeApi.analyze(file);
+      const extracted = result.extractedSkills || [];
+
+      if (extracted.length === 0) {
+        setError('No technical skills were identified in this document. You can still confirm your existing skills or try another CV format.');
+        return;
+      }
+
+      // Merge newly extracted skills with state
+      const newSkills: ParsedSkill[] = extracted.map((name, idx) => ({
+        id: `extracted-${Date.now()}-${idx}`,
+        name,
+        category: 'Extracted from Resume',
+        confidence: 90,
+        state: existingSkills.includes(name) ? 'confirmed' : 'pending',
+      }));
+
+      // Combine keeping unique by name
+      setSkills((prev) => {
+        const existingNames = new Set(prev.map((s) => s.name.toLowerCase()));
+        const uniqueNew = newSkills.filter((s) => !existingNames.has(s.name.toLowerCase()));
+        return [...uniqueNew, ...prev];
+      });
+    } catch (err: any) {
+      setError(err.message || 'Failed to analyze resume file. Please ensure it is a valid PDF or DOCX file.');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+  };
+
+  const pending = skills.filter((s) => s.state === 'pending');
   const confirmed = skills.filter((s) => s.state === 'confirmed');
-  const removed   = skills.filter((s) => s.state === 'removed');
+  const removed = skills.filter((s) => s.state === 'removed');
 
   function confirm(id: string) {
     setSkills((prev) => prev.map((s) => (s.id === id ? { ...s, state: 'confirmed' } : s)));
@@ -44,9 +130,25 @@ export default function CVSkillReview() {
     setSkills((prev) => prev.map((s) => (s.state === 'pending' ? { ...s, state: 'confirmed' } : s)));
   }
 
-  function handleSave() {
-    setSaved(true);
-    setTimeout(() => navigate('/student'), 1800);
+  async function handleSave() {
+    try {
+      setSaving(true);
+      setError(null);
+
+      // Collect confirmed skill names
+      const confirmedNames = confirmed.map((s) => s.name.trim()).filter(Boolean);
+      const allConfirmed = Array.from(new Set([...existingSkills, ...confirmedNames]));
+      const skillsPayload = allConfirmed.join(', ');
+
+      await studentApi.updateProfile({ skills: skillsPayload });
+
+      setSaved(true);
+      setTimeout(() => navigate('/student'), 1000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save skills to profile');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -58,27 +160,59 @@ export default function CVSkillReview() {
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
           </svg>
-          CV Skill Review
+          CV Skill Parsing
         </div>
-        <h1 className="mb-1 font-serif text-[26px]">Verify Your Extracted Skills</h1>
+        <h1 className="mb-1 font-serif text-[26px]">Extract & Verify Skills from Your CV</h1>
         <p className="m-0 text-[14px] text-ink-soft">
-          Our NLP service found <strong>{skills.length} skills</strong> in your CV.
-          Review each one and confirm or remove it before saving to your profile.
+          Upload your resume in PDF or DOCX format. Our Apache Tika NLP engine will automatically scan and extract your technical skills into your profile.
         </p>
       </div>
 
-      {/* ── Legend ── */}
-      <div className="card mb-5 flex flex-wrap items-center gap-4 py-3.5">
-        <span className="text-[12px] font-semibold text-ink-soft">Skill source legend:</span>
-        <div className="flex items-center gap-1.5 text-[12.5px]">
-          <SkillSourceBadge source="self" />
-          <span className="text-ink-soft">— Added by you (self-declared) after confirming here</span>
+      {/* ── File Upload Box ── */}
+      <div className="card mb-6 border-dashed border-2 border-sand-line bg-sand/10 p-6 text-center">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.docx,.doc,.txt"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-signal-soft text-signal">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
         </div>
-        <div className="flex items-center gap-1.5 text-[12.5px]">
-          <SkillSourceBadge source="verified" />
-          <span className="text-ink-soft">— Earned via platform assessments</span>
-        </div>
+
+        <h3 className="font-serif text-[16px] font-bold text-ink mb-1">
+          {fileName ? `Uploaded: ${fileName}` : 'Choose a CV / Resume File'}
+        </h3>
+        <p className="text-xs text-ink-soft mb-4">Supported formats: PDF, DOCX, DOC, TXT (up to 5MB)</p>
+
+        <button
+          type="button"
+          disabled={analyzing}
+          onClick={() => fileInputRef.current?.click()}
+          className="btn btn-signal px-5 py-2 text-xs font-semibold disabled:opacity-50"
+        >
+          {analyzing ? 'Scanning Resume with NLP...' : fileName ? 'Upload Different File' : 'Browse & Upload Resume'}
+        </button>
+
+        {analyzing && (
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-signal font-medium animate-pulse">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-signal border-t-transparent" />
+            Extracting skills using Apache Tika...
+          </div>
+        )}
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-lg bg-red-50 p-3.5 text-xs text-red-700 border border-red-200">
+          {error}
+        </div>
+      )}
 
       {/* ── Progress summary strip ── */}
       <div className="mb-6 grid grid-cols-3 gap-3">
@@ -139,7 +273,7 @@ export default function CVSkillReview() {
       {confirmed.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-3 font-serif text-[17px]">
-            Confirmed
+            Confirmed Profile Skills
             <span className="ml-2 font-sans text-[13px] font-normal text-ink-soft">
               ({confirmed.length} skill{confirmed.length !== 1 ? 's' : ''})
             </span>
@@ -173,7 +307,7 @@ export default function CVSkillReview() {
       {removed.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-3 font-serif text-[17px]">
-            Removed
+            Excluded Skills
             <span className="ml-2 font-sans text-[13px] font-normal text-ink-soft">
               ({removed.length})
             </span>
@@ -207,23 +341,28 @@ export default function CVSkillReview() {
         <div className="flex items-center justify-between">
           <p className="m-0 text-[12.5px] text-ink-soft">
             {confirmed.length === 0
-              ? 'Confirm at least one skill to save.'
-              : `${confirmed.length} skill${confirmed.length !== 1 ? 's' : ''} will be added to your profile as Self-Declared.`}
+              ? 'Confirm at least one skill or upload a CV to save to your profile.'
+              : `${confirmed.length} skill${confirmed.length !== 1 ? 's' : ''} will be saved directly to your PostgreSQL profile.`}
           </p>
           <button
             id="cv-review-save"
-            disabled={confirmed.length === 0 || saved}
+            disabled={confirmed.length === 0 || saving || saved}
             onClick={handleSave}
             className={`btn btn-signal px-6 transition-all ${
               confirmed.length === 0 ? 'cursor-not-allowed opacity-40' : ''
             } ${saved ? 'opacity-80' : ''}`}
           >
-            {saved ? (
+            {saving ? (
+              <span className="flex items-center gap-2">
+                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Saving...
+              </span>
+            ) : saved ? (
               <span className="flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                Saved!
+                Saved to Profile!
               </span>
             ) : (
               'Save to my profile'
@@ -241,7 +380,7 @@ function SkillCard({
   onConfirm,
   onRemove,
 }: {
-  skill: CvExtractedSkill;
+  skill: ParsedSkill;
   onConfirm: () => void;
   onRemove: () => void;
 }) {
@@ -278,7 +417,7 @@ function SkillCard({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2">
-          <span className="text-[14.5px] font-semibold">{skill.name}</span>
+          <span className="text-[14.5px] font-semibold text-ink">{skill.name}</span>
           <span className="text-[11.5px] text-ink-soft">{skill.category}</span>
         </div>
         <div className="mt-1.5 flex items-center gap-2">

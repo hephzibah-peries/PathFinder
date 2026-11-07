@@ -3,6 +3,7 @@ package com.pathfinder.backend.controller;
 import com.pathfinder.backend.dto.CompanyProfileDto;
 import com.pathfinder.backend.service.CompanyProfileService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,11 +18,13 @@ public class CompanyProfileController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
     public ResponseEntity<CompanyProfileDto> getMyProfile(Authentication authentication) {
         return ResponseEntity.ok(companyProfileService.getProfileByEmail(authentication.getName()));
     }
 
     @PutMapping("/me")
+    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
     public ResponseEntity<CompanyProfileDto> updateMyProfile(
             Authentication authentication,
             @RequestBody CompanyProfileDto dto) {

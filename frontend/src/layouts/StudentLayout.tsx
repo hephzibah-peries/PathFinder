@@ -76,8 +76,8 @@ export default function StudentLayout() {
       {/* ── Sidebar ── */}
       <aside className="sidebar">
         <Link to="/" className="sidebar-brand">
-          <img src="/logo.svg" alt="SkillBridgePlatform Logo" className="h-9 w-9" />
-          <span className="font-serif text-[16px] leading-tight">SkillBridge<span className="text-signal">Platform</span></span>
+          <img src="/logo.svg" alt="PathFinder Logo" className="h-9 w-9" />
+          <span className="font-serif text-[16px] leading-tight">Path<span className="text-signal">Finder</span></span>
         </Link>
 
         <nav className="sidebar-nav">

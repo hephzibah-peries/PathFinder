@@ -73,9 +73,9 @@ export default function CompanyLayout() {
       {/* ── Sidebar ── */}
       <aside className="sidebar">
         <Link to="/" className="sidebar-brand">
-          <img src="/logo.svg" alt="SkillBridgePlatform Logo" className="h-9 w-9" />
+          <img src="/logo.svg" alt="PathFinder Logo" className="h-9 w-9" />
           <div className="leading-tight">
-            <span className="font-serif text-[16px]">SkillBridge<span className="text-signal">Platform</span></span>
+            <span className="font-serif text-[16px]">Path<span className="text-signal">Finder</span></span>
             <div className="text-[10.5px] font-medium text-ink-soft">for companies</div>
           </div>
         </Link>

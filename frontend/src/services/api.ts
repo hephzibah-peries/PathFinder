@@ -71,6 +71,13 @@ export interface Recommendation {
   missingSkills: string[];
 }
 
+export interface ResumeAnalysis {
+  extractedText: string;
+  extractedSkills: string[];
+  missingSkills: string[];
+  matchScore: number;
+}
+
 export interface UserSession {
   email: string;
   role: string;
@@ -223,4 +230,16 @@ export const applicationApi = {
 
 export const recommendationApi = {
   getRecommendations: () => request<Recommendation[]>('/recommendations'),
+};
+
+export const resumeApi = {
+  analyze: (file: File, internshipId?: number | string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const query = internshipId ? `?internshipId=${internshipId}` : '';
+    return request<ResumeAnalysis>(`/resume/analyze${query}`, {
+      method: 'POST',
+      body: formData,
+    });
+  },
 };

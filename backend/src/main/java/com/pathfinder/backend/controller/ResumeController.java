@@ -4,6 +4,7 @@ import com.pathfinder.backend.dto.ResumeAnalysisDto;
 import com.pathfinder.backend.service.ResumeService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +22,7 @@ public class ResumeController {
     }
 
     @PostMapping(value = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN')")
     public ResponseEntity<ResumeAnalysisDto> analyzeResume(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "internshipId", required = false) Long internshipId) {

@@ -80,7 +80,7 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
   }
 
   function handleRemoveReqSkill(skill: string) {
-    setRequiredSkills(requiredSkills.filter(s => s !== skill));
+    setRequiredSkills(requiredSkills.filter((s) => s !== skill));
   }
 
   function handleAddPrefSkill(e: React.KeyboardEvent) {
@@ -94,12 +94,12 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
   }
 
   function handleRemovePrefSkill(skill: string) {
-    setPreferredSkills(preferredSkills.filter(s => s !== skill));
+    setPreferredSkills(preferredSkills.filter((s) => s !== skill));
   }
 
   function toggleAcademicYear(year: string) {
     if (academicYear.includes(year)) {
-      setAcademicYear(academicYear.filter(y => y !== year));
+      setAcademicYear(academicYear.filter((y) => y !== year));
     } else {
       setAcademicYear([...academicYear, year]);
     }
@@ -192,16 +192,29 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
 
       {/* Modal Panel */}
       <div className={`modal-panel ${closing ? 'modal-panel-closing' : ''}`}>
-        
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-sand-line px-7 py-5">
+        <div className="flex items-center justify-between border-b border-[#E5D5CE] bg-[#FAF6F4] px-7 py-5">
           <div>
-            <h2 className="m-0 font-serif text-[20px]">Post New Internship</h2>
-            <p className="mt-1 text-[12.5px] text-ink-soft">
-              Step {step} of 2: {step === 1 ? 'Basic Details' : 'Candidate Requirements'}
-            </p>
+            <h2 className="font-serif text-2xl font-bold text-[#2B1B17]">Post New Internship</h2>
+            <div className="mt-1.5 flex items-center gap-2 text-xs">
+              <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
+                step === 1 ? 'bg-[#FDF2ED] text-[#7A4B43] border border-[#E5D5CE]' : 'text-[#7A6A65]'
+              }`}>
+                Step 1: Basic Information
+              </span>
+              <span className="text-[#7A6A65]">&rarr;</span>
+              <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
+                step === 2 ? 'bg-[#FDF2ED] text-[#7A4B43] border border-[#E5D5CE]' : 'text-[#7A6A65]'
+              }`}>
+                Step 2: Qualifications & Skills
+              </span>
+            </div>
           </div>
-          <button onClick={handleClose} className="text-ink-soft hover:text-ink" disabled={loading}>
+          <button
+            onClick={handleClose}
+            className="rounded-lg p-2 text-[#7A6A65] hover:bg-[#F2E8E4] hover:text-[#2B1B17] transition-colors"
+            disabled={loading}
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -211,7 +224,7 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
 
         {/* Error notification */}
         {error && (
-          <div className="mx-7 mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">
+          <div className="mx-7 mt-5 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-900">
             {error}
           </div>
         )}
@@ -221,10 +234,12 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
           {step === 1 ? (
             <div className="space-y-5">
               <div>
-                <label className="form-label">Internship Title <span className="text-error">*</span></label>
-                <input 
-                  type="text" 
-                  className="form-input" 
+                <label className="form-label">
+                  Internship Title <span className="text-[#7A4B43]">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
                   placeholder="e.g. Backend Developer Intern"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -232,9 +247,11 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">Work Mode <span className="text-error">*</span></label>
+                  <label className="form-label">
+                    Work Mode <span className="text-[#7A4B43]">*</span>
+                  </label>
                   <select className="form-select" value={workMode} onChange={(e) => setWorkMode(e.target.value)}>
                     <option value="Hybrid">Hybrid</option>
                     <option value="On-site">On-site</option>
@@ -242,7 +259,9 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">Duration <span className="text-error">*</span></label>
+                  <label className="form-label">
+                    Duration <span className="text-[#7A4B43]">*</span>
+                  </label>
                   <select className="form-select" value={duration} onChange={(e) => setDuration(e.target.value)}>
                     <option value="3 Months">3 Months</option>
                     <option value="6 Months">6 Months</option>
@@ -251,12 +270,12 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="form-label">Location</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
+                  <input
+                    type="text"
+                    className="form-input"
                     placeholder="e.g. Colombo, Sri Lanka"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
@@ -264,9 +283,9 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
                 </div>
                 <div>
                   <label className="form-label">Stipend / Compensation</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
+                  <input
+                    type="text"
+                    className="form-input"
                     placeholder="e.g. LKR 40,000 / month"
                     value={stipend}
                     onChange={(e) => setStipend(e.target.value)}
@@ -276,19 +295,19 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
 
               <div>
                 <label className="form-label">Application Deadline</label>
-                <input 
-                  type="date" 
-                  className="form-input" 
+                <input
+                  type="date"
+                  className="form-input"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="form-label">Role Overview / Description</label>
-                <textarea 
-                  className="form-input min-h-[90px] resize-y" 
-                  placeholder="Briefly describe what the intern will be doing and the team they will join..."
+                <label className="form-label">Role Overview & Responsibilities</label>
+                <textarea
+                  className="form-input min-h-[90px] resize-y"
+                  placeholder="Briefly describe what the intern will be doing, projects involved, and mentoring support..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
@@ -297,19 +316,27 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
           ) : (
             <div className="space-y-6">
               <div>
-                <label className="form-label">Required Skills <span className="text-error">*</span></label>
-                <p className="form-hint mb-2">Type a skill and press Enter to add.</p>
-                <div className="form-tags-input">
-                  {requiredSkills.map(skill => (
-                    <span key={skill} className="form-tag">
+                <label className="form-label">
+                  Required Technical Skills <span className="text-[#7A4B43]">*</span>
+                </label>
+                <p className="text-xs text-[#7A6A65] mb-2 font-medium">Type a skill name and press Enter to append.</p>
+                <div className="rounded-xl border border-[#E5D5CE] bg-[#FAF6F4] p-3.5 flex flex-wrap gap-2">
+                  {requiredSkills.map((skill) => (
+                    <span key={skill} className="skill-tag skill-tag-have text-sm">
                       {skill}
-                      <button type="button" onClick={() => handleRemoveReqSkill(skill)} className="ml-0.5 text-ink-soft hover:text-ink">&times;</button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveReqSkill(skill)}
+                        className="ml-1.5 text-emerald-900 hover:text-emerald-950 font-bold"
+                      >
+                        ×
+                      </button>
                     </span>
                   ))}
-                  <input 
-                    type="text" 
-                    className="flex-1 min-w-[120px] bg-transparent outline-none text-[13px]" 
-                    placeholder="Add required skill (e.g. Java)..."
+                  <input
+                    type="text"
+                    className="flex-1 min-w-[140px] bg-transparent outline-none text-sm text-[#2B1B17] placeholder-[#9C8E89]"
+                    placeholder="Add skill (e.g. Java)..."
                     value={newReqSkill}
                     onChange={(e) => setNewReqSkill(e.target.value)}
                     onKeyDown={handleAddReqSkill}
@@ -318,18 +345,26 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
               </div>
 
               <div>
-                <label className="form-label">Preferred Skills <span className="font-normal text-ink-soft">(Optional)</span></label>
-                <div className="form-tags-input">
-                  {preferredSkills.map(skill => (
-                    <span key={skill} className="form-tag">
+                <label className="form-label">
+                  Preferred / Nice-to-Have Skills <span className="text-[#7A6A65]">(Optional)</span>
+                </label>
+                <div className="rounded-xl border border-[#E5D5CE] bg-[#FAF6F4] p-3.5 flex flex-wrap gap-2">
+                  {preferredSkills.map((skill) => (
+                    <span key={skill} className="skill-tag text-sm">
                       {skill}
-                      <button type="button" onClick={() => handleRemovePrefSkill(skill)} className="ml-0.5 text-ink-soft hover:text-ink">&times;</button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePrefSkill(skill)}
+                        className="ml-1.5 text-[#7A6A65] hover:text-[#2B1B17] font-bold"
+                      >
+                        ×
+                      </button>
                     </span>
                   ))}
-                  <input 
-                    type="text" 
-                    className="flex-1 min-w-[120px] bg-transparent outline-none text-[13px]" 
-                    placeholder="Add preferred skill (e.g. Docker)..."
+                  <input
+                    type="text"
+                    className="flex-1 min-w-[140px] bg-transparent outline-none text-sm text-[#2B1B17] placeholder-[#9C8E89]"
+                    placeholder="Add skill (e.g. Docker)..."
                     value={newPrefSkill}
                     onChange={(e) => setNewPrefSkill(e.target.value)}
                     onKeyDown={handleAddPrefSkill}
@@ -337,13 +372,15 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">Min. GPA <span className="font-normal text-ink-soft">(Optional)</span></label>
-                  <input 
-                    type="number" 
+                  <label className="form-label">
+                    Min. Academic GPA <span className="text-[#7A6A65]">(Optional)</span>
+                  </label>
+                  <input
+                    type="number"
                     step="0.1"
-                    className="form-input" 
+                    className="form-input"
                     placeholder="e.g. 3.0"
                     value={minGpa}
                     onChange={(e) => setMinGpa(e.target.value)}
@@ -352,13 +389,14 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
                 <div>
                   <label className="form-label">Target Academic Level</label>
                   <div className="mt-2 space-y-2">
-                    {['3rd Year', 'Final Year', 'Graduated'].map(year => (
-                      <label key={year} className="flex items-center gap-2 text-[13px] cursor-pointer">
-                        <input 
-                          type="checkbox" 
+                    {['3rd Year', 'Final Year', 'Graduated'].map((year) => (
+                      <label key={year} className="flex items-center gap-2 text-sm text-[#2B1B17] font-medium cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="rounded bg-white border-[#E5D5CE] text-[#7A4B43] focus:ring-[#7A4B43]/20"
                           checked={academicYear.includes(year)}
                           onChange={() => toggleAcademicYear(year)}
-                        /> 
+                        />
                         {year}
                       </label>
                     ))}
@@ -367,10 +405,10 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
               </div>
 
               <div>
-                <label className="form-label">Experience / Requirements Details</label>
-                <textarea 
-                  className="form-input min-h-[80px] resize-y" 
-                  placeholder="Describe any coursework, projects, or prerequisites expected from candidates..."
+                <label className="form-label">Prerequisites & Coursework</label>
+                <textarea
+                  className="form-input min-h-[80px] resize-y"
+                  placeholder="Describe any specific academic coursework or project experience expected..."
                   value={experience}
                   onChange={(e) => setExperience(e.target.value)}
                 />
@@ -380,34 +418,31 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between border-t border-sand-line bg-sand/30 px-7 py-4">
-          <button 
+        <div className="flex items-center justify-between border-t border-[#E5D5CE] bg-[#FAF6F4] px-7 py-4">
+          <button
             type="button"
             onClick={step === 2 ? () => setStep(1) : handleClose}
-            className="btn btn-ghost"
+            className="btn btn-ghost px-5 py-2.5 text-sm"
             disabled={loading}
           >
-            {step === 2 ? 'Back' : 'Cancel'}
+            {step === 2 ? '← Back to Details' : 'Cancel'}
           </button>
-          
-          <button 
+
+          <button
             type="button"
             onClick={step === 1 ? handleNextStep : handleSubmit}
-            className="btn btn-signal"
+            className="btn btn-primary px-6 py-2.5 text-sm"
             disabled={loading}
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                Posting Internship...
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Publishing to Live Board...
               </span>
             ) : step === 1 ? (
-              'Next: Requirements'
+              'Next: Candidate Requirements →'
             ) : (
-              'Post Internship'
+              'Confirm & Publish Internship'
             )}
           </button>
         </div>

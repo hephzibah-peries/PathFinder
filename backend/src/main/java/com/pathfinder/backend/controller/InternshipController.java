@@ -20,7 +20,7 @@ public class InternshipController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN') or isAuthenticated()")
     public ResponseEntity<InternshipDto> createInternship(
             Authentication authentication,
             @RequestBody InternshipDto dto) {
@@ -38,7 +38,7 @@ public class InternshipController {
     }
 
     @GetMapping("/my")
-    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN') or isAuthenticated()")
     public ResponseEntity<List<InternshipDto>> getMyInternships(Authentication authentication) {
         return ResponseEntity.ok(internshipService.getMyInternships(authentication.getName()));
     }

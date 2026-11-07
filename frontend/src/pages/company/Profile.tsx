@@ -60,7 +60,7 @@ export default function CompanyProfile() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-sm text-ink-soft">Loading company profile from backend...</div>
+        <div className="text-base text-[#7A6A65]">Loading company profile from backend...</div>
       </div>
     );
   }
@@ -71,26 +71,26 @@ export default function CompanyProfile() {
   return (
     <div className="mx-auto max-w-[880px]">
       {error && (
-        <div className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800 border border-amber-200">
+        <div className="mb-4 rounded-xl bg-[#FDF2ED] p-4 text-sm font-semibold text-[#7A4B43] border border-[#E5D5CE]">
           Note: {error} (Displaying local draft mode)
         </div>
       )}
 
-      <div className="card flex items-center justify-between bg-gradient-to-br from-sand to-paper-raised">
+      <div className="card flex items-center justify-between bg-gradient-to-br from-[#FAF6F4] to-white">
         <div className="flex items-center gap-5">
-          <div className="flex h-[72px] w-[72px] items-center justify-center rounded-xl bg-ink text-[26px] font-bold text-white shadow-sm">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#7A4B43] text-2xl font-bold text-white shadow-sm">
             {avatar}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="m-0 font-serif text-[24px] text-ink">{name}</h1>
+            <div className="flex items-center gap-2.5">
+              <h1 className="m-0 font-serif text-3xl font-bold text-[#2B1B17]">{name}</h1>
               {profile?.verified && (
-                <span className="rounded-full bg-signal/10 px-2 py-0.5 text-xs font-semibold text-signal">
+                <span className="rounded-full bg-[#2D6A4F]/10 border border-[#2D6A4F]/30 px-3 py-1 text-xs font-bold text-[#2D6A4F]">
                   Verified
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-[13.5px] text-ink-soft">
+            <p className="mt-1 text-base text-[#7A6A65] font-semibold">
               {profile?.industry || 'Industry not specified'} · {profile?.email || user?.email}
             </p>
             {profile?.website && (
@@ -98,14 +98,14 @@ export default function CompanyProfile() {
                 href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 block text-[12.5px] font-semibold text-signal hover:underline"
+                className="mt-1 block text-sm font-bold text-[#7A4B43] hover:underline"
               >
                 {profile.website.replace(/^https?:\/\//, '')}
               </a>
             )}
           </div>
         </div>
-        <button onClick={() => setIsEditing(true)} className="btn btn-ghost shadow-sm">
+        <button onClick={() => setIsEditing(true)} className="btn btn-secondary shadow-xs">
           Edit Profile
         </button>
       </div>
@@ -113,25 +113,25 @@ export default function CompanyProfile() {
       <SectionTitle
         title="Company Overview"
         action={
-          <button onClick={() => setIsEditing(true)} className="text-[13px] font-semibold text-signal">
+          <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-[#7A4B43] hover:underline">
             Edit
           </button>
         }
       />
       <div className="card">
-        <p className="text-[14px] leading-relaxed text-ink/90">
+        <p className="text-base leading-relaxed text-[#2B1B17]">
           {profile?.description ||
             'No company description provided yet. Click "Edit Profile" to tell candidates about your organization, mission, and team.'}
         </p>
 
-        <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-sand-line pt-5">
+        <dl className="mt-6 grid grid-cols-2 gap-5 border-t border-[#E5D5CE] pt-5">
           <div>
-            <dt className="text-[11.5px] font-semibold uppercase tracking-wider text-ink-soft">Industry</dt>
-            <dd className="mt-1 text-[14px] font-medium text-ink">{profile?.industry || 'Not set'}</dd>
+            <dt className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]">Industry</dt>
+            <dd className="mt-1 text-base font-semibold text-[#2B1B17]">{profile?.industry || 'Not set'}</dd>
           </div>
           <div>
-            <dt className="text-[11.5px] font-semibold uppercase tracking-wider text-ink-soft">Verification Status</dt>
-            <dd className="mt-1 text-[14px] font-medium text-ink">
+            <dt className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]">Verification Status</dt>
+            <dd className="mt-1 text-base font-semibold text-[#2B1B17]">
               {profile?.verified ? 'Verified Employer' : 'Pending Verification'}
             </dd>
           </div>
@@ -140,67 +140,67 @@ export default function CompanyProfile() {
 
       {/* ── Edit Modal ── */}
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-xl border border-sand-line bg-paper-raised p-6 shadow-xl">
-            <h2 className="mb-4 font-serif text-xl font-bold">Edit Company Profile</h2>
-            <form onSubmit={handleSaveProfile} className="space-y-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2B1B17]/45 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[#E5D5CE] bg-white p-7 shadow-xl">
+            <h2 className="mb-5 font-serif text-2xl font-bold text-[#2B1B17]">Edit Company Profile</h2>
+            <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-semibold">Company Name</label>
+                <label className="form-label">Company Name</label>
                 <input
                   type="text"
                   required
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                  className="form-input"
                   placeholder="e.g. Nimbus Systems"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold">Industry</label>
+                <label className="form-label">Industry</label>
                 <input
                   type="text"
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
-                  className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                  className="form-input"
                   placeholder="e.g. Enterprise Software & FinTech"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold">Description / About</label>
+                <label className="form-label">Description / About</label>
                 <textarea
                   rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                  className="form-input"
                   placeholder="Describe your company culture, technology stack, and hiring goals..."
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold">Website</label>
+                <label className="form-label">Website</label>
                 <input
                   type="text"
                   value={website}
                   onChange={(e) => setWebsite(e.target.value)}
-                  className="w-full rounded-lg border border-sand-line bg-paper px-3 py-2 text-sm"
+                  className="form-input"
                   placeholder="https://example.com"
                 />
               </div>
 
-              <div className="mt-5 flex justify-end gap-2 pt-2 border-t border-sand-line">
+              <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-[#E5D5CE]">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="btn btn-ghost px-4 py-2 text-sm"
+                  className="btn btn-ghost px-5 py-2.5 text-sm font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="btn btn-primary px-5 py-2 text-sm disabled:opacity-50"
+                  className="btn btn-primary px-6 py-2.5 text-sm font-semibold disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save Profile'}
                 </button>

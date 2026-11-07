@@ -195,24 +195,34 @@ export const companyApi = {
 };
 
 export const internshipApi = {
-  getAll: (customToken?: string) =>
-    request<Internship[]>('/internships', {
-      headers: customToken ? { Authorization: `Bearer ${customToken}` } : {},
-    }),
-  getById: (id: number | string, customToken?: string) =>
-    request<Internship>(`/internships/${id}`, {
-      headers: customToken ? { Authorization: `Bearer ${customToken}` } : {},
-    }),
-  getMyInternships: (customToken?: string) =>
-    request<Internship[]>('/internships/my', {
-      headers: customToken ? { Authorization: `Bearer ${customToken}` } : {},
-    }),
-  create: (data: Partial<Internship>, customToken?: string) =>
-    request<Internship>('/internships', {
+  getAll: (customToken?: string) => {
+    const token = customToken || getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return request<Internship[]>('/internships', { headers });
+  },
+  getById: (id: number | string, customToken?: string) => {
+    const token = customToken || getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return request<Internship>(`/internships/${id}`, { headers });
+  },
+  getMyInternships: (customToken?: string) => {
+    const token = customToken || getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return request<Internship[]>('/internships/my', { headers });
+  },
+  create: (data: Partial<Internship>, customToken?: string) => {
+    const token = customToken || getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return request<Internship>('/internships', {
       method: 'POST',
       body: JSON.stringify(data),
-      headers: customToken ? { Authorization: `Bearer ${customToken}` } : {},
-    }),
+      headers,
+    });
+  },
 };
 
 export const applicationApi = {

@@ -22,7 +22,7 @@ public class ResumeController {
     }
 
     @PostMapping(value = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResumeAnalysisDto> analyzeResume(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "internshipId", required = false) Long internshipId) {

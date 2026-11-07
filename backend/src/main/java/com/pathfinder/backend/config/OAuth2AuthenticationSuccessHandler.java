@@ -85,6 +85,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             User user;
             if (existingUserOpt.isPresent()) {
                 user = existingUserOpt.get();
+                if (user.getRole() == null) {
+                    user.setRole(UserRole.STUDENT);
+                    user = userRepository.save(user);
+                }
                 logger.info("Existing OAuth2 user logged in: {}", email);
             } else {
                 logger.info("Auto-provisioning new OAuth2 student user: {}", email);

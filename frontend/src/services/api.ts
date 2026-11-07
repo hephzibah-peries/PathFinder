@@ -88,15 +88,17 @@ const TOKEN_KEY = 'pathfinder_token';
 const USER_KEY = 'pathfinder_user';
 
 export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  return localStorage.getItem(TOKEN_KEY) || localStorage.getItem('token');
 }
 
 export function setToken(token: string): void {
   localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem('token', token);
 }
 
 export function removeToken(): void {
   localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem('token');
   localStorage.removeItem(USER_KEY);
 }
 
@@ -237,9 +239,15 @@ export const resumeApi = {
     const formData = new FormData();
     formData.append('file', file);
     const query = internshipId ? `?internshipId=${internshipId}` : '';
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
     return request<ResumeAnalysis>(`/resume/analyze${query}`, {
       method: 'POST',
       body: formData,
+      headers,
     });
   },
 };

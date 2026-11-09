@@ -15,6 +15,7 @@ import SkillGap from './pages/student/SkillGap';
 import Readiness from './pages/student/Readiness';
 import Roadmap from './pages/student/Roadmap';
 import CVSkillReview from './pages/student/CVSkillReview';
+import AIMockInterview from './pages/student/AIMockInterview';
 
 import CompanyLayout from './layouts/CompanyLayout';
 import CompanyDashboard from './pages/company/Dashboard';
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="readiness" element={<Readiness />} />
             <Route path="roadmap" element={<Roadmap />} />
             <Route path="cv-review" element={<CVSkillReview />} />
+            <Route path="mock-interview" element={<AIMockInterview />} />
           </Route>
 
           <Route path="/company" element={<CompanyLayout />}>

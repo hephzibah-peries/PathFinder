@@ -261,3 +261,80 @@ export const resumeApi = {
     });
   },
 };
+
+export interface InterviewQuestion {
+  id: number;
+  question: string;
+  type: 'TECHNICAL' | 'SYSTEM_SCENARIO' | 'BEHAVIORAL' | string;
+  focusArea: string;
+  context: string;
+}
+
+export interface InterviewEvaluation {
+  technicalScore: number;
+  communicationClarity: number;
+  modelAnswer: string;
+  constructiveFeedback: string;
+  keyStrengths: string[];
+}
+
+export interface InterviewSessionRecord {
+  id?: number;
+  studentId?: number;
+  studentEmail?: string;
+  targetRole: string;
+  overallScore: number;
+  technicalAverage: number;
+  communicationAverage: number;
+  qaBreakdownJson?: string;
+  createdAt?: string;
+}
+
+export interface GenerateInterviewParams {
+  internshipId?: number;
+  targetRole?: string;
+}
+
+export interface EvaluateInterviewParams {
+  questionId: number;
+  question: string;
+  candidateAnswer: string;
+  questionType?: string;
+  focusArea?: string;
+}
+
+export interface CompleteInterviewParams {
+  targetRole: string;
+  overallScore: number;
+  technicalAverage: number;
+  communicationAverage: number;
+  qaBreakdown: Array<{
+    questionId: number;
+    question: string;
+    type: string;
+    focusArea: string;
+    candidateAnswer: string;
+    evaluation: InterviewEvaluation;
+  }>;
+}
+
+export const aiInterviewApi = {
+  generateQuestions: (params: GenerateInterviewParams = {}) =>
+    request<InterviewQuestion[]>('/ai/interview/generate', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+  evaluateResponse: (params: EvaluateInterviewParams) =>
+    request<InterviewEvaluation>('/ai/interview/evaluate', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+  completeSession: (params: CompleteInterviewParams) =>
+    request<InterviewSessionRecord>('/ai/interview/complete', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+  getHistory: () =>
+    request<InterviewSessionRecord[]>('/ai/interview/history'),
+};
+

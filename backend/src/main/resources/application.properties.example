@@ -17,3 +17,8 @@ spring.security.oauth2.client.registration.google.client-secret=YOUR_GOOGLE_CLIE
 spring.security.oauth2.client.registration.google.scope=profile,email
 spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:8080/login/oauth2/code/google
 
+# Gemini LLM API Configuration
+gemini.api.key=YOUR_GEMINI_API_KEY
+gemini.model=gemini-1.5-flash
+
+

@@ -1,0 +1,138 @@
+package com.pathfinder.backend.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pathfinder.backend.dto.CompleteInterviewRequest;
+import com.pathfinder.backend.dto.InterviewSessionDto;
+import com.pathfinder.backend.entity.InterviewSession;
+import com.pathfinder.backend.entity.User;
+import com.pathfinder.backend.repository.InterviewSessionRepository;
+import com.pathfinder.backend.repository.UserRepository;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class InterviewSessionService {
+
+    private static final Logger log = LoggerFactory.getLogger(InterviewSessionService.class);
+
+    private final InterviewSessionRepository sessionRepository;
+    private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
+    private final JdbcTemplate jdbcTemplate;
+
+    public InterviewSessionService(InterviewSessionRepository sessionRepository,
+                                   UserRepository userRepository,
+                                   ObjectMapper objectMapper,
+                                   JdbcTemplate jdbcTemplate) {
+        this.sessionRepository = sessionRepository;
+        this.userRepository = userRepository;
+        this.objectMapper = objectMapper;
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @PostConstruct
+    public void initSchema() {
+        try {
+            jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS public.interview_sessions (
+                    id BIGSERIAL PRIMARY KEY,
+                    student_id BIGINT NOT NULL,
+                    student_email VARCHAR(255) NOT NULL,
+                    target_role VARCHAR(255) NOT NULL,
+                    overall_score DOUBLE PRECISION,
+                    technical_average DOUBLE PRECISION,
+                    communication_average DOUBLE PRECISION,
+                    qa_breakdown_json TEXT,
+                    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+            """);
+            log.info("Verified table 'interview_sessions' in public schema.");
+        } catch (Exception ex) {
+            log.warn("Auto-creation of table 'interview_sessions' skipped or failed: {}", ex.getMessage());
+        }
+    }
+
+    private volatile boolean tableInitialized = false;
+
+    public synchronized void ensureTableExists() {
+        if (tableInitialized) return;
+        try {
+            jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS public.interview_sessions (
+                    id BIGSERIAL PRIMARY KEY,
+                    student_id BIGINT NOT NULL,
+                    student_email VARCHAR(255) NOT NULL,
+                    target_role VARCHAR(255) NOT NULL,
+                    overall_score DOUBLE PRECISION,
+                    technical_average DOUBLE PRECISION,
+                    communication_average DOUBLE PRECISION,
+                    qa_breakdown_json TEXT,
+                    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+            """);
+            tableInitialized = true;
+            log.info("Verified/created table 'interview_sessions' in database.");
+        } catch (Exception ex) {
+            log.warn("Table creation check skipped or failed: {}", ex.getMessage());
+        }
+    }
+
+    public InterviewSessionDto saveSession(String studentEmail, CompleteInterviewRequest request) {
+        ensureTableExists();
+
+        User user = userRepository.findByEmail(studentEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + studentEmail));
+
+        String qaJson = "[]";
+        if (request.getQaBreakdown() != null) {
+            try {
+                qaJson = objectMapper.writeValueAsString(request.getQaBreakdown());
+            } catch (Exception ex) {
+                log.error("Failed to serialize QA breakdown: {}", ex.getMessage());
+            }
+        }
+
+        InterviewSession session = InterviewSession.builder()
+                .studentId(user.getId())
+                .studentEmail(studentEmail)
+                .targetRole(request.getTargetRole() != null ? request.getTargetRole() : "Software Engineer Intern")
+                .overallScore(request.getOverallScore())
+                .technicalAverage(request.getTechnicalAverage())
+                .communicationAverage(request.getCommunicationAverage())
+                .qaBreakdownJson(qaJson)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        InterviewSession saved = sessionRepository.save(session);
+        return mapToDto(saved);
+    }
+
+    public List<InterviewSessionDto> getStudentSessions(String studentEmail) {
+        ensureTableExists();
+        return sessionRepository.findByStudentEmailOrderByCreatedAtDesc(studentEmail)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    private InterviewSessionDto mapToDto(InterviewSession session) {
+        return InterviewSessionDto.builder()
+                .id(session.getId())
+                .studentId(session.getStudentId())
+                .studentEmail(session.getStudentEmail())
+                .targetRole(session.getTargetRole())
+                .overallScore(session.getOverallScore())
+                .technicalAverage(session.getTechnicalAverage())
+                .communicationAverage(session.getCommunicationAverage())
+                .qaBreakdownJson(session.getQaBreakdownJson())
+                .createdAt(session.getCreatedAt())
+                .build();
+    }
+}

@@ -21,6 +21,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (data: LoginRequest) => Promise<AuthResponse>;
   register: (data: RegisterRequest) => Promise<AuthResponse>;
+  loginWithGoogle: (idToken: string) => Promise<AuthResponse>;
   loginWithToken: (token: string, email: string, role: string) => void;
   logout: () => void;
 }
@@ -77,6 +78,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return res;
   };
 
+  const loginWithGoogle = async (idToken: string): Promise<AuthResponse> => {
+    const res = await authApi.loginWithGoogle(idToken);
+    setToken(res.token);
+    setStoredUser({ email: res.email, role: res.role });
+    setTokenState(res.token);
+    setUserState({ email: res.email, role: res.role });
+    return res;
+  };
+
   const loginWithToken = (token: string, email: string, role: string) => {
     setToken(token);
     setStoredUser({ email, role });
@@ -99,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         register,
+        loginWithGoogle,
         loginWithToken,
         logout,
       }}

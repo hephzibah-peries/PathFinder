@@ -173,6 +173,11 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  loginWithGoogle: (idToken: string) =>
+    request<AuthResponse>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    }),
   getMe: () => request<any>('/test/me'),
 };
 

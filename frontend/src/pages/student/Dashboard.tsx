@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ProgressBar, ScoreRing, SkillTag, Badge, SectionTitle } from '../../components/ui';
+import { ProgressBar, ScoreRing, Badge, SectionTitle } from '../../components/ui';
 import MatchExplanationDrawer from '../../components/MatchExplanationDrawer';
+import TrafficLightBadge from '../../components/TrafficLightBadge';
+import JargonTooltip from '../../components/JargonTooltip';
+import { useLanguage } from '../../context/LanguageContext';
 import type { MissingSkillEntry } from '../../components/MatchExplanationDrawer';
 import {
   recommendationApi,
@@ -28,6 +31,7 @@ const statusBadge: Record<string, 'success' | 'warn' | 'error' | 'info'> = {
 };
 
 export default function StudentDashboard() {
+  const { lang, t } = useLanguage();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -123,12 +127,12 @@ export default function StudentDashboard() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="stat-card-value !text-emerald-800">{profileScore}%</div>
-            <div className="stat-card-label">Profile Completed</div>
+            <div className="stat-card-label">{t('profileCompleted')}</div>
             <div className="mt-3">
               <ProgressBar value={profileScore} />
             </div>
             <Link to="/student/profile" className="stat-card-sub inline-block text-emerald-800 hover:text-emerald-950 font-bold">
-              {profileScore < 100 ? 'Complete profile →' : 'View profile →'}
+              {profileScore < 100 ? (lang === 'ta' ? 'சுயவிவரத்தை நிரப்பவும் →' : 'Complete profile →') : (lang === 'ta' ? 'சுயவிவரம் காண்க →' : 'View profile →')}
             </Link>
           </div>
         </div>
@@ -143,10 +147,10 @@ export default function StudentDashboard() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="stat-card-value text-[#2B1B17]">{totalApps}</div>
-            <div className="stat-card-label">Submitted Applications</div>
-            <div className="mt-2 text-sm text-[#7A6A65]">Tracked in realtime</div>
+            <div className="stat-card-label">{t('submittedApps')}</div>
+            <div className="mt-2 text-sm text-[#7A6A65]">{lang === 'ta' ? 'நிகழ்நேர கண்காணிப்பு' : 'Tracked in realtime'}</div>
             <Link to="/student/applications" className="stat-card-sub inline-block text-[#4A6D88] hover:text-[#324B5E] font-bold">
-              View application status →
+              {lang === 'ta' ? 'விண்ணப்ப நிலை காண்க →' : 'View application status →'}
             </Link>
           </div>
         </div>
@@ -160,23 +164,27 @@ export default function StudentDashboard() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="stat-card-value text-[#7A4B43]">{shortlistedCount}</div>
-            <div className="stat-card-label">Shortlisted Candidates</div>
-            <div className="mt-2 text-sm text-[#7A6A65]">Corporate review active</div>
-            <div className="stat-card-sub text-[#7A4B43]">Pending recruiter reachout</div>
+            <div className="stat-card-label">{t('shortlistedCandidates')}</div>
+            <div className="mt-2 text-sm text-[#7A6A65]">{lang === 'ta' ? 'நிறுவன பரிசீலனை' : 'Corporate review active'}</div>
+            <div className="stat-card-sub text-[#7A4B43]">{lang === 'ta' ? 'அழைப்பு நிலுவையில்' : 'Pending recruiter reachout'}</div>
           </div>
         </div>
 
-        {/* Career Readiness Score */}
-        <div className="stat-card">
+        {/* Career Readiness Score (Step 2 Tour Target) */}
+        <div className="stat-card relative" data-tour="tour-readiness">
           <div className="flex-shrink-0">
             <ScoreRing score={topMatch} label="FIT" size={72} />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="stat-card-value text-[#2B1B17]">{topMatch}%</div>
-            <div className="stat-card-label">Top AI Fit Score</div>
-            <Link to="/student/skills" className="stat-card-sub inline-block text-[#7A4B43] hover:text-[#5E342D] font-bold">
-              Analyze skill gap →
-            </Link>
+          <div className="flex-1 min-w-0 space-y-1">
+            <div className="stat-card-label font-bold text-xs">
+              {t('topAIFit')}
+            </div>
+            <TrafficLightBadge score={topMatch} size="sm" showScore={false} />
+            <div>
+              <Link to="/student/skills" className="stat-card-sub inline-block text-[#7A4B43] hover:text-[#5E342D] font-bold mt-1">
+                {lang === 'ta' ? 'திறன் இடைவெளி பகுப்பாய்வு →' : 'Analyze skill gap →'}
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -241,39 +249,45 @@ export default function StudentDashboard() {
                       </div>
                     </div>
 
-                    {/* AI Match Badge */}
+                    {/* AI Match Badge with Traffic Light Indicator */}
                     <button
                       onClick={() => setDrawerRec(rec)}
-                      className="flex flex-col items-center gap-0.5 rounded-2xl border border-[#E5D5CE] bg-[#FDF2ED] px-4 py-2.5 transition-all hover:bg-[#F9DDD4] hover:scale-105 shadow-xs shrink-0"
+                      className="flex flex-col items-end gap-1.5 transition-all hover:scale-105 shrink-0"
                       title="Click to view explainable AI breakdown"
                     >
-                      <span className="font-serif text-xl font-bold text-[#7A4B43] leading-none">{matchPct}%</span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A6A65]">AI Fit</span>
+                      <TrafficLightBadge score={matchPct} size="md" />
+                      <span className="text-[11px] font-bold text-[#7A6A65] hover:text-[#7A4B43] underline decoration-dotted">
+                        {lang === 'ta' ? 'விளக்கம் காண்க →' : 'Why this match?'}
+                      </span>
                     </button>
                   </div>
 
-                  {/* Matched/missing skill tags */}
+                  {/* Matched/missing skill tags with Jargon Tooltips */}
                   <div className="mt-4 flex flex-wrap gap-1.5 border-t border-[#E5D5CE] pt-3">
                     {rec.matchedSkills.map((s) => (
-                      <SkillTag key={s} label={s} state="have" source="verified" />
+                      <span key={s} className="skill-tag skill-tag-have text-sm">
+                        <JargonTooltip term={s}>{s}</JargonTooltip>
+                      </span>
                     ))}
                     {rec.missingSkills.slice(0, 3).map((s) => (
-                      <SkillTag key={s} label={s} state="missing" />
+                      <span key={s} className="skill-tag skill-tag-missing text-sm">
+                        <JargonTooltip term={s}>{s}</JargonTooltip>
+                      </span>
                     ))}
                   </div>
 
                   {/* Actions */}
                   <div className="mt-4 flex items-center justify-between border-t border-[#E5D5CE] pt-3">
                     <span className="text-sm text-[#7A6A65]">
-                      Stipend: <span className="font-semibold text-[#2B1B17]">{i.stipend || 'Competitive'}</span>
+                      {lang === 'ta' ? 'உதவித்தொகை:' : 'Stipend:'} <span className="font-semibold text-[#2B1B17]">{i.stipend || 'Competitive'}</span>
                     </span>
 
                     <div className="flex gap-3">
                       <Link to={`/student/internships/${i.id}`} className="btn btn-ghost py-2 px-4 text-sm font-semibold">
-                        View Details
+                        {lang === 'ta' ? 'விவரம்' : 'View Details'}
                       </Link>
                       <Link to={`/student/internships/${i.id}`} className="btn btn-primary py-2 px-5 text-sm font-semibold">
-                        Apply Now
+                        {lang === 'ta' ? 'விண்ணப்பிக்க' : 'Apply Now'}
                       </Link>
                     </div>
                   </div>
@@ -285,22 +299,32 @@ export default function StudentDashboard() {
 
         {/* ── Right Column: Profile Highlights & Preferences ── */}
         <div className="lg:col-span-4 space-y-6">
-          <SectionTitle title="Profile Diagnostics" />
+          <SectionTitle title={lang === 'ta' ? 'சுயவிவர பகுப்பாய்வு' : 'Profile Diagnostics'} />
 
-          {/* Skills Widget */}
+          {/* Skills Widget with Jargon Glossary */}
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-serif text-base font-bold text-[#2B1B17]">Your Technical Stack</h3>
+              <h3 className="font-serif text-base font-bold text-[#2B1B17]">
+                {lang === 'ta' ? 'தொழில்நுட்பத் திறன்கள்' : 'Your Technical Stack'}
+              </h3>
               <span className="text-sm font-semibold text-[#7A6A65]">{parsedSkills.length} skills</span>
             </div>
 
+            <p className="text-xs text-[#7A6A65] mb-3">
+              {lang === 'ta'
+                ? 'திறன் விளக்கத்தைப் படிக்க அதன் மீது வைக்கவும் (Hover for explanation):'
+                : 'Hover or tap underlined skills for beginner-friendly definitions:'}
+            </p>
+
             {parsedSkills.length === 0 ? (
-              <p className="text-sm text-[#7A6A65] mb-4">No skills registered yet.</p>
+              <p className="text-sm text-[#7A6A65] mb-4">
+                {lang === 'ta' ? 'திறன்கள் இன்னும் சேர்க்கப்படவில்லை.' : 'No skills registered yet.'}
+              </p>
             ) : (
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {parsedSkills.map((skill) => (
                   <span key={skill} className="skill-tag skill-tag-have text-sm">
-                    {skill}
+                    <JargonTooltip term={skill}>{skill}</JargonTooltip>
                   </span>
                 ))}
               </div>
@@ -314,7 +338,7 @@ export default function StudentDashboard() {
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              Extract & Update Skills from CV →
+              {lang === 'ta' ? 'CV-லிருந்து திறன்களைப் பிரித்தெடு →' : 'Extract & Update Skills from CV →'}
             </Link>
           </div>
 

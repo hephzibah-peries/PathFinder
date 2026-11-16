@@ -1,15 +1,21 @@
-spring.profiles.active=local
+# Active Spring profile: 'dev' (In-Memory H2), 'local' (Local PostgreSQL), or 'supabase' (Remote Cloud PostgreSQL)
+spring.profiles.active=dev
 
-# Local Database Settings
-spring.datasource.url=jdbc:postgresql://localhost:5432/pathfinder_db
-spring.datasource.username=postgres
-spring.datasource.password=YOUR_POSTGRES_PASSWORD
-spring.datasource.driver-class-name=org.postgresql.Driver
+# H2 In-Memory Development Database (Default Fallback)
+spring.datasource.url=jdbc:h2:mem:pathfinderdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
 
 # Hibernate DDL Settings
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.show-sql=false
+
+# H2 Web Console
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+spring.h2.console.settings.web-allow-others=true
 
 # Google OAuth2 Credentials
 spring.security.oauth2.client.registration.google.client-id=YOUR_GOOGLE_CLIENT_ID
@@ -20,5 +26,3 @@ spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:
 # Gemini LLM API Configuration
 gemini.api.key=YOUR_GEMINI_API_KEY
 gemini.model=gemini-1.5-flash
-
-

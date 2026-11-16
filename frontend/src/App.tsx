@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Landing from './pages/Landing';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -30,39 +31,41 @@ import AdminDashboard from './pages/admin/Dashboard';
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
+      <LanguageProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
 
-          <Route path="/student" element={<StudentLayout />}>
-            <Route index element={<StudentDashboard />} />
-            <Route path="profile" element={<StudentProfile />} />
-            <Route path="internships" element={<InternshipSearch />} />
-            <Route path="internships/:id" element={<InternshipDetails />} />
-            <Route path="applications" element={<Applications />} />
-            <Route path="skills" element={<SkillGap />} />
-            <Route path="readiness" element={<Readiness />} />
-            <Route path="roadmap" element={<Roadmap />} />
-            <Route path="cv-review" element={<CVSkillReview />} />
-            <Route path="mock-interview" element={<AIMockInterview />} />
-          </Route>
+            <Route path="/student" element={<StudentLayout />}>
+              <Route index element={<StudentDashboard />} />
+              <Route path="profile" element={<StudentProfile />} />
+              <Route path="internships" element={<InternshipSearch />} />
+              <Route path="internships/:id" element={<InternshipDetails />} />
+              <Route path="applications" element={<Applications />} />
+              <Route path="skills" element={<SkillGap />} />
+              <Route path="readiness" element={<Readiness />} />
+              <Route path="roadmap" element={<Roadmap />} />
+              <Route path="cv-review" element={<CVSkillReview />} />
+              <Route path="mock-interview" element={<AIMockInterview />} />
+            </Route>
 
-          <Route path="/company" element={<CompanyLayout />}>
-            <Route index element={<CompanyDashboard />} />
-            <Route path="profile" element={<CompanyProfile />} />
-            <Route path="internships" element={<ManageInternships />} />
-            <Route path="applicants" element={<Applicants />} />
-            <Route path="applicants/:id" element={<CandidateDetails />} />
-          </Route>
+            <Route path="/company" element={<CompanyLayout />}>
+              <Route index element={<CompanyDashboard />} />
+              <Route path="profile" element={<CompanyProfile />} />
+              <Route path="internships" element={<ManageInternships />} />
+              <Route path="applicants" element={<Applicants />} />
+              <Route path="applicants/:id" element={<CandidateDetails />} />
+            </Route>
 
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

@@ -100,6 +100,7 @@ export function removeToken(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem('token');
   localStorage.removeItem(USER_KEY);
+  localStorage.removeItem('user');
 }
 
 export function getStoredUser(): UserSession | null {
@@ -140,6 +141,14 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
   });
 
   if (!response.ok) {
+    // 401 Unauthorized Interceptor: Clear stored tokens/session and redirect to /login
+    if (response.status === 401) {
+      removeToken();
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login';
+      }
+    }
+
     let errorMessage = `HTTP error ${response.status}: ${response.statusText}`;
     try {
       const errorData = await response.json();
@@ -173,7 +182,22 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  loginWithGoogle: (idToken: string) =>
+    request<AuthResponse>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    }),
   getMe: () => request<any>('/test/me'),
+};
+
+export interface DbStatusResponse {
+  status: string;
+  database: string;
+  type?: string;
+}
+
+export const healthApi = {
+  getDbStatus: () => request<DbStatusResponse>('/public/db-status'),
 };
 
 export const studentApi = {

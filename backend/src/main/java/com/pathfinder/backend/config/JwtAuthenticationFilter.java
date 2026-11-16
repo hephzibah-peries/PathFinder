@@ -42,21 +42,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt);
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+        } catch (Exception ex) {
+            // Expired or invalid token: continue filter chain without setting authentication
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (jwtService.isTokenValid(jwt, userEmail)) {
-                String role = jwtService.extractClaim(jwt, claims -> claims.get("role", String.class));
-                String authorityName = (role != null && !role.isBlank())
-                        ? (role.startsWith("ROLE_") ? role : "ROLE_" + role)
-                        : "ROLE_STUDENT";
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userEmail,
-                        null,
-                        Collections.singletonList(new SimpleGrantedAuthority(authorityName))
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            try {
+                if (jwtService.isTokenValid(jwt, userEmail)) {
+                    String role = jwtService.extractClaim(jwt, claims -> claims.get("role", String.class));
+                    String authorityName = (role != null && !role.isBlank())
+                            ? (role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                            : "ROLE_STUDENT";
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userEmail,
+                            null,
+                            Collections.singletonList(new SimpleGrantedAuthority(authorityName))
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } catch (Exception ex) {
+                // Ignore token validation errors and proceed
             }
         }
         filterChain.doFilter(request, response);

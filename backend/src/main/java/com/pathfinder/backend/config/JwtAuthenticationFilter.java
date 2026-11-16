@@ -1,10 +1,14 @@
 package com.pathfinder.backend.config;
 
 import com.pathfinder.backend.service.JwtService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,6 +22,8 @@ import java.util.Collections;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtService jwtService;
 
@@ -33,25 +39,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
-        try {
-            userEmail = jwtService.extractUsername(jwt);
-        } catch (Exception ex) {
-            // Expired or invalid token: continue filter chain without setting authentication
-            filterChain.doFilter(request, response);
-            return;
-        }
+        final String jwt = authHeader.substring(7);
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            try {
+        try {
+            final String userEmail = jwtService.extractUsername(jwt);
+
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtService.isTokenValid(jwt, userEmail)) {
                     String role = jwtService.extractClaim(jwt, claims -> claims.get("role", String.class));
                     String authorityName = (role != null && !role.isBlank())
@@ -65,10 +64,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
-            } catch (Exception ex) {
-                // Ignore token validation errors and proceed
             }
+        } catch (ExpiredJwtException e) {
+            log.debug("Expired JWT token encountered on request [{} {}]: {}", request.getMethod(), request.getRequestURI(), e.getMessage());
+        } catch (JwtException | IllegalArgumentException e) {
+            log.debug("Invalid JWT token encountered on request [{} {}]: {}", request.getMethod(), request.getRequestURI(), e.getMessage());
+        } catch (Exception e) {
+            log.warn("Unexpected error validating JWT token on request [{} {}]: {}", request.getMethod(), request.getRequestURI(), e.getMessage());
         }
+
         filterChain.doFilter(request, response);
     }
 }

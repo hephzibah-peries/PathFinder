@@ -3,6 +3,9 @@ package com.pathfinder.backend.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -74,6 +77,12 @@ public class SecurityConfig {
                 .failureHandler((request, response, exception) -> {
                     response.sendRedirect("http://localhost:5173/login?error=" + java.net.URLEncoder.encode(exception.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
                 })
+            )
+            .exceptionHandling(exceptions -> exceptions
+                .defaultAuthenticationEntryPointFor(
+                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                    new AntPathRequestMatcher("/api/**")
+                )
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

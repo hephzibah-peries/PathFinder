@@ -181,6 +181,16 @@ export const authApi = {
   getMe: () => request<any>('/test/me'),
 };
 
+export interface DbStatusResponse {
+  status: string;
+  database: string;
+  type?: string;
+}
+
+export const healthApi = {
+  getDbStatus: () => request<DbStatusResponse>('/public/db-status'),
+};
+
 export const studentApi = {
   getProfile: () => request<StudentProfile>('/students/me'),
   updateProfile: (profile: Partial<StudentProfile>) =>

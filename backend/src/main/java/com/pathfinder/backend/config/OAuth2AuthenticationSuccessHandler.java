@@ -123,7 +123,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             String token = jwtService.generateToken(user.getEmail(), roleStr);
 
             // 6. Clean redirect to React frontend
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/oauth2/redirect")
+            String frontendUrl = System.getenv("FRONTEND_URL");
+            if (frontendUrl == null || frontendUrl.isBlank()) {
+                frontendUrl = "http://localhost:5173";
+            }
+            frontendUrl = frontendUrl.replaceAll("/+$", "");
+
+            String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
                     .queryParam("token", token)
                     .queryParam("email", user.getEmail())
                     .queryParam("role", roleStr)
@@ -146,7 +152,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private void redirectWithError(HttpServletRequest request, HttpServletResponse response, String errorMessage) throws IOException {
         if (!response.isCommitted()) {
-            String errorUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/login")
+            String frontendUrl = System.getenv("FRONTEND_URL");
+            if (frontendUrl == null || frontendUrl.isBlank()) {
+                frontendUrl = "http://localhost:5173";
+            }
+            frontendUrl = frontendUrl.replaceAll("/+$", "");
+
+            String errorUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/login")
                     .queryParam("error", errorMessage)
                     .build().toUriString();
             getRedirectStrategy().sendRedirect(request, response, errorUrl);

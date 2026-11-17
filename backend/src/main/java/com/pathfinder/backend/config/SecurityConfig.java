@@ -75,7 +75,12 @@ public class SecurityConfig {
                 )
                 .successHandler(oauth2SuccessHandler)
                 .failureHandler((request, response, exception) -> {
-                    response.sendRedirect("http://localhost:5173/login?error=" + java.net.URLEncoder.encode(exception.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+                    String frontendUrl = System.getenv("FRONTEND_URL");
+                    if (frontendUrl == null || frontendUrl.isBlank()) {
+                        frontendUrl = "http://localhost:5173";
+                    }
+                    frontendUrl = frontendUrl.replaceAll("/+$", "");
+                    response.sendRedirect(frontendUrl + "/login?error=" + java.net.URLEncoder.encode(exception.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
                 })
             )
             .exceptionHandling(exceptions -> exceptions
@@ -92,14 +97,32 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
+        
+        List<String> allowedOrigins = new java.util.ArrayList<>(List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
             "http://localhost:5174",
-            "http://127.0.0.1:5174"
+            "http://127.0.0.1:5174",
+            "https://pathfinder123-rose.vercel.app"
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        String envFrontendUrl = System.getenv("FRONTEND_URL");
+        if (envFrontendUrl != null && !envFrontendUrl.isBlank()) {
+            String clean = envFrontendUrl.trim().replaceAll("/+$", "");
+            if (!allowedOrigins.contains(clean)) {
+                allowedOrigins.add(clean);
+            }
+        }
+
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOriginPatterns(List.of(
+            "https://*.vercel.app",
+            "http://localhost:*",
+            "http://127.0.0.1:*"
+        ));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Disposition"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

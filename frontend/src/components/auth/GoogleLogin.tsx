@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { getOAuth2AuthorizationUrl } from '../../services/api';
 
 declare global {
   interface Window {
@@ -118,7 +119,7 @@ export const GoogleLogin: React.FC<GoogleLoginProps> = ({
       window.google.accounts.id.prompt();
     } else {
       // Direct redirect to Spring Security OAuth2 endpoint as fallback
-      window.location.href = '/oauth2/authorization/google';
+      window.location.href = getOAuth2AuthorizationUrl('google');
     }
   };
 

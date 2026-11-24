@@ -27,11 +27,14 @@ public class StudentProfile {
     private String preferredLocation;
     private String preferredWorkMode;
 
+    @Column(columnDefinition = "TEXT")
+    private String profilePicture;
+
     public StudentProfile() {
     }
 
     public StudentProfile(Long id, User user, String fullName, String university, Double gpa, String bio,
-                          String skills, String preferredLocation, String preferredWorkMode) {
+                          String skills, String preferredLocation, String preferredWorkMode, String profilePicture) {
         this.id = id;
         this.user = user;
         this.fullName = fullName;
@@ -41,6 +44,7 @@ public class StudentProfile {
         this.skills = skills;
         this.preferredLocation = preferredLocation;
         this.preferredWorkMode = preferredWorkMode;
+        this.profilePicture = profilePicture;
     }
 
     public Long getId() { return id; }
@@ -61,6 +65,8 @@ public class StudentProfile {
     public void setPreferredLocation(String preferredLocation) { this.preferredLocation = preferredLocation; }
     public String getPreferredWorkMode() { return preferredWorkMode; }
     public void setPreferredWorkMode(String preferredWorkMode) { this.preferredWorkMode = preferredWorkMode; }
+    public String getProfilePicture() { return profilePicture; }
+    public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -74,6 +80,7 @@ public class StudentProfile {
         private String skills;
         private String preferredLocation;
         private String preferredWorkMode;
+        private String profilePicture;
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder user(User user) { this.user = user; return this; }
@@ -84,8 +91,9 @@ public class StudentProfile {
         public Builder skills(String skills) { this.skills = skills; return this; }
         public Builder preferredLocation(String preferredLocation) { this.preferredLocation = preferredLocation; return this; }
         public Builder preferredWorkMode(String preferredWorkMode) { this.preferredWorkMode = preferredWorkMode; return this; }
+        public Builder profilePicture(String profilePicture) { this.profilePicture = profilePicture; return this; }
         public StudentProfile build() {
-            return new StudentProfile(id, user, fullName, university, gpa, bio, skills, preferredLocation, preferredWorkMode);
+            return new StudentProfile(id, user, fullName, university, gpa, bio, skills, preferredLocation, preferredWorkMode, profilePicture);
         }
     }
 }

@@ -24,15 +24,21 @@ public class Application {
 
     private LocalDateTime appliedAt = LocalDateTime.now();
 
+    private Long resumeId;
+    private String resumeFileName;
+
     public Application() {
     }
 
-    public Application(Long id, Internship internship, StudentProfile student, String status, LocalDateTime appliedAt) {
+    public Application(Long id, Internship internship, StudentProfile student, String status, LocalDateTime appliedAt,
+                       Long resumeId, String resumeFileName) {
         this.id = id;
         this.internship = internship;
         this.student = student;
         this.status = status;
         this.appliedAt = appliedAt;
+        this.resumeId = resumeId;
+        this.resumeFileName = resumeFileName;
     }
 
     public Long getId() { return id; }
@@ -45,6 +51,10 @@ public class Application {
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getAppliedAt() { return appliedAt; }
     public void setAppliedAt(LocalDateTime appliedAt) { this.appliedAt = appliedAt; }
+    public Long getResumeId() { return resumeId; }
+    public void setResumeId(Long resumeId) { this.resumeId = resumeId; }
+    public String getResumeFileName() { return resumeFileName; }
+    public void setResumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -54,12 +64,16 @@ public class Application {
         private StudentProfile student;
         private String status = "PENDING";
         private LocalDateTime appliedAt = LocalDateTime.now();
+        private Long resumeId;
+        private String resumeFileName;
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder internship(Internship internship) { this.internship = internship; return this; }
         public Builder student(StudentProfile student) { this.student = student; return this; }
         public Builder status(String status) { this.status = status; return this; }
         public Builder appliedAt(LocalDateTime appliedAt) { this.appliedAt = appliedAt; return this; }
-        public Application build() { return new Application(id, internship, student, status, appliedAt); }
+        public Builder resumeId(Long resumeId) { this.resumeId = resumeId; return this; }
+        public Builder resumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; return this; }
+        public Application build() { return new Application(id, internship, student, status, appliedAt, resumeId, resumeFileName); }
     }
 }

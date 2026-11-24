@@ -11,12 +11,13 @@ public class StudentProfileDto {
     private String skills;
     private String preferredLocation;
     private String preferredWorkMode;
+    private String profilePicture;
 
     public StudentProfileDto() {
     }
 
     public StudentProfileDto(Long id, Long userId, String email, String fullName, String university, Double gpa,
-                             String bio, String skills, String preferredLocation, String preferredWorkMode) {
+                             String bio, String skills, String preferredLocation, String preferredWorkMode, String profilePicture) {
         this.id = id;
         this.userId = userId;
         this.email = email;
@@ -27,6 +28,7 @@ public class StudentProfileDto {
         this.skills = skills;
         this.preferredLocation = preferredLocation;
         this.preferredWorkMode = preferredWorkMode;
+        this.profilePicture = profilePicture;
     }
 
     public Long getId() { return id; }
@@ -49,6 +51,8 @@ public class StudentProfileDto {
     public void setPreferredLocation(String preferredLocation) { this.preferredLocation = preferredLocation; }
     public String getPreferredWorkMode() { return preferredWorkMode; }
     public void setPreferredWorkMode(String preferredWorkMode) { this.preferredWorkMode = preferredWorkMode; }
+    public String getProfilePicture() { return profilePicture; }
+    public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -63,6 +67,7 @@ public class StudentProfileDto {
         private String skills;
         private String preferredLocation;
         private String preferredWorkMode;
+        private String profilePicture;
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder userId(Long userId) { this.userId = userId; return this; }
@@ -74,8 +79,9 @@ public class StudentProfileDto {
         public Builder skills(String skills) { this.skills = skills; return this; }
         public Builder preferredLocation(String preferredLocation) { this.preferredLocation = preferredLocation; return this; }
         public Builder preferredWorkMode(String preferredWorkMode) { this.preferredWorkMode = preferredWorkMode; return this; }
+        public Builder profilePicture(String profilePicture) { this.profilePicture = profilePicture; return this; }
         public StudentProfileDto build() {
-            return new StudentProfileDto(id, userId, email, fullName, university, gpa, bio, skills, preferredLocation, preferredWorkMode);
+            return new StudentProfileDto(id, userId, email, fullName, university, gpa, bio, skills, preferredLocation, preferredWorkMode, profilePicture);
         }
     }
 }

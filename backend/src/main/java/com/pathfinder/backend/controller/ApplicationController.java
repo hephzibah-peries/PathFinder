@@ -24,8 +24,9 @@ public class ApplicationController {
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApplicationDto> applyForInternship(
             Authentication authentication,
-            @PathVariable Long internshipId) {
-        return ResponseEntity.ok(applicationService.applyForInternship(authentication.getName(), internshipId));
+            @PathVariable Long internshipId,
+            @RequestParam(value = "resumeId", required = false) Long resumeId) {
+        return ResponseEntity.ok(applicationService.applyForInternship(authentication.getName(), internshipId, resumeId));
     }
 
     @GetMapping("/my-applications")

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { ProgressBar, ScoreRing, Badge, SectionTitle } from '../../components/ui';
 import MatchExplanationDrawer from '../../components/MatchExplanationDrawer';
 import TrafficLightBadge from '../../components/TrafficLightBadge';
 import JargonTooltip from '../../components/JargonTooltip';
-import { useLanguage } from '../../context/LanguageContext';
 import type { MissingSkillEntry } from '../../components/MatchExplanationDrawer';
 import {
   recommendationApi,
@@ -31,7 +31,7 @@ const statusBadge: Record<string, 'success' | 'warn' | 'error' | 'info'> = {
 };
 
 export default function StudentDashboard() {
-  const { lang, t } = useLanguage();
+  const { lang } = useLanguage();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -127,12 +127,12 @@ export default function StudentDashboard() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="stat-card-value !text-emerald-800">{profileScore}%</div>
-            <div className="stat-card-label">{t('profileCompleted')}</div>
+            <div className="stat-card-label">Profile Completed</div>
             <div className="mt-3">
               <ProgressBar value={profileScore} />
             </div>
             <Link to="/student/profile" className="stat-card-sub inline-block text-emerald-800 hover:text-emerald-950 font-bold">
-              {profileScore < 100 ? (lang === 'ta' ? 'சுயவிவரத்தை நிரப்பவும் →' : 'Complete profile →') : (lang === 'ta' ? 'சுயவிவரம் காண்க →' : 'View profile →')}
+              {profileScore < 100 ? 'Complete profile →' : 'View profile →'}
             </Link>
           </div>
         </div>
@@ -147,10 +147,10 @@ export default function StudentDashboard() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="stat-card-value text-[#2B1B17]">{totalApps}</div>
-            <div className="stat-card-label">{t('submittedApps')}</div>
-            <div className="mt-2 text-sm text-[#7A6A65]">{lang === 'ta' ? 'நிகழ்நேர கண்காணிப்பு' : 'Tracked in realtime'}</div>
+            <div className="stat-card-label">Submitted Applications</div>
+            <div className="mt-2 text-sm text-[#7A6A65]">Tracked in realtime</div>
             <Link to="/student/applications" className="stat-card-sub inline-block text-[#4A6D88] hover:text-[#324B5E] font-bold">
-              {lang === 'ta' ? 'விண்ணப்ப நிலை காண்க →' : 'View application status →'}
+              View application status →
             </Link>
           </div>
         </div>
@@ -164,9 +164,9 @@ export default function StudentDashboard() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="stat-card-value text-[#7A4B43]">{shortlistedCount}</div>
-            <div className="stat-card-label">{t('shortlistedCandidates')}</div>
-            <div className="mt-2 text-sm text-[#7A6A65]">{lang === 'ta' ? 'நிறுவன பரிசீலனை' : 'Corporate review active'}</div>
-            <div className="stat-card-sub text-[#7A4B43]">{lang === 'ta' ? 'அழைப்பு நிலுவையில்' : 'Pending recruiter reachout'}</div>
+            <div className="stat-card-label">Shortlisted Candidates</div>
+            <div className="mt-2 text-sm text-[#7A6A65]">Corporate review active</div>
+            <div className="stat-card-sub text-[#7A4B43]">Pending recruiter reachout</div>
           </div>
         </div>
 
@@ -177,12 +177,12 @@ export default function StudentDashboard() {
           </div>
           <div className="flex-1 min-w-0 space-y-1">
             <div className="stat-card-label font-bold text-xs">
-              {t('topAIFit')}
+              Career Readiness Score
             </div>
             <TrafficLightBadge score={topMatch} size="sm" showScore={false} />
             <div>
               <Link to="/student/skills" className="stat-card-sub inline-block text-[#7A4B43] hover:text-[#5E342D] font-bold mt-1">
-                {lang === 'ta' ? 'திறன் இடைவெளி பகுப்பாய்வு →' : 'Analyze skill gap →'}
+                Analyze skill gap →
               </Link>
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function StudentDashboard() {
                     >
                       <TrafficLightBadge score={matchPct} size="md" />
                       <span className="text-[11px] font-bold text-[#7A6A65] hover:text-[#7A4B43] underline decoration-dotted">
-                        {lang === 'ta' ? 'விளக்கம் காண்க →' : 'Why this match?'}
+                        Why this match?
                       </span>
                     </button>
                   </div>
@@ -296,16 +296,26 @@ export default function StudentDashboard() {
 
                   {/* Actions */}
                   <div className="mt-4 flex items-center justify-between border-t border-[#E5D5CE] pt-3">
-                    <span className="text-sm text-[#7A6A65]">
-                      {lang === 'ta' ? 'இறுதி நாள்:' : 'Deadline:'} <span className="font-semibold text-[#2B1B17]">{i.deadline || 'Rolling basis'}</span>
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-[#7A6A65]">
+                      <span>
+                        {lang === 'ta' ? 'இறுதி நாள்:' : 'Deadline:'} <span className="font-semibold text-[#2B1B17]">{i.deadline || 'Rolling basis'}</span>
+                      </span>
+                      {i.stipend && i.stipend.toLowerCase() !== 'competitive' && (
+                        <>
+                          <span>•</span>
+                          <span>
+                            Stipend: <span className="font-semibold text-[#2D6A4F]">{i.stipend}</span>
+                          </span>
+                        </>
+                      )}
+                    </div>
 
                     <div className="flex gap-3">
                       <Link to={`/student/internships/${i.id}`} className="btn btn-ghost py-2 px-4 text-sm font-semibold">
-                        {lang === 'ta' ? 'விவரம்' : 'View Details'}
+                        View Details
                       </Link>
                       <Link to={`/student/internships/${i.id}`} className="btn btn-primary py-2 px-5 text-sm font-semibold">
-                        {lang === 'ta' ? 'விண்ணப்பிக்க' : 'Apply Now'}
+                        Apply Now
                       </Link>
                     </div>
                   </div>
@@ -317,26 +327,24 @@ export default function StudentDashboard() {
 
         {/* ── Right Column: Profile Highlights & Preferences ── */}
         <div className="lg:col-span-4 space-y-6">
-          <SectionTitle title={lang === 'ta' ? 'சுயவிவர பகுப்பாய்வு' : 'Profile Diagnostics'} />
+          <SectionTitle title="Profile Diagnostics" />
 
           {/* Skills Widget with Jargon Glossary */}
           <div className="card">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-serif text-base font-bold text-[#2B1B17]">
-                {lang === 'ta' ? 'தொழில்நுட்பத் திறன்கள்' : 'Your Technical Stack'}
+                Your Technical Stack
               </h3>
               <span className="text-sm font-semibold text-[#7A6A65]">{parsedSkills.length} skills</span>
             </div>
 
             <p className="text-xs text-[#7A6A65] mb-3">
-              {lang === 'ta'
-                ? 'திறன் விளக்கத்தைப் படிக்க அதன் மீது வைக்கவும் (Hover for explanation):'
-                : 'Hover or tap underlined skills for beginner-friendly definitions:'}
+              Hover or tap underlined skills for beginner-friendly definitions:
             </p>
 
             {parsedSkills.length === 0 ? (
               <p className="text-sm text-[#7A6A65] mb-4">
-                {lang === 'ta' ? 'திறன்கள் இன்னும் சேர்க்கப்படவில்லை.' : 'No skills registered yet.'}
+                No skills registered yet.
               </p>
             ) : (
               <div className="flex flex-wrap gap-1.5 mb-4">
@@ -356,7 +364,7 @@ export default function StudentDashboard() {
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              {lang === 'ta' ? 'CV-லிருந்து திறன்களைப் பிரித்தெடு →' : 'Extract & Update Skills from CV →'}
+              Extract & Update Skills from CV →
             </Link>
           </div>
 

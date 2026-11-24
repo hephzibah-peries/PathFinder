@@ -5,7 +5,13 @@ import com.pathfinder.backend.entity.StudentProfile;
 import com.pathfinder.backend.entity.User;
 import com.pathfinder.backend.repository.StudentProfileRepository;
 import com.pathfinder.backend.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
+import java.util.Base64;
 
 @Service
 public class StudentProfileService {
@@ -37,15 +43,43 @@ public class StudentProfileService {
         StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
                 .orElse(StudentProfile.builder().user(user).build());
 
-        profile.setFullName(dto.getFullName());
-        profile.setUniversity(dto.getUniversity());
-        profile.setGpa(dto.getGpa());
-        profile.setBio(dto.getBio());
-        profile.setSkills(dto.getSkills());
-        profile.setPreferredLocation(dto.getPreferredLocation());
-        profile.setPreferredWorkMode(dto.getPreferredWorkMode());
+        if (dto.getFullName() != null) profile.setFullName(dto.getFullName());
+        if (dto.getUniversity() != null) profile.setUniversity(dto.getUniversity());
+        if (dto.getGpa() != null) profile.setGpa(dto.getGpa());
+        if (dto.getBio() != null) profile.setBio(dto.getBio());
+        if (dto.getSkills() != null) profile.setSkills(dto.getSkills());
+        if (dto.getPreferredLocation() != null) profile.setPreferredLocation(dto.getPreferredLocation());
+        if (dto.getPreferredWorkMode() != null) profile.setPreferredWorkMode(dto.getPreferredWorkMode());
+        if (dto.getProfilePicture() != null) {
+            profile.setProfilePicture(dto.getProfilePicture());
+        }
 
         return mapToDto(studentProfileRepository.save(profile));
+    }
+
+    public StudentProfileDto uploadProfilePicture(String email, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File must not be empty");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Uploaded file must be an image");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
+                .orElse(StudentProfile.builder().user(user).build());
+
+        try {
+            String base64 = Base64.getEncoder().encodeToString(file.getBytes());
+            String dataUrl = "data:" + contentType + ";base64," + base64;
+            profile.setProfilePicture(dataUrl);
+            return mapToDto(studentProfileRepository.save(profile));
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to read image bytes", e);
+        }
     }
 
     private StudentProfileDto mapToDto(StudentProfile profile) {
@@ -60,6 +94,7 @@ public class StudentProfileService {
                 .skills(profile.getSkills())
                 .preferredLocation(profile.getPreferredLocation())
                 .preferredWorkMode(profile.getPreferredWorkMode())
+                .profilePicture(profile.getProfilePicture())
                 .build();
     }
 }

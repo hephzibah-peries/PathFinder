@@ -77,7 +77,11 @@ public class AIInterviewController {
             profileJson = objectMapper.writeValueAsString(profileContext);
         } catch (Exception ignored) {}
 
-        List<InterviewQuestionDto> questions = aiService.generateInterviewQuestions(profileJson, targetRole);
+        String category = (request != null && request.getQuestionCategory() != null && !request.getQuestionCategory().isBlank())
+                ? request.getQuestionCategory()
+                : "Technical Knowledge";
+
+        List<InterviewQuestionDto> questions = aiService.generateInterviewQuestions(profileJson, targetRole, category);
         return ResponseEntity.ok(questions);
     }
 

@@ -2,13 +2,21 @@ import { useState, useEffect } from 'react';
 import { internshipApi, Internship } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-interface PostInternshipModalProps {
+export interface PostInternshipModalProps {
   open: boolean;
   onClose: () => void;
   onCreated?: (newInternship: Internship) => void;
+  initialData?: Partial<Internship> | null;
+  mode?: 'create' | 'edit';
 }
 
-export default function PostInternshipModal({ open, onClose, onCreated }: PostInternshipModalProps) {
+export default function PostInternshipModal({
+  open,
+  onClose,
+  onCreated,
+  initialData,
+  mode = 'create',
+}: PostInternshipModalProps) {
   const { token } = useAuth();
   const [step, setStep] = useState(1);
   const [closing, setClosing] = useState(false);
@@ -41,8 +49,48 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
       setStep(1);
       setError(null);
       setLoading(false);
+
+      if (initialData) {
+        setTitle(initialData.title || '');
+        setWorkMode(initialData.workMode || 'Hybrid');
+        setLocation(initialData.location || (initialData.workMode === 'Remote' ? 'Remote' : 'Colombo, Sri Lanka'));
+        setStipend(initialData.stipend || '');
+        setDeadline(initialData.deadline || '');
+        setDescription(initialData.description || '');
+
+        // Extract duration from requirements if present
+        if (initialData.requirements?.includes('6 Months')) {
+          setDuration('6 Months');
+        } else if (initialData.requirements?.includes('1 Year')) {
+          setDuration('1 Year');
+        } else {
+          setDuration('3 Months');
+        }
+
+        // Parse skills
+        if (initialData.skills) {
+          const parsed = initialData.skills
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (parsed.length > 2) {
+            setRequiredSkills(parsed.slice(0, Math.ceil(parsed.length * 0.6)));
+            setPreferredSkills(parsed.slice(Math.ceil(parsed.length * 0.6)));
+          } else if (parsed.length > 0) {
+            setRequiredSkills(parsed);
+            setPreferredSkills([]);
+          }
+        }
+
+        // Extract experience/requirements
+        if (initialData.requirements) {
+          setExperience(initialData.requirements);
+        }
+      } else {
+        resetForm();
+      }
     }
-  }, [open]);
+  }, [open, initialData]);
 
   function resetForm() {
     setTitle('');
@@ -147,7 +195,6 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
       }
       const requirementsStr = reqList.join('. ');
 
-      // Build description
       const desc = description.trim()
         ? description.trim()
         : `${title} (${duration}) - ${workMode} opportunity at ${location}. ${experience ? experience.trim() : ''}`;
@@ -168,7 +215,6 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
         deadline: finalDeadline,
       };
 
-      // Ensure active user's JWT token is passed in Authorization header
       const created = await internshipApi.create(payload, token || undefined);
 
       if (onCreated) {
@@ -195,18 +241,24 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E5D5CE] bg-[#FAF6F4] px-7 py-5">
           <div>
-            <h2 className="font-serif text-2xl font-bold text-[#2B1B17]">Post New Internship</h2>
+            <h2 className="font-serif text-2xl font-bold text-[#2B1B17]">
+              {mode === 'edit' ? 'Edit Internship Position' : 'Post New Internship'}
+            </h2>
             <div className="mt-1.5 flex items-center gap-2 text-xs">
-              <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
-                step === 1 ? 'bg-[#FDF2ED] text-[#7A4B43] border border-[#E5D5CE]' : 'text-[#7A6A65]'
-              }`}>
-                Step 1: Basic Information
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
+                  step === 1 ? 'bg-[#FDF2ED] text-[#7A4B43] border border-[#E5D5CE]' : 'text-[#7A6A65]'
+                }`}
+              >
+                Step 1: Role Overview
               </span>
               <span className="text-[#7A6A65]">&rarr;</span>
-              <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
-                step === 2 ? 'bg-[#FDF2ED] text-[#7A4B43] border border-[#E5D5CE]' : 'text-[#7A6A65]'
-              }`}>
-                Step 2: Qualifications & Skills
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
+                  step === 2 ? 'bg-[#FDF2ED] text-[#7A4B43] border border-[#E5D5CE]' : 'text-[#7A6A65]'
+                }`}
+              >
+                Step 2: Technical Skills & Criteria
               </span>
             </div>
           </div>
@@ -286,7 +338,7 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. LKR 40,000 / month"
+                    placeholder="e.g. LKR 65,000 / month"
                     value={stipend}
                     onChange={(e) => setStipend(e.target.value)}
                   />
@@ -431,16 +483,18 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
           <button
             type="button"
             onClick={step === 1 ? handleNextStep : handleSubmit}
-            className="btn btn-primary px-6 py-2.5 text-sm"
+            className="btn btn-primary px-6 py-2.5 text-sm font-semibold"
             disabled={loading}
           >
             {loading ? (
               <span className="flex items-center gap-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Publishing to Live Board...
+                Saving Role...
               </span>
             ) : step === 1 ? (
               'Next: Candidate Requirements →'
+            ) : mode === 'edit' ? (
+              'Save Internship Changes'
             ) : (
               'Confirm & Publish Internship'
             )}

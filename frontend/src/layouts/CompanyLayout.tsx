@@ -1,36 +1,11 @@
-import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { NavLink, Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { companyApi, CompanyProfile } from '../services/api';
 
 const navItems = [
   {
     to: '/company',
-    label: 'Dashboard Overview',
-    end: true,
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-      </svg>
-    ),
-  },
-  {
-    to: '/company/profile',
-    label: 'Company Profile',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 21h18" />
-        <path d="M5 21V7l8-4v18" />
-        <path d="M19 21V11l-6-4" />
-        <line x1="9" y1="9" x2="9" y2="9.01" />
-        <line x1="9" y1="13" x2="9" y2="13.01" />
-        <line x1="9" y1="17" x2="9" y2="17.01" />
-      </svg>
-    ),
-  },
-  {
-    to: '/company/internships',
     label: 'Manage Internships',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -51,22 +26,75 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    to: '/company/profile',
+    label: 'Company Profile',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 21h18" />
+        <path d="M5 21V7l8-4v18" />
+        <path d="M19 21V11l-6-4" />
+        <line x1="9" y1="9" x2="9" y2="9.01" />
+        <line x1="9" y1="13" x2="9" y2="13.01" />
+        <line x1="9" y1="17" x2="9" y2="17.01" />
+      </svg>
+    ),
+  },
 ];
 
 export default function CompanyLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [profile, setProfile] = useState<CompanyProfile | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    companyApi
+      .getProfile()
+      .then((data) => {
+        if (isMounted && data) {
+          setProfile(data);
+        }
+      })
+      .catch(() => {
+        // Silently keep default user info
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const displayName = user?.name || user?.email?.split('@')[0] || 'Company';
+  const companyDisplayName =
+    profile?.companyName?.trim() ||
+    user?.name?.trim() ||
+    (user?.email ? user.email.split('@')[0] : 'Corporate Partner');
+
   const displayRole = user?.role ? user.role.replace('ROLE_', '') : 'COMPANY';
-  const initials = user?.name
-    ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-    : (user?.email ? user.email.slice(0, 2).toUpperCase() : 'CO');
+
+  const initials = companyDisplayName
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'CO';
+
+  const isItemActive = (itemTo: string) => {
+    if (itemTo === '/company') {
+      return (
+        location.pathname === '/company' ||
+        location.pathname === '/company/' ||
+        location.pathname === '/company/internships'
+      );
+    }
+    return location.pathname.startsWith(itemTo);
+  };
 
   return (
     <div className="flex min-h-screen bg-[#FAF6F4] text-[#2B1B17]">
@@ -86,19 +114,19 @@ export default function CompanyLayout() {
 
         <nav className="sidebar-nav">
           <div className="sidebar-section-label">Navigation</div>
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                `sidebar-item group ${isActive ? 'sidebar-item-active' : ''}`
-              }
-            >
-              <span className="transition-transform group-hover:scale-110">{item.icon}</span>
-              <span className="text-[15px] font-semibold">{item.label}</span>
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const active = isItemActive(item.to);
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={`sidebar-item group ${active ? 'sidebar-item-active' : ''}`}
+              >
+                <span className="transition-transform group-hover:scale-110">{item.icon}</span>
+                <span className="text-[15px] font-semibold">{item.label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="sidebar-footer">
@@ -108,8 +136,12 @@ export default function CompanyLayout() {
                 {initials}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-bold text-[#2B1B17]">{displayName}</div>
-                <div className="truncate text-xs text-[#7A6A65]">{user?.email || displayRole}</div>
+                <div className="truncate text-sm font-bold text-[#2B1B17]" title={companyDisplayName}>
+                  {companyDisplayName}
+                </div>
+                <div className="truncate text-xs text-[#7A6A65]" title={user?.email || displayRole}>
+                  {user?.email || displayRole}
+                </div>
               </div>
             </div>
             <button
@@ -133,11 +165,13 @@ export default function CompanyLayout() {
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[#E5D5CE] bg-[#FAF6F4]/90 px-8 py-4 backdrop-blur-md shadow-xs">
           <div className="flex items-center gap-2.5">
             <div className="h-2.5 w-2.5 rounded-full bg-[#2D6A4F] animate-pulse" />
-            <span className="text-sm font-medium text-[#7A6A65]">Employer Recruitment Engine</span>
+            <span className="text-sm font-medium text-[#7A6A65]">
+              {profile?.companyName ? `${profile.companyName} Talent Hub` : 'Employer Recruitment Engine'}
+            </span>
           </div>
 
           <div className="flex items-center gap-5">
-            <Link to="/company/internships" className="btn btn-primary py-2.5 px-5 text-sm">
+            <Link to="/company?post=true" className="btn btn-primary py-2.5 px-5 text-sm">
               <span className="flex items-center gap-2">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -150,22 +184,26 @@ export default function CompanyLayout() {
             <div className="h-5 w-px bg-[#E5D5CE]" />
 
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FDF2ED] border border-[#E5D5CE] text-sm font-bold text-[#7A4B43]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-[#E5D5CE] text-xs font-bold text-[#7A4B43] shadow-xs">
                 {initials}
               </div>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-[#7A6A65] hover:text-[#2B1B17] font-semibold transition-colors"
-              >
-                Sign out
-              </button>
+              <div className="hidden md:block text-left">
+                <span className="block text-xs font-bold text-[#2B1B17] leading-tight truncate max-w-[150px]">
+                  {companyDisplayName}
+                </span>
+                <span className="block text-[11px] font-medium text-[#7A6A65] leading-tight">
+                  Verified Employer
+                </span>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Page body */}
-        <main className="flex-1 mx-auto w-full max-w-[1240px] px-8 py-8">
-          <Outlet />
+        <main className="flex-1 p-8">
+          <div className="mx-auto max-w-7xl animate-fade-in">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

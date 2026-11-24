@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 @Service
 public class ResumeService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ResumeService.class);
     private static final int MAX_EXTRACTED_CHARACTERS = 5_000_000;
     private static final List<String> KNOWN_SKILLS = List.of(
             "Spring Boot", "Spring", "JavaScript", "TypeScript", "Node.js", "React", "Angular",
@@ -153,33 +154,44 @@ public class ResumeService {
         StudentProfile student = studentProfileRepository.findByUserId(user.getId())
                 .orElseGet(() -> studentProfileRepository.save(StudentProfile.builder().user(user).build()));
 
+        String extractedText = "";
+        List<String> skills = List.of();
+        String skillsCsv = "";
         try {
-            String extractedText = tika.parseToString(file.getInputStream()).strip();
-            List<String> skills = extractSkills(extractedText);
-            String skillsCsv = String.join(", ", skills);
-
-            StudentResume resume = StudentResume.builder()
-                    .student(student)
-                    .fileName(file.getOriginalFilename() != null ? file.getOriginalFilename() : "Resume.pdf")
-                    .fileType(file.getContentType())
-                    .fileSize(file.getSize())
-                    .extractedText(extractedText)
-                    .extractedSkills(skillsCsv)
-                    .fileData(file.getBytes())
-                    .build();
-
-            StudentResume saved = studentResumeRepository.save(resume);
-
-            // Also update student profile skills if profile has none yet
-            if (student.getSkills() == null || student.getSkills().isBlank()) {
-                student.setSkills(skillsCsv);
-                studentProfileRepository.save(student);
-            }
-
-            return mapToDto(saved);
-        } catch (IOException | TikaException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to parse resume document: " + e.getMessage(), e);
+            extractedText = tika.parseToString(file.getInputStream()).strip();
+            skills = extractSkills(extractedText);
+            skillsCsv = String.join(", ", skills);
+        } catch (Exception parseEx) {
+            log.warn("Tika text/skills extraction warning for file '{}': {}",
+                    file.getOriginalFilename(), parseEx.getMessage());
         }
+
+        byte[] fileBytes;
+        try {
+            fileBytes = file.getBytes();
+        } catch (IOException ioEx) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to read resume file content: " + ioEx.getMessage(), ioEx);
+        }
+
+        StudentResume resume = StudentResume.builder()
+                .student(student)
+                .fileName(file.getOriginalFilename() != null ? file.getOriginalFilename() : "Resume.pdf")
+                .fileType(file.getContentType())
+                .fileSize(file.getSize())
+                .extractedText(extractedText)
+                .extractedSkills(skillsCsv)
+                .fileData(fileBytes)
+                .build();
+
+        StudentResume saved = studentResumeRepository.save(resume);
+
+        // Also update student profile skills if profile has none yet
+        if ((student.getSkills() == null || student.getSkills().isBlank()) && !skillsCsv.isBlank()) {
+            student.setSkills(skillsCsv);
+            studentProfileRepository.save(student);
+        }
+
+        return mapToDto(saved);
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
@@ -239,6 +251,7 @@ public class ResumeService {
                 .body(data);
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public SkillDiagnosisResponse diagnoseSkillGap(String email, SkillDiagnosisRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));

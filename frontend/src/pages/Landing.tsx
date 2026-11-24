@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import Hero3DBackground from '../components/Hero3DBackground';
 
 const features = [
   {
@@ -66,14 +68,9 @@ const features = [
   },
 ];
 
-const stats = [
-  { value: '5,000+', label: 'Active Students' },
-  { value: '500+', label: 'Verified Internships' },
-  { value: '200+', label: 'Partner Companies' },
-  { value: '94%', label: 'Placement Fit Rate' },
-];
-
 export default function Landing() {
+  const [activeTab, setActiveTab] = useState<'students' | 'companies'>('students');
+
   return (
     <div className="min-h-screen bg-[#FAF6F4] text-[#2B1B17] overflow-x-hidden selection:bg-[#E6A694]/30 selection:text-[#7A4B43]">
       {/* ── Background Subtle Glow ── */}
@@ -96,135 +93,72 @@ export default function Landing() {
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold uppercase tracking-wider text-[#7A6A65]">
             <a href="#features" className="hover:text-[#7A4B43] transition-colors">Features</a>
-            <a href="#stats" className="hover:text-[#7A4B43] transition-colors">Platform Stats</a>
             <a href="#how-it-works" className="hover:text-[#7A4B43] transition-colors">How It Works</a>
           </nav>
 
-          <div className="flex items-center gap-3">
-            <Link to="/login" className="btn btn-ghost px-5 py-2.5 text-sm font-semibold">Log In</Link>
-            <Link to="/register" className="btn btn-primary px-6 py-2.5 text-sm font-semibold">Get Started Free</Link>
+          <div className="flex items-center">
+            <Link
+              to="/login"
+              className="rounded-xl border border-[#E5D5CE] bg-white px-5 py-2 text-sm font-semibold text-[#2B1B17] hover:bg-[#FDF2ED] hover:border-[#D6C1B8] transition-all shadow-2xs"
+            >
+              Sign In
+            </Link>
           </div>
         </div>
       </header>
 
       {/* ── Hero Section ── */}
-      <section className="relative z-10 mx-auto max-w-7xl px-8 pt-20 pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#E5D5CE] bg-[#FDF2ED] px-4 py-1.5 text-xs font-bold text-[#7A4B43] shadow-xs mb-6 uppercase tracking-wider">
-              <span className="h-2 w-2 rounded-full bg-[#E6A694] animate-ping" />
-              <span>Next-Generation Career Intelligence</span>
-            </div>
-
-            <h1 className="font-serif text-5xl sm:text-6xl lg:text-[68px] font-bold tracking-tight leading-[1.08] text-[#2B1B17] mb-6">
-              Find the right internship. <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7A4B43] via-[#6B3E36] to-[#E6A694]">
-                Bridge every skill gap.
-              </span>
-            </h1>
-
-            <p className="text-xl text-[#7A6A65] max-w-xl leading-relaxed mb-8">
-              PathFinder scans your resume, predicts company match percentages with Apache Tika NLP, and generates actionable learning roadmaps to land your dream role.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-4">
-              <Link to="/register" className="btn btn-primary px-8 py-3.5 text-base font-semibold">
-                Get Started as a Student
-              </Link>
-              <Link to="/student/internships" className="btn btn-secondary px-7 py-3.5 text-base font-semibold">
-                Browse Live Openings
-              </Link>
-            </div>
-
-            {/* Quick trust strip */}
-            <div className="mt-10 flex items-center gap-6 text-sm text-[#7A6A65] font-medium">
-              <div className="flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#2D6A4F]">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span>Zero keywords guesswork</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#2D6A4F]">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span>Google OAuth2 enabled</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#2D6A4F]">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span>PostgreSQL synced</span>
-              </div>
-            </div>
+      <section className="relative overflow-hidden mx-auto max-w-7xl px-8 pt-20 pb-20">
+        <Hero3DBackground />
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#E5D5CE] bg-[#FDF2ED] px-4 py-1.5 text-xs font-bold text-[#7A4B43] shadow-xs mb-6 uppercase tracking-wider">
+            <span className="h-2 w-2 rounded-full bg-[#E6A694] animate-ping" />
+            <span>Next-Generation Career Intelligence</span>
           </div>
 
-          {/* Hero Interactive Card Preview */}
-          <div className="lg:col-span-5">
-            <div className="relative rounded-3xl border border-[#E5D5CE] bg-white p-7 shadow-md">
-              <div className="flex items-center justify-between pb-4 border-b border-[#E5D5CE] mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-3 w-3 rounded-full bg-[#E6A694]" />
-                  <div className="h-3 w-3 rounded-full bg-[#7A4B43]" />
-                  <div className="h-3 w-3 rounded-full bg-[#2D6A4F]" />
-                </div>
-                <span className="badge badge-peach font-bold">AI Recommended Match</span>
-              </div>
+          <h1 className="font-serif text-5xl sm:text-6xl lg:text-[68px] font-bold tracking-tight leading-[1.08] text-[#2B1B17] mb-6">
+            Find the right internship. <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7A4B43] via-[#6B3E36] to-[#E6A694]">
+              Bridge every skill gap.
+            </span>
+          </h1>
 
-              {/* Sample Card */}
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-serif text-2xl font-bold text-[#2B1B17]">Full-Stack Cloud Engineer</h3>
-                    <p className="text-sm text-[#7A6A65] mt-1 font-semibold">Apex Innovations • Remote</p>
-                  </div>
-                  <div className="rounded-2xl border border-[#E5D5CE] bg-[#FDF2ED] px-3.5 py-2 text-center">
-                    <div className="font-serif text-xl font-bold text-[#7A4B43] leading-none">94%</div>
-                    <div className="text-[10px] uppercase font-bold text-[#7A6A65]">Fit score</div>
-                  </div>
-                </div>
+          <p className="text-lg sm:text-xl text-[#7A6A65] max-w-2xl mx-auto leading-relaxed mb-8">
+            An intelligent hiring workspace connecting students and tech companies through skill-readiness diagnostics and AI mock interviews.
+          </p>
 
-                <div className="rounded-2xl border border-[#E5D5CE] bg-[#FAF6F4] p-4 space-y-2.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-semibold text-[#2B1B17]">Skill Alignment:</span>
-                    <span className="font-bold text-[#2D6A4F]">5 / 6 Matched</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="skill-tag skill-tag-have text-sm font-semibold">Spring Boot</span>
-                    <span className="skill-tag skill-tag-have text-sm font-semibold">React</span>
-                    <span className="skill-tag skill-tag-have text-sm font-semibold">PostgreSQL</span>
-                    <span className="skill-tag skill-tag-missing text-sm font-semibold">Docker</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  <div className="text-sm text-[#7A6A65]">
-                    Stipend: <span className="font-semibold text-[#2B1B17]">$1,200/mo</span>
-                  </div>
-                  <span className="btn btn-primary py-2.5 px-4 text-sm font-semibold">
-                    View AI Breakdown
-                  </span>
-                </div>
-              </div>
-            </div>
+          <div className="flex justify-center mb-12">
+            <Link
+              to="/login"
+              className="btn bg-[#7A4B43] text-white hover:bg-[#683C35] shadow-md px-8 py-3.5 text-base font-bold inline-flex items-center gap-2 group transition-all"
+            >
+              <span>Get Started</span>
+              <span className="transition-transform group-hover:translate-x-1">→</span>
+            </Link>
           </div>
-        </div>
-      </section>
 
-      {/* ── Key Metrics Strip ── */}
-      <section id="stats" className="relative z-10 border-y border-[#E5D5CE] bg-white">
-        <div className="mx-auto max-w-7xl px-8 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((s, idx) => (
-              <div key={idx} className="text-center md:border-r border-[#E5D5CE] last:border-none">
-                <div className="font-serif text-5xl lg:text-6xl font-bold text-[#2B1B17] tracking-tight">
-                  <span className="text-[#7A4B43]">
-                    {s.value}
-                  </span>
-                </div>
-                <div className="mt-2 text-sm font-bold uppercase tracking-wider text-[#7A6A65]">{s.label}</div>
-              </div>
-            ))}
+          {/* Bottom Feature Highlights */}
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-sm text-[#7A6A65] font-medium pt-8 border-t border-[#E5D5CE]/60">
+            <div className="flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#2D6A4F]">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Skill-Gap Diagnostics</span>
+            </div>
+            <span className="hidden sm:inline text-[#E5D5CE]">•</span>
+            <div className="flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#2D6A4F]">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Category-Based AI Interviews</span>
+            </div>
+            <span className="hidden sm:inline text-[#E5D5CE]">•</span>
+            <div className="flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#2D6A4F]">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Verified Company Internships</span>
+            </div>
           </div>
         </div>
       </section>
@@ -253,23 +187,177 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── How It Works ── */}
+      <section id="how-it-works" className="relative z-10 border-t border-[#E5D5CE] bg-[#FAF6F4] py-24">
+        <div className="mx-auto max-w-7xl px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#E5D5CE] bg-[#FDF2ED] px-4 py-1.5 text-xs font-bold text-[#7A4B43] shadow-xs mb-4 uppercase tracking-wider">
+              Step-by-Step Walkthrough
+            </div>
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#2B1B17] mb-4">
+              How It Works
+            </h2>
+            <p className="text-[#7A6A65] text-base sm:text-lg">
+              A seamless process designed to turn academic potential into verified career placement.
+            </p>
+
+            {/* Tab Switcher */}
+            <div className="mt-8 inline-flex p-1.5 rounded-2xl bg-[#F0E6E1] border border-[#E5D5CE] shadow-xs">
+              <button
+                type="button"
+                onClick={() => setActiveTab('students')}
+                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === 'students'
+                    ? 'bg-[#7A4B43] text-white shadow-sm'
+                    : 'text-[#7A6A65] hover:text-[#2B1B17]'
+                }`}
+              >
+                For Students
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('companies')}
+                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === 'companies'
+                    ? 'bg-[#7A4B43] text-white shadow-sm'
+                    : 'text-[#7A6A65] hover:text-[#2B1B17]'
+                }`}
+              >
+                For Companies
+              </button>
+            </div>
+          </div>
+
+          {/* Step Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {activeTab === 'students' ? (
+              <>
+                <div className="rounded-3xl border border-[#E5D5CE] bg-white p-8 shadow-xs hover:border-[#D6C1B8] hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FDF2ED] border border-[#E5D5CE] text-[#7A4B43] font-serif text-lg font-black shadow-xs">
+                        01
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]/70">Step 01</span>
+                    </div>
+                    <h3 className="font-serif text-xl font-bold text-[#2B1B17] mb-3">
+                      Upload CV & Set Profile
+                    </h3>
+                    <p className="text-sm text-[#7A6A65] leading-relaxed font-medium">
+                      Add your university, GPA, and resume so PathFinder understands your academic and technical background.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-[#E5D5CE] bg-white p-8 shadow-xs hover:border-[#D6C1B8] hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FDF2ED] border border-[#E5D5CE] text-[#7A4B43] font-serif text-lg font-black shadow-xs">
+                        02
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]/70">Step 02</span>
+                    </div>
+                    <h3 className="font-serif text-xl font-bold text-[#2B1B17] mb-3">
+                      Bridge Skill Gaps & Practice
+                    </h3>
+                    <p className="text-sm text-[#7A6A65] leading-relaxed font-medium">
+                      Analyze your readiness score for target roles and practice with the category-based AI Mock Interview engine.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-[#E5D5CE] bg-white p-8 shadow-xs hover:border-[#D6C1B8] hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FDF2ED] border border-[#E5D5CE] text-[#7A4B43] font-serif text-lg font-black shadow-xs">
+                        03
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]/70">Step 03</span>
+                    </div>
+                    <h3 className="font-serif text-xl font-bold text-[#2B1B17] mb-3">
+                      Explore & Apply with Confidence
+                    </h3>
+                    <p className="text-sm text-[#7A6A65] leading-relaxed font-medium">
+                      Browse verified company internships, check office locations on Google Maps, and track your application status.
+                    </p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="rounded-3xl border border-[#E5D5CE] bg-white p-8 shadow-xs hover:border-[#D6C1B8] hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FDF2ED] border border-[#E5D5CE] text-[#7A4B43] font-serif text-lg font-black shadow-xs">
+                        01
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]/70">Step 01</span>
+                    </div>
+                    <h3 className="font-serif text-xl font-bold text-[#2B1B17] mb-3">
+                      Build Your Company Profile
+                    </h3>
+                    <p className="text-sm text-[#7A6A65] leading-relaxed font-medium">
+                      Showcase your organization's brand, logo, industry, and overview to attract top student talent.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-[#E5D5CE] bg-white p-8 shadow-xs hover:border-[#D6C1B8] hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FDF2ED] border border-[#E5D5CE] text-[#7A4B43] font-serif text-lg font-black shadow-xs">
+                        02
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]/70">Step 02</span>
+                    </div>
+                    <h3 className="font-serif text-xl font-bold text-[#2B1B17] mb-3">
+                      Post Structured Internships
+                    </h3>
+                    <p className="text-sm text-[#7A6A65] leading-relaxed font-medium">
+                      Define required tech stacks, work mode, duration, location, and minimum GPA criteria in minutes.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-[#E5D5CE] bg-white p-8 shadow-xs hover:border-[#D6C1B8] hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FDF2ED] border border-[#E5D5CE] text-[#7A4B43] font-serif text-lg font-black shadow-xs">
+                        03
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]/70">Step 03</span>
+                    </div>
+                    <h3 className="font-serif text-xl font-bold text-[#2B1B17] mb-3">
+                      Shortlist with AI Match Scores
+                    </h3>
+                    <p className="text-sm text-[#7A6A65] leading-relaxed font-medium">
+                      Review applicants ranked automatically by skill alignment and manage shortlists effortlessly.
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA Banner ── */}
       <section className="relative z-10 mx-auto max-w-7xl px-8 pb-24">
         <div className="rounded-3xl border border-[#6B3E36] bg-gradient-to-r from-[#7A4B43] via-[#6B3E36] to-[#5E342D] p-10 sm:p-14 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-3">
-              Ready to accelerate your career?
+              Built for Emerging Talent & Modern Hiring Teams
             </h2>
-            <p className="text-[#FDF2ED]/90 text-base max-w-lg">
-              Join thousands of students and leading tech employers connecting on PathFinder today.
+            <p className="text-[#FDF2ED]/90 text-base max-w-xl">
+              Connect academic potential with industry opportunities through structured skill matching and AI-driven interview readiness.
             </p>
           </div>
           <div className="flex gap-4 shrink-0">
-            <Link to="/register" className="btn bg-[#E6A694] text-white hover:bg-[#CD8C7A] shadow-md px-8 py-3.5 text-base font-bold">
-              Create Student Account
+            <Link to="/login" className="btn bg-[#E6A694] text-white hover:bg-[#CD8C7A] shadow-md px-8 py-3.5 text-base font-bold">
+              Student Portal
             </Link>
             <Link to="/login" className="btn border-2 border-white/40 text-white hover:bg-white/10 px-7 py-3.5 text-base font-semibold">
-              Sign In
+              Company Portal
             </Link>
           </div>
         </div>

@@ -19,7 +19,6 @@ import CVSkillReview from './pages/student/CVSkillReview';
 import AIMockInterview from './pages/student/AIMockInterview';
 
 import CompanyLayout from './layouts/CompanyLayout';
-import CompanyDashboard from './pages/company/Dashboard';
 import CompanyProfile from './pages/company/Profile';
 import ManageInternships from './pages/company/ManageInternships';
 import Applicants from './pages/company/Applicants';
@@ -53,11 +52,11 @@ export default function App() {
             </Route>
 
             <Route path="/company" element={<CompanyLayout />}>
-              <Route index element={<CompanyDashboard />} />
-              <Route path="profile" element={<CompanyProfile />} />
+              <Route index element={<ManageInternships />} />
               <Route path="internships" element={<ManageInternships />} />
               <Route path="applicants" element={<Applicants />} />
               <Route path="applicants/:id" element={<CandidateDetails />} />
+              <Route path="profile" element={<CompanyProfile />} />
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>

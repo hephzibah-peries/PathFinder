@@ -77,7 +77,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      console.log('[PathFinder Auth] Received Google credential token, submitting to /api/auth/google...');
+      console.log('[PathFinder Auth] Received Google credential token, submitting via authApi.loginWithGoogle...');
       const response = await loginWithGoogle(credential);
       console.log('[PathFinder Auth] Google login successful. Authenticated as:', response.email, response.role);
 

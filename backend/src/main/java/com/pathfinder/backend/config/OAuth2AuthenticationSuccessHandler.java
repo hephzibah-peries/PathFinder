@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -31,6 +32,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final UserRepository userRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    @Value("${frontend.url:http://localhost:5173}")
+    private String configuredFrontendUrl;
 
     public OAuth2AuthenticationSuccessHandler(JwtService jwtService,
                                               UserRepository userRepository,
@@ -123,7 +127,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             String token = jwtService.generateToken(user.getEmail(), roleStr);
 
             // 6. Clean redirect to React frontend
-            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/oauth2/redirect")
+            String frontendUrl = System.getenv("FRONTEND_URL");
+            if (frontendUrl == null || frontendUrl.isBlank()) {
+                frontendUrl = configuredFrontendUrl != null && !configuredFrontendUrl.isBlank() ? configuredFrontendUrl : "http://localhost:5173";
+            }
+            frontendUrl = frontendUrl.replaceAll("/+$", "");
+
+            String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
                     .queryParam("token", token)
                     .queryParam("email", user.getEmail())
                     .queryParam("role", roleStr)
@@ -146,7 +156,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private void redirectWithError(HttpServletRequest request, HttpServletResponse response, String errorMessage) throws IOException {
         if (!response.isCommitted()) {
-            String errorUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/login")
+            String frontendUrl = System.getenv("FRONTEND_URL");
+            if (frontendUrl == null || frontendUrl.isBlank()) {
+                frontendUrl = configuredFrontendUrl != null && !configuredFrontendUrl.isBlank() ? configuredFrontendUrl : "http://localhost:5173";
+            }
+            frontendUrl = frontendUrl.replaceAll("/+$", "");
+
+            String errorUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/login")
                     .queryParam("error", errorMessage)
                     .build().toUriString();
             getRedirectStrategy().sendRedirect(request, response, errorUrl);

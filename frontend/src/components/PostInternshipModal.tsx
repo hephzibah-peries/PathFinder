@@ -2,13 +2,21 @@ import { useState, useEffect } from 'react';
 import { internshipApi, Internship } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-interface PostInternshipModalProps {
+export interface PostInternshipModalProps {
   open: boolean;
   onClose: () => void;
   onCreated?: (newInternship: Internship) => void;
+  initialData?: Partial<Internship> | null;
+  mode?: 'create' | 'edit';
 }
 
-export default function PostInternshipModal({ open, onClose, onCreated }: PostInternshipModalProps) {
+export default function PostInternshipModal({
+  open,
+  onClose,
+  onCreated,
+  initialData,
+  mode = 'create',
+}: PostInternshipModalProps) {
   const { token } = useAuth();
   const [step, setStep] = useState(1);
   const [closing, setClosing] = useState(false);
@@ -21,7 +29,6 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
   const [duration, setDuration] = useState('3 Months');
   const [workMode, setWorkMode] = useState('Hybrid');
   const [location, setLocation] = useState('Colombo, Sri Lanka');
-  const [stipend, setStipend] = useState('');
   const [deadline, setDeadline] = useState('');
   const [description, setDescription] = useState('');
 
@@ -31,7 +38,6 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
   const [newReqSkill, setNewReqSkill] = useState('');
   const [newPrefSkill, setNewPrefSkill] = useState('');
   const [minGpa, setMinGpa] = useState('');
-  const [academicYear, setAcademicYear] = useState<string[]>(['Final Year']);
   const [experience, setExperience] = useState('');
 
   useEffect(() => {
@@ -41,21 +47,58 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
       setStep(1);
       setError(null);
       setLoading(false);
+
+      if (initialData) {
+        setTitle(initialData.title || '');
+        setWorkMode(initialData.workMode || 'Hybrid');
+        setLocation(initialData.location || (initialData.workMode === 'Remote' ? 'Remote' : 'Colombo, Sri Lanka'));
+        setDeadline(initialData.deadline || '');
+        setDescription(initialData.description || '');
+
+        // Extract duration from requirements if present
+        if (initialData.requirements?.includes('6 Months')) {
+          setDuration('6 Months');
+        } else if (initialData.requirements?.includes('1 Year')) {
+          setDuration('1 Year');
+        } else {
+          setDuration('3 Months');
+        }
+
+        // Parse skills
+        if (initialData.skills) {
+          const parsed = initialData.skills
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+          if (parsed.length > 2) {
+            setRequiredSkills(parsed.slice(0, Math.ceil(parsed.length * 0.6)));
+            setPreferredSkills(parsed.slice(Math.ceil(parsed.length * 0.6)));
+          } else if (parsed.length > 0) {
+            setRequiredSkills(parsed);
+            setPreferredSkills([]);
+          }
+        }
+
+        // Extract experience/requirements
+        if (initialData.requirements) {
+          setExperience(initialData.requirements);
+        }
+      } else {
+        resetForm();
+      }
     }
-  }, [open]);
+  }, [open, initialData]);
 
   function resetForm() {
     setTitle('');
     setDuration('3 Months');
     setWorkMode('Hybrid');
     setLocation('Colombo, Sri Lanka');
-    setStipend('');
     setDeadline('');
     setDescription('');
     setRequiredSkills(['Java', 'Spring Boot']);
     setPreferredSkills(['Docker', 'PostgreSQL']);
     setMinGpa('');
-    setAcademicYear(['Final Year']);
     setExperience('');
     setError(null);
   }
@@ -97,14 +140,6 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
     setPreferredSkills(preferredSkills.filter((s) => s !== skill));
   }
 
-  function toggleAcademicYear(year: string) {
-    if (academicYear.includes(year)) {
-      setAcademicYear(academicYear.filter((y) => y !== year));
-    } else {
-      setAcademicYear([...academicYear, year]);
-    }
-  }
-
   function handleNextStep() {
     if (!title.trim()) {
       setError('Please provide an internship title.');
@@ -133,9 +168,6 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
 
       // Aggregate requirements
       const reqList: string[] = [];
-      if (academicYear.length > 0) {
-        reqList.push(`Academic Level: ${academicYear.join(', ')}`);
-      }
       if (minGpa.trim()) {
         reqList.push(`Minimum GPA: ${minGpa}`);
       }
@@ -147,7 +179,6 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
       }
       const requirementsStr = reqList.join('. ');
 
-      // Build description
       const desc = description.trim()
         ? description.trim()
         : `${title} (${duration}) - ${workMode} opportunity at ${location}. ${experience ? experience.trim() : ''}`;
@@ -164,11 +195,10 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
         workMode,
         requirements: requirementsStr,
         skills: skillsStr,
-        stipend: stipend.trim() || 'Competitive',
+        stipend: '',
         deadline: finalDeadline,
       };
 
-      // Ensure active user's JWT token is passed in Authorization header
       const created = await internshipApi.create(payload, token || undefined);
 
       if (onCreated) {
@@ -195,18 +225,24 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E5D5CE] bg-[#FAF6F4] px-7 py-5">
           <div>
-            <h2 className="font-serif text-2xl font-bold text-[#2B1B17]">Post New Internship</h2>
+            <h2 className="font-serif text-2xl font-bold text-[#2B1B17]">
+              {mode === 'edit' ? 'Edit Internship Position' : 'Post New Internship'}
+            </h2>
             <div className="mt-1.5 flex items-center gap-2 text-xs">
-              <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
-                step === 1 ? 'bg-[#FDF2ED] text-[#7A4B43] border border-[#E5D5CE]' : 'text-[#7A6A65]'
-              }`}>
-                Step 1: Basic Information
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
+                  step === 1 ? 'bg-[#FDF2ED] text-[#7A4B43] border border-[#E5D5CE]' : 'text-[#7A6A65]'
+                }`}
+              >
+                Step 1: Role Overview
               </span>
               <span className="text-[#7A6A65]">&rarr;</span>
-              <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
-                step === 2 ? 'bg-[#FDF2ED] text-[#7A4B43] border border-[#E5D5CE]' : 'text-[#7A6A65]'
-              }`}>
-                Step 2: Qualifications & Skills
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
+                  step === 2 ? 'bg-[#FDF2ED] text-[#7A4B43] border border-[#E5D5CE]' : 'text-[#7A6A65]'
+                }`}
+              >
+                Step 2: Technical Skills & Criteria
               </span>
             </div>
           </div>
@@ -272,35 +308,37 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">Location</label>
+                  <div className="flex items-center justify-between">
+                    <label className="form-label">Location</label>
+                    {location.trim() && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.trim())}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] font-semibold text-[#7A4B43] hover:underline inline-flex items-center gap-0.5"
+                        title="Preview this location on Google Maps"
+                      >
+                        Preview on Google Maps ↗
+                      </a>
+                    )}
+                  </div>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. Colombo, Sri Lanka"
+                    placeholder="e.g. Colombo, Sri Lanka or office address"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="form-label">Stipend / Compensation</label>
+                  <label className="form-label">Application Deadline</label>
                   <input
-                    type="text"
+                    type="date"
                     className="form-input"
-                    placeholder="e.g. LKR 40,000 / month"
-                    value={stipend}
-                    onChange={(e) => setStipend(e.target.value)}
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="form-label">Application Deadline</label>
-                <input
-                  type="date"
-                  className="form-input"
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
-                />
               </div>
 
               <div>
@@ -372,36 +410,18 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="form-label">
-                    Min. Academic GPA <span className="text-[#7A6A65]">(Optional)</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    className="form-input"
-                    placeholder="e.g. 3.0"
-                    value={minGpa}
-                    onChange={(e) => setMinGpa(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Target Academic Level</label>
-                  <div className="mt-2 space-y-2">
-                    {['3rd Year', 'Final Year', 'Graduated'].map((year) => (
-                      <label key={year} className="flex items-center gap-2 text-sm text-[#2B1B17] font-medium cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="rounded bg-white border-[#E5D5CE] text-[#7A4B43] focus:ring-[#7A4B43]/20"
-                          checked={academicYear.includes(year)}
-                          onChange={() => toggleAcademicYear(year)}
-                        />
-                        {year}
-                      </label>
-                    ))}
-                  </div>
-                </div>
+              <div>
+                <label className="form-label">
+                  Min. Academic GPA <span className="text-[#7A6A65]">(Optional)</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="form-input"
+                  placeholder="e.g. 3.0"
+                  value={minGpa}
+                  onChange={(e) => setMinGpa(e.target.value)}
+                />
               </div>
 
               <div>
@@ -431,16 +451,18 @@ export default function PostInternshipModal({ open, onClose, onCreated }: PostIn
           <button
             type="button"
             onClick={step === 1 ? handleNextStep : handleSubmit}
-            className="btn btn-primary px-6 py-2.5 text-sm"
+            className="btn btn-primary px-6 py-2.5 text-sm font-semibold"
             disabled={loading}
           >
             {loading ? (
               <span className="flex items-center gap-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Publishing to Live Board...
+                Saving Role...
               </span>
             ) : step === 1 ? (
               'Next: Candidate Requirements →'
+            ) : mode === 'edit' ? (
+              'Save Internship Changes'
             ) : (
               'Confirm & Publish Internship'
             )}

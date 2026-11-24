@@ -31,6 +31,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final OAuth2AuthenticationSuccessHandler oauth2SuccessHandler;
 
+    @org.springframework.beans.factory.annotation.Value("${frontend.url:http://localhost:5173}")
+    private String frontendUrl;
+
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
                           OAuth2AuthenticationSuccessHandler oauth2SuccessHandler) {
         this.jwtAuthFilter = jwtAuthFilter;
@@ -75,7 +78,15 @@ public class SecurityConfig {
                 )
                 .successHandler(oauth2SuccessHandler)
                 .failureHandler((request, response, exception) -> {
-                    response.sendRedirect("http://localhost:5173/login?error=" + java.net.URLEncoder.encode(exception.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+                    String redirectBase = (this.frontendUrl != null && !this.frontendUrl.isBlank())
+                            ? this.frontendUrl
+                            : "http://localhost:5173";
+                    String envFrontendUrl = System.getenv("FRONTEND_URL");
+                    if (envFrontendUrl != null && !envFrontendUrl.isBlank()) {
+                        redirectBase = envFrontendUrl;
+                    }
+                    redirectBase = redirectBase.replaceAll("/+$", "");
+                    response.sendRedirect(redirectBase + "/login?error=" + java.net.URLEncoder.encode(exception.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
                 })
             )
             .exceptionHandling(exceptions -> exceptions
@@ -92,14 +103,39 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
+        
+        List<String> allowedOrigins = new java.util.ArrayList<>(List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
             "http://localhost:5174",
-            "http://127.0.0.1:5174"
+            "http://127.0.0.1:5174",
+            "https://pathfinder123-rose.vercel.app"
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        if (this.frontendUrl != null && !this.frontendUrl.isBlank()) {
+            String clean = this.frontendUrl.trim().replaceAll("/+$", "");
+            if (!allowedOrigins.contains(clean)) {
+                allowedOrigins.add(clean);
+            }
+        }
+
+        String envFrontendUrl = System.getenv("FRONTEND_URL");
+        if (envFrontendUrl != null && !envFrontendUrl.isBlank()) {
+            String clean = envFrontendUrl.trim().replaceAll("/+$", "");
+            if (!allowedOrigins.contains(clean)) {
+                allowedOrigins.add(clean);
+            }
+        }
+
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOriginPatterns(List.of(
+            "https://*.vercel.app",
+            "http://localhost:*",
+            "http://127.0.0.1:*"
+        ));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Disposition"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -117,7 +117,73 @@ export function setStoredUser(user: UserSession): void {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
-const BASE_URL = '/api';
+/**
+ * Resolves the backend host/origin without trailing slash or '/api'.
+ * Example: 'https://pathfinder-6rly.onrender.com' or 'http://localhost:8080'
+ */
+export function getBackendHost(): string {
+  const rawUrl = (import.meta.env.VITE_API_URL || '').trim();
+  if (rawUrl) {
+    return rawUrl.replace(/\/+$/, '').replace(/\/api$/, '');
+  }
+
+  // Automatic local development fallback:
+  // If VITE_API_URL is not set, default to http://localhost:8080 during local development
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '0.0.0.0' ||
+      window.location.hostname === '')
+  ) {
+    return 'http://localhost:8080';
+  }
+
+  return '';
+}
+
+/**
+ * Resolves the base URL for API endpoints.
+ * - If VITE_API_URL is configured (e.g. 'https://pathfinder-6rly.onrender.com'), returns 'https://pathfinder-6rly.onrender.com/api'.
+ * - If VITE_API_URL is empty, returns '/api' (relying on Vite proxy or same-origin deployment).
+ * Handles trailing slashes and avoids duplicate '/api/api' paths.
+ */
+export function getApiBaseUrl(): string {
+  const host = getBackendHost();
+  return host ? `${host}/api` : '/api';
+}
+
+/**
+ * Normalizes any endpoint into a clean, fully qualified or proxied URL.
+ * Handles:
+ *   - Absolute URLs ('http://...', 'https://...')
+ *   - Endpoints with or without leading slash ('/auth/login' vs 'auth/login')
+ *   - Endpoints that already contain '/api' ('/api/auth/login' -> '.../api/auth/login')
+ */
+export function buildApiUrl(endpoint: string): string {
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    return endpoint;
+  }
+
+  const base = getApiBaseUrl();
+  let path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+  if (path === '/api') {
+    path = '';
+  } else if (path.startsWith('/api/')) {
+    path = path.substring(4); // e.g. '/api/auth/login' -> '/auth/login'
+  }
+
+  return `${base}${path}`;
+}
+
+/**
+ * Direct OAuth2 authorization redirect URL pointing to Spring Security's endpoint.
+ */
+export function getOAuth2AuthorizationUrl(provider = 'google'): string {
+  const host = getBackendHost();
+  return host ? `${host}/oauth2/authorization/${provider}` : `/oauth2/authorization/${provider}`;
+}
 
 export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
@@ -131,9 +197,7 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const url = endpoint.startsWith('http')
-    ? endpoint
-    : `${BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const url = buildApiUrl(endpoint);
 
   const response = await fetch(url, {
     ...options,

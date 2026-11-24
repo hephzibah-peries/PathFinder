@@ -18,7 +18,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/public")
-@CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"})
+@CrossOrigin(
+    origins = {
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+        "https://pathfinder123-rose.vercel.app"
+    },
+    originPatterns = {"https://*.vercel.app", "http://localhost:*", "http://127.0.0.1:*"}
+)
 public class HealthController {
 
     private static final Logger log = LoggerFactory.getLogger(HealthController.class);

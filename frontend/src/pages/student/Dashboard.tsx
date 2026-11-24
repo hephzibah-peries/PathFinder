@@ -240,7 +240,25 @@ export default function StudentDashboard() {
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-[#7A6A65]">
                           <span className="font-semibold text-[#2B1B17]">{i.companyName || 'Company'}</span>
                           <span>•</span>
-                          <span>{i.location || 'Colombo, Sri Lanka'}</span>
+                          {i.location ? (
+                            <a
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(i.location)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[#7A4B43] hover:underline font-semibold"
+                              title="View on Google Maps / Get Directions"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                <circle cx="12" cy="10" r="3" />
+                              </svg>
+                              <span>{i.location}</span>
+                              <span className="text-[10px]">↗</span>
+                            </a>
+                          ) : (
+                            <span>Colombo, Sri Lanka</span>
+                          )}
                           <span>•</span>
                           <span className="rounded-md bg-[#FAF6F4] px-2.5 py-0.5 text-xs font-semibold text-[#7A6A65] border border-[#E5D5CE]">
                             {i.workMode || 'Hybrid'}
@@ -279,7 +297,7 @@ export default function StudentDashboard() {
                   {/* Actions */}
                   <div className="mt-4 flex items-center justify-between border-t border-[#E5D5CE] pt-3">
                     <span className="text-sm text-[#7A6A65]">
-                      {lang === 'ta' ? 'உதவித்தொகை:' : 'Stipend:'} <span className="font-semibold text-[#2B1B17]">{i.stipend || 'Competitive'}</span>
+                      {lang === 'ta' ? 'இறுதி நாள்:' : 'Deadline:'} <span className="font-semibold text-[#2B1B17]">{i.deadline || 'Rolling basis'}</span>
                     </span>
 
                     <div className="flex gap-3">

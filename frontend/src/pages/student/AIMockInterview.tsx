@@ -3,12 +3,10 @@ import { Link } from 'react-router-dom';
 import {
   aiInterviewApi,
   internshipApi,
-  studentApi,
   type InterviewQuestion,
   type InterviewEvaluation,
   type InterviewSessionRecord,
   type Internship,
-  type StudentProfile,
 } from '../../services/api';
 import { ScoreRing, ProgressBar } from '../../components/ui';
 
@@ -22,16 +20,40 @@ interface QAHistoryItem {
   evaluation: InterviewEvaluation;
 }
 
+const QUESTION_CATEGORIES = [
+  'Personal Introduction & Background',
+  'Educational Background',
+  'Technical Knowledge',
+  'Programming & Problem-Solving',
+  'Projects & Practical Experience',
+  'Company Knowledge & Motivation',
+  'Communication & Behavioral Questions',
+  'Internship Availability & University Commitments',
+  'Learning Ability & Career Goals',
+  'Situational & Scenario-Based Questions',
+] as const;
+
+const TARGET_POSITIONS = [
+  'Software Engineer',
+  'Frontend Developer',
+  'Backend Developer',
+  'Full Stack Engineer',
+  'Mobile Application Developer',
+  'DevOps / Cloud Engineer',
+  'AI / Data Science Specialist',
+  'QA & Test Automation Engineer',
+  'Cybersecurity Specialist',
+  'UI/UX Designer',
+] as const;
+
 export default function AIMockInterview() {
   // Page / Simulation states: 'setup' | 'interview' | 'summary'
   const [step, setStep] = useState<'setup' | 'interview' | 'summary'>('setup');
 
   // Setup state
   const [internships, setInternships] = useState<Internship[]>([]);
-  const [selectedInternshipId, setSelectedInternshipId] = useState<number | ''>('');
-  const [targetRole, setTargetRole] = useState('Full Stack Software Engineer');
-  const [customRoleInput, setCustomRoleInput] = useState('');
-  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+  const [targetRole, setTargetRole] = useState('Software Engineer');
+  const [questionCategory, setQuestionCategory] = useState<string>('Technical Knowledge');
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -55,20 +77,13 @@ export default function AIMockInterview() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [savedSessionId, setSavedSessionId] = useState<number | null>(null);
 
-  // Load profile and available internships
+  // Load available internships
   useEffect(() => {
     async function init() {
       try {
-        const [profileRes, internshipsRes] = await Promise.allSettled([
-          studentApi.getProfile(),
-          internshipApi.getAll(),
-        ]);
-
-        if (profileRes.status === 'fulfilled') {
-          setStudentProfile(profileRes.value);
-        }
-        if (internshipsRes.status === 'fulfilled') {
-          setInternships(internshipsRes.value);
+        const internshipsRes = await internshipApi.getAll();
+        if (internshipsRes) {
+          setInternships(internshipsRes);
         }
       } catch (err) {
         console.error('Failed to load initial interview setup data:', err);
@@ -156,12 +171,10 @@ export default function AIMockInterview() {
     setLoadingQuestions(true);
     setErrorMsg(null);
 
-    const effectiveRole = customRoleInput.trim() || targetRole;
-
     try {
       const generated = await aiInterviewApi.generateQuestions({
-        internshipId: selectedInternshipId ? Number(selectedInternshipId) : undefined,
-        targetRole: effectiveRole,
+        targetRole,
+        questionCategory,
       });
 
       if (!generated || generated.length === 0) {
@@ -277,9 +290,8 @@ export default function AIMockInterview() {
     const overallScore = Math.round(techAvg * 0.6 + commAvg * 0.4);
 
     try {
-      const effectiveRole = customRoleInput.trim() || targetRole;
       const saved = await aiInterviewApi.completeSession({
-        targetRole: effectiveRole,
+        targetRole,
         overallScore,
         technicalAverage: techAvg,
         communicationAverage: commAvg,
@@ -310,11 +322,6 @@ export default function AIMockInterview() {
     setHistoryOpen(true);
     fetchPastSessions();
   };
-
-  // Skill tags parsed from student profile
-  const parsedStudentSkills = studentProfile?.skills
-    ? studentProfile.skills.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean)
-    : ['Java', 'Spring Boot', 'React', 'PostgreSQL', 'REST APIs'];
 
   // Current question helpers
   const currentQ = questions[currentIndex];
@@ -382,110 +389,76 @@ export default function AIMockInterview() {
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          STAGE 1: INTERVIEW SETUP & MODE SELECTOR
+          STAGE 1: INTERVIEW SETUP (2 Dropdowns Only + Clean UI)
       ───────────────────────────────────────────────────────────── */}
       {step === 'setup' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Configuration Card */}
-          <div className="lg:col-span-2 card space-y-6">
-            <div className="border-b border-[#E5D5CE] pb-4">
-              <h2 className="text-xl font-bold font-serif text-[#2B1B17]">Select Target Role & Context</h2>
+        <div className="max-w-2xl mx-auto">
+          <div className="card space-y-6 p-8">
+            <div>
+              <h2 className="text-2xl font-bold font-serif text-[#2B1B17]">Select Interview Parameters</h2>
               <p className="text-sm text-[#7A6A65] mt-1">
-                Customize the interview target to align with specific job descriptions or open company listings.
+                Choose your target position and question category to simulate an industry interview round.
               </p>
             </div>
 
-            {/* Target Role Dropdown / Presets */}
-            <div className="space-y-3">
-              <label className="block text-sm font-bold text-[#2B1B17]">
-                Target Specialization Role
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  'Full Stack Software Engineer',
-                  'Backend Java / Spring Boot Engineer',
-                  'Frontend React & TypeScript Engineer',
-                  'Cloud & DevOps Engineer Intern',
-                  'AI / Data Science Intern',
-                ].map((role) => (
-                  <button
-                    key={role}
-                    type="button"
-                    onClick={() => {
-                      setTargetRole(role);
-                      setCustomRoleInput('');
-                    }}
-                    className={`flex items-center justify-between p-3.5 rounded-xl border text-left text-sm font-semibold transition-all ${
-                      targetRole === role && !customRoleInput
-                        ? 'border-[#7A4B43] bg-[#FDF2ED] text-[#7A4B43] shadow-xs'
-                        : 'border-[#E5D5CE] bg-white text-[#2B1B17] hover:bg-[#FAF6F4]'
-                    }`}
-                  >
-                    <span>{role}</span>
-                    {targetRole === role && !customRoleInput && (
-                      <span className="flex h-2 w-2 rounded-full bg-[#7A4B43]" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {/* Custom Role Input */}
-              <div className="pt-2">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#7A6A65] mb-1.5">
-                  Or Enter Custom Role Title
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Distributed Systems Engineer Intern"
-                  value={customRoleInput}
-                  onChange={(e) => setCustomRoleInput(e.target.value)}
-                  className="w-full rounded-xl border border-[#E5D5CE] bg-[#FAF6F4] px-4 py-2.5 text-sm text-[#2B1B17] placeholder-[#7A6A65]/60 focus:border-[#7A4B43] focus:bg-white focus:outline-none transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Link to Posted Internship */}
-            {internships.length > 0 && (
-              <div className="space-y-2 pt-2 border-t border-[#E5D5CE]">
-                <label className="block text-sm font-bold text-[#2B1B17]">
-                  Align with an Active PathFinder Internship (Optional)
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* 1. Target Position Dropdown */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#7A6A65] mb-2">
+                  1. Position
                 </label>
                 <select
-                  value={selectedInternshipId}
-                  onChange={(e) => {
-                    const id = e.target.value ? Number(e.target.value) : '';
-                    setSelectedInternshipId(id);
-                    if (id) {
-                      const found = internships.find((i) => i.id === id);
-                      if (found) {
-                        setTargetRole(found.title);
-                      }
-                    }
-                  }}
-                  className="w-full rounded-xl border border-[#E5D5CE] bg-white px-4 py-2.5 text-sm text-[#2B1B17] focus:border-[#7A4B43] focus:outline-none transition-colors"
+                  value={targetRole}
+                  onChange={(e) => setTargetRole(e.target.value)}
+                  className="form-select w-full text-sm font-semibold"
                 >
-                  <option value="">-- Generic Industry Standard Role --</option>
-                  {internships.map((int) => (
-                    <option key={int.id} value={int.id}>
-                      {int.title} • {int.companyName || 'Company'} ({int.location || 'Remote'})
+                  {TARGET_POSITIONS.filter((pos) => pos.trim().toUpperCase() !== 'SE').map((pos) => (
+                    <option key={pos} value={pos}>
+                      {pos}
+                    </option>
+                  ))}
+                  {internships
+                    .filter((i) => {
+                      if (!i.title) return false;
+                      const titleTrimmed = i.title.trim();
+                      if (TARGET_POSITIONS.includes(titleTrimmed as any)) return false;
+                      // Filter out test/shorthand abbreviations like "SE"
+                      if (titleTrimmed.toUpperCase() === 'SE' || titleTrimmed.length <= 2) return false;
+                      return true;
+                    })
+                    .map((i) => (
+                      <option key={i.id} value={i.title}>
+                        {i.title}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* 2. Question Category Dropdown */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#7A6A65] mb-2">
+                  2. Question Category
+                </label>
+                <select
+                  value={questionCategory}
+                  onChange={(e) => setQuestionCategory(e.target.value)}
+                  className="form-select w-full text-sm font-semibold"
+                >
+                  {QUESTION_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-[#7A6A65]">
-                  Selecting an internship tailors questions directly to that employer's declared tech stack and requirements.
-                </p>
               </div>
-            )}
+            </div>
 
             {/* Launch CTA */}
-            <div className="pt-4 border-t border-[#E5D5CE] flex items-center justify-between">
-              <div className="text-xs text-[#7A6A65]">
-                Generates <span className="font-bold text-[#2B1B17]">5 structured questions</span> (3 Technical, 1 System Design, 1 Behavioral)
-              </div>
+            <div className="pt-4 border-t border-[#E5D5CE] flex justify-end">
               <button
                 onClick={handleStartInterview}
                 disabled={loadingQuestions}
-                className="btn btn-primary py-3 px-6 text-sm flex items-center gap-2"
+                className="btn btn-primary py-3 px-8 text-base font-semibold flex items-center gap-2"
               >
                 {loadingQuestions ? (
                   <>
@@ -497,72 +470,13 @@ export default function AIMockInterview() {
                   </>
                 ) : (
                   <>
-                    Start Mock Interview
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <span>Start Interview</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
                   </>
                 )}
               </button>
-            </div>
-          </div>
-
-          {/* Student Profile & AI Interview Info Sidebar */}
-          <div className="space-y-6">
-            <div className="card space-y-4 bg-linear-to-br from-white to-[#FAF6F4]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FDF2ED] border border-[#E5D5CE] text-[#7A4B43]">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-[#2B1B17]">Active Profile Context</h3>
-                  <p className="text-xs text-[#7A6A65]">
-                    {studentProfile?.fullName || 'Student Candidate'}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-[#7A6A65] block mb-2">
-                  Skills Being Evaluated
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {parsedStudentSkills.map((sk) => (
-                    <span
-                      key={sk}
-                      className="rounded-lg border border-[#E5D5CE] bg-white px-2.5 py-1 text-xs font-semibold text-[#2B1B17]"
-                    >
-                      {sk}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-[#E5D5CE] bg-[#FDF2ED]/50 p-3.5 text-xs text-[#7A6A65] leading-relaxed">
-                <span className="font-bold text-[#7A4B43]">Gemini AI Optimization:</span> Questions dynamically reflect your verified GitHub & CV projects, ensuring you practice answering the exact questions asked in elite tech hiring loops.
-              </div>
-            </div>
-
-            {/* Features summary */}
-            <div className="card space-y-3">
-              <h4 className="text-sm font-bold text-[#2B1B17]">Interview Features</h4>
-              <ul className="space-y-2.5 text-xs text-[#7A6A65]">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#2D6A4F] font-bold">✓</span>
-                  <span><strong>Dual-Mode Response:</strong> Type or dictate your answer with browser speech-to-text.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#2D6A4F] font-bold">✓</span>
-                  <span><strong>Instant Feedback:</strong> Technical accuracy and communication clarity scored 0–100%.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#2D6A4F] font-bold">✓</span>
-                  <span><strong>Model Answers:</strong> Exemplary industry responses for rapid self-correction.</span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
@@ -576,10 +490,12 @@ export default function AIMockInterview() {
           {/* Progress Header */}
           <div className="card p-4 space-y-3">
             <div className="flex items-center justify-between text-xs font-semibold text-[#7A6A65]">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="badge badge-peach uppercase tracking-wider font-bold">
                   {targetRole}
                 </span>
+                <span>•</span>
+                <span className="font-semibold text-[#7A4B43]">{questionCategory}</span>
                 <span>• Question {currentIndex + 1} of {questions.length}</span>
               </div>
               <span className="font-bold text-[#2B1B17]">{progressPercent}% Completed</span>
@@ -872,7 +788,7 @@ export default function AIMockInterview() {
                 Interview Readiness Assessment
               </h2>
               <p className="text-sm text-[#7A6A65] mt-1">
-                Role Evaluated: <strong className="text-[#2B1B17]">{customRoleInput.trim() || targetRole}</strong>
+                Role Evaluated: <strong className="text-[#2B1B17]">{targetRole}</strong> • Category: <strong className="text-[#7A4B43]">{questionCategory}</strong>
               </p>
             </div>
 

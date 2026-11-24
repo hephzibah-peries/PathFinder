@@ -39,15 +39,19 @@ public class AIService {
     }
 
     /**
-     * Generates a 5-question interview set:
-     * - 3 Technical questions tailored to student skills
-     * - 1 System / Scenario question based on candidate project experience
-     * - 1 Behavioral / Problem-solving question
+     * Generates a 5-question interview set tailored to candidate profile, target role, and chosen category.
      */
     public List<InterviewQuestionDto> generateInterviewQuestions(String studentProfileJson, String targetRole) {
+        return generateInterviewQuestions(studentProfileJson, targetRole, "Technical Knowledge");
+    }
+
+    public List<InterviewQuestionDto> generateInterviewQuestions(String studentProfileJson, String targetRole, String questionCategory) {
+        if (questionCategory == null || questionCategory.isBlank()) {
+            questionCategory = "Technical Knowledge";
+        }
         if (geminiApiKey != null && !geminiApiKey.isBlank() && !geminiApiKey.equals("YOUR_GEMINI_API_KEY")) {
             try {
-                String prompt = buildQuestionGenerationPrompt(studentProfileJson, targetRole);
+                String prompt = buildQuestionGenerationPrompt(studentProfileJson, targetRole, questionCategory);
                 String rawResponse = callGeminiApi(prompt);
                 String cleanJson = extractJson(rawResponse);
 
@@ -59,7 +63,7 @@ public class AIService {
                 log.warn("Gemini API question generation failed: {}. Falling back to dynamic heuristic generation.", ex.getMessage());
             }
         }
-        return generateFallbackQuestions(studentProfileJson, targetRole);
+        return generateFallbackQuestions(studentProfileJson, targetRole, questionCategory);
     }
 
     /**
@@ -87,58 +91,86 @@ public class AIService {
         return evaluateFallbackResponse(question, candidateAnswer);
     }
 
-    private String buildQuestionGenerationPrompt(String profileJson, String targetRole) {
+    private String determineQuestionType(String category) {
+        if (category == null) return "TECHNICAL";
+        return switch (category) {
+            case "Situational & Scenario-Based Questions" -> "SYSTEM_SCENARIO";
+            case "Communication & Behavioral Questions",
+                 "Personal Introduction & Background",
+                 "Company Knowledge & Motivation",
+                 "Internship Availability & University Commitments",
+                 "Learning Ability & Career Goals" -> "BEHAVIORAL";
+            default -> "TECHNICAL";
+        };
+    }
+
+    private String buildQuestionGenerationPrompt(String profileJson, String targetRole, String questionCategory) {
+        String role = (targetRole != null && !targetRole.isBlank()) ? targetRole : "Software Engineer Intern";
+        String category = (questionCategory != null && !questionCategory.isBlank()) ? questionCategory : "Technical Knowledge";
+        String qType = determineQuestionType(category);
+
         return """
             You are a Principal Tech Interviewer and Hiring Committee Member.
             Generate an exact structured set of 5 interview questions for a candidate:
             Target Role: %s
-            Student Profile Information:
+            Selected Question Category: %s
+            Candidate Profile Information:
             %s
 
-            Requirements:
-            1. Exactly 3 TECHNICAL questions directly probing verified skills and core language/framework competencies.
-            2. Exactly 1 SYSTEM_SCENARIO question presenting a real-world architectural design, scalability, or debugging scenario.
-            3. Exactly 1 BEHAVIORAL question focused on situational problem solving, teamwork, or trade-off decisions using the STAR method.
+            CRITICAL DIRECTIVE:
+            All 5 questions MUST be strictly and deeply focused on the chosen category: "%s".
+            Tailor questions directly to the target position (%s).
+            Category Guidelines:
+            - "Personal Introduction & Background": Self-introduction, personal journey into software engineering, technical passions, and core developer strengths.
+            - "Educational Background": University degree coursework, Computer Science fundamentals, academic research, and key university learnings.
+            - "Technical Knowledge": Core programming language mechanisms, framework internals, architectural principles, database indexing, and API design.
+            - "Programming & Problem-Solving": Time/space complexity (Big-O), data structures, debugging tricky runtime bugs, edge cases, and code optimization.
+            - "Projects & Practical Experience": Hands-on software applications, architectural decisions, trade-offs made, and project technical hurdles overcome.
+            - "Company Knowledge & Motivation": Why this specific company, understanding of industry domain, culture fit, and long-term career drive.
+            - "Communication & Behavioral Questions": Collaboration, constructive disagreement resolution, handling critical code review feedback, and teamwork (STAR format).
+            - "Internship Availability & University Commitments": Time management, balancing university exams with internship deliverables, full-time commitment.
+            - "Learning Ability & Career Goals": How candidate rapidly masters unfamiliar technologies, adaptability, and 1-3 year career aspirations.
+            - "Situational & Scenario-Based Questions": Hypothetical production emergencies, handling urgent bug reports, tight sprint deadlines, and ambiguous specifications.
 
             Respond with ONLY a valid JSON array matching this format:
             [
               {
                 "id": 1,
-                "question": "Specific technical question...",
-                "type": "TECHNICAL",
-                "focusArea": "Topic (e.g., Spring Boot Dependency Injection / React State)",
+                "question": "First question specifically testing %s...",
+                "type": "%s",
+                "focusArea": "%s Focus",
                 "context": "Context rationale"
               },
               {
                 "id": 2,
-                "question": "...",
-                "type": "TECHNICAL",
-                "focusArea": "...",
-                "context": "..."
+                "question": "Second question specifically testing %s...",
+                "type": "%s",
+                "focusArea": "%s Focus",
+                "context": "Context rationale"
               },
               {
                 "id": 3,
-                "question": "...",
-                "type": "TECHNICAL",
-                "focusArea": "...",
-                "context": "..."
+                "question": "Third question specifically testing %s...",
+                "type": "%s",
+                "focusArea": "%s Focus",
+                "context": "Context rationale"
               },
               {
                 "id": 4,
-                "question": "System/Scenario design question...",
-                "type": "SYSTEM_SCENARIO",
-                "focusArea": "System Architecture & Resilience",
-                "context": "Real-world production scenario"
+                "question": "Fourth question specifically testing %s...",
+                "type": "%s",
+                "focusArea": "%s Focus",
+                "context": "Context rationale"
               },
               {
                 "id": 5,
-                "question": "Behavioral question...",
-                "type": "BEHAVIORAL",
-                "focusArea": "Conflict Resolution & Collaboration",
-                "context": "STAR situational inquiry"
+                "question": "Fifth question specifically testing %s...",
+                "type": "%s",
+                "focusArea": "%s Focus",
+                "context": "Context rationale"
               }
             ]
-            """.formatted(targetRole != null ? targetRole : "Software Engineer Intern", profileJson);
+            """.formatted(role, category, profileJson, category, role, category, qType, category, category, qType, category, category, qType, category, category, qType, category, category, qType, category);
     }
 
     private String buildEvaluationPrompt(String question, String candidateAnswer) {
@@ -211,7 +243,12 @@ public class AIService {
     }
 
     private List<InterviewQuestionDto> generateFallbackQuestions(String profileJson, String targetRole) {
+        return generateFallbackQuestions(profileJson, targetRole, "Technical Knowledge");
+    }
+
+    private List<InterviewQuestionDto> generateFallbackQuestions(String profileJson, String targetRole, String questionCategory) {
         String role = (targetRole != null && !targetRole.isBlank()) ? targetRole : "Software Engineering Intern";
+        String category = (questionCategory != null && !questionCategory.isBlank()) ? questionCategory : "Technical Knowledge";
         List<String> parsedSkills = extractSkillsFromProfile(profileJson);
 
         String skill1 = !parsedSkills.isEmpty() ? parsedSkills.get(0) : "Java / Spring Boot";
@@ -220,45 +257,78 @@ public class AIService {
 
         List<InterviewQuestionDto> list = new ArrayList<>();
 
-        list.add(new InterviewQuestionDto(
-                1,
-                "How does " + skill1 + " handle concurrency and state management in production applications, and what patterns do you apply to avoid memory leaks or thread starvation?",
-                "TECHNICAL",
-                skill1 + " Architecture",
-                "Tailored to verified skill in " + skill1
-        ));
-
-        list.add(new InterviewQuestionDto(
-                2,
-                "When working with " + skill2 + ", how do you optimize database query efficiency, manage indexing strategies, and handle the N+1 select problem?",
-                "TECHNICAL",
-                skill2 + " & Data Persistence",
-                "Tailored to verified skill in " + skill2
-        ));
-
-        list.add(new InterviewQuestionDto(
-                3,
-                "Explain the trade-offs between monolithic architectures and microservices. For a " + role + " role, how would you design authentication and service communication using JWT and API Gateways?",
-                "TECHNICAL",
-                "Microservices & Security",
-                "Tailored to target role requirements: " + role
-        ));
-
-        list.add(new InterviewQuestionDto(
-                4,
-                "Scenario: Your application experiences a sudden 10x traffic spike during a peak recruitment drive, causing response latencies to degrade from 120ms to 4500ms. How would you systematically diagnose bottlenecks, apply caching (e.g. Redis), and scale the service gracefully?",
-                "SYSTEM_SCENARIO",
-                "High-Traffic System Resilience & Scalability",
-                "Simulated real-world production incident"
-        ));
-
-        list.add(new InterviewQuestionDto(
-                5,
-                "Describe a situation where you had a disagreement with a team member or project lead regarding a technical decision or deadline. How did you communicate your reasoning, explore alternatives, and arrive at a consensus?",
-                "BEHAVIORAL",
-                "Collaboration & STAR Conflict Resolution",
-                "Evaluates interpersonal maturity, team alignment, and emotional intelligence"
-        ));
+        switch (category) {
+            case "Personal Introduction & Background" -> {
+                list.add(new InterviewQuestionDto(1, "Could you walk us through your background, your journey into software engineering, and why you are interested in the " + role + " position?", "BEHAVIORAL", "Self-Introduction & Career Story", "Assesses communication clarity and personal narrative"));
+                list.add(new InterviewQuestionDto(2, "What sparked your passion for technology, and what specific engineering problems excite you most?", "BEHAVIORAL", "Engineering Passion & Drive", "Evaluates intrinsic developer curiosity"));
+                list.add(new InterviewQuestionDto(3, "What do you consider your greatest personal technical strength, and what is one area of development you are actively improving?", "BEHAVIORAL", "Self-Awareness & Growth Mindset", "Assesses self-reflection and candidness"));
+                list.add(new InterviewQuestionDto(4, "How do you maintain focus, discipline, and curiosity when tackling ambiguous or difficult engineering tasks?", "BEHAVIORAL", "Resilience & Work Ethic", "Evaluates persistence and daily work habits"));
+                list.add(new InterviewQuestionDto(5, "Outside of university coursework, how do you express your interest in technology and software craft?", "BEHAVIORAL", "Extracurricular Initiative", "Identifies proactive side projects and continuous learning"));
+            }
+            case "Educational Background" -> {
+                list.add(new InterviewQuestionDto(1, "How has your university degree program prepared you for the practical day-to-day challenges of a " + role + "?", "TECHNICAL", "Academic Foundation & Core Principles", "Assesses theoretical grounding"));
+                list.add(new InterviewQuestionDto(2, "Which university computer science course (e.g. Data Structures, OS, Database Systems, Networks) challenged you the most and why?", "TECHNICAL", "Coursework Rigor", "Evaluates ability to master challenging academic material"));
+                list.add(new InterviewQuestionDto(3, "Describe an academic lab assignment or capstone project where you applied theory to build working software.", "TECHNICAL", "Applied Academic Knowledge", "Bridges university theory with software implementation"));
+                list.add(new InterviewQuestionDto(4, "How do you bridge the gap between academic theory (e.g. algorithm design) and pragmatic software engineering trade-offs?", "TECHNICAL", "Theory vs. Practice", "Assesses engineering pragmatism"));
+                list.add(new InterviewQuestionDto(5, "What academic research, paper, or technology topic has caught your attention recently, and how does it relate to " + role + "?", "TECHNICAL", "Academic Curiosity", "Assesses depth of intellectual engagement"));
+            }
+            case "Programming & Problem-Solving" -> {
+                list.add(new InterviewQuestionDto(1, "Walk us through how you analyze the time and space complexity (Big-O) of an algorithm before writing the implementation.", "TECHNICAL", "Algorithmic Complexity & Big-O", "Evaluates analytical rigor"));
+                list.add(new InterviewQuestionDto(2, "Describe a time you encountered a complex runtime bug (such as a concurrency issue or memory leak). How did you systematically debug it?", "TECHNICAL", "Systematic Root-Cause Debugging", "Assesses debugging methodology"));
+                list.add(new InterviewQuestionDto(3, "When choosing between different data structures (e.g. HashMaps vs. Trees vs. Linked Lists), what performance factors guide your decision?", "TECHNICAL", "Data Structure Selection", "Tests core computer science foundations"));
+                list.add(new InterviewQuestionDto(4, "How do you approach solving a problem when requirements are ambiguous or constraints are incomplete?", "TECHNICAL", "Ambiguity Resolution", "Evaluates boundary condition identification"));
+                list.add(new InterviewQuestionDto(5, "How do you approach refactoring complex legacy code to improve readability and maintainability without introducing regressions?", "TECHNICAL", "Code Refactoring & Unit Testing", "Assesses software quality discipline"));
+            }
+            case "Projects & Practical Experience" -> {
+                list.add(new InterviewQuestionDto(1, "Tell us about a software project you built that you are proud of. What was the overarching architecture, and why did you choose that tech stack?", "TECHNICAL", "System Architecture & Design", "Evaluates project ownership and architectural decisions"));
+                list.add(new InterviewQuestionDto(2, "What was the most challenging technical roadblock you encountered in your projects, and how did you resolve it?", "TECHNICAL", "Technical Obstacle Resolution", "Assesses problem-solving in real projects"));
+                list.add(new InterviewQuestionDto(3, "How did you design the database schema and handle data relationships or migrations in your application?", "TECHNICAL", "Database Modeling & Persistence", "Evaluates data layer design capabilities"));
+                list.add(new InterviewQuestionDto(4, "What testing strategies (unit, integration, or end-to-end) and CI/CD tools did you configure for your project?", "TECHNICAL", "Testing & Continuous Integration", "Tests software delivery lifecycle awareness"));
+                list.add(new InterviewQuestionDto(5, "If you had the opportunity to rebuild one of your past projects from scratch, what architectural choices would you do differently?", "TECHNICAL", "Retrospective Analysis & Architecture", "Tests ability to reflect and learn from mistakes"));
+            }
+            case "Company Knowledge & Motivation" -> {
+                list.add(new InterviewQuestionDto(1, "What specifically drew your attention to our engineering team, and why do you want to intern here as a " + role + "?", "BEHAVIORAL", "Company Alignment & Motivation", "Assesses research and authentic motivation"));
+                list.add(new InterviewQuestionDto(2, "What do you know about our core product domain and technology ecosystem, and which area are you most excited to contribute to?", "BEHAVIORAL", "Product & Domain Knowledge", "Tests candidate preparation and domain interest"));
+                list.add(new InterviewQuestionDto(3, "How does our engineering culture and commitment to high-quality code align with your personal development goals?", "BEHAVIORAL", "Culture & Values Fit", "Evaluates mutual alignment and team harmony"));
+                list.add(new InterviewQuestionDto(4, "What major industry trends do you see impacting our software products over the next 2-3 years?", "BEHAVIORAL", "Industry Foresight & Vision", "Evaluates big-picture understanding"));
+                list.add(new InterviewQuestionDto(5, "What specific impact or milestone do you hope to accomplish by the end of your internship with us?", "BEHAVIORAL", "Internship Objectives & Impact", "Tests goal-setting and ambition"));
+            }
+            case "Communication & Behavioral Questions" -> {
+                list.add(new InterviewQuestionDto(1, "Describe a situation where you had a disagreement with a peer or team member regarding a technical decision. How did you arrive at consensus?", "BEHAVIORAL", "Constructive Conflict Resolution (STAR)", "Evaluates interpersonal maturity and teamwork"));
+                list.add(new InterviewQuestionDto(2, "Tell me about a time you received critical or negative feedback during a code review. How did you react and what changes did you implement?", "BEHAVIORAL", "Receptiveness to Feedback", "Tests ego management and coachability"));
+                list.add(new InterviewQuestionDto(3, "How do you explain a complex technical bug or architecture constraint to a non-technical stakeholder or client?", "BEHAVIORAL", "Cross-Functional Communication", "Tests clarity and empathy in communication"));
+                list.add(new InterviewQuestionDto(4, "Describe an instance where a project fell behind schedule. How did you communicate the delay and help the team recover?", "BEHAVIORAL", "Accountability & Crisis Management", "Assesses ownership under pressure"));
+                list.add(new InterviewQuestionDto(5, "Tell me about a time you had to collaborate with teammates who had different skill levels or perspectives. How did you ensure success?", "BEHAVIORAL", "Team Inclusivity & Collaboration", "Evaluates teamwork in diverse groups"));
+            }
+            case "Internship Availability & University Commitments" -> {
+                list.add(new InterviewQuestionDto(1, "What is your current university schedule and upcoming exam period, and how will you ensure dedicated commitment to this internship?", "BEHAVIORAL", "Schedule Management & Availability", "Clarifies academic timing and work hours"));
+                list.add(new InterviewQuestionDto(2, "How do you manage your time when high-stakes academic deadlines coincide with urgent sprint deliverables?", "BEHAVIORAL", "Time Prioritization Under Pressure", "Tests self-discipline and stress management"));
+                list.add(new InterviewQuestionDto(3, "Are you available for the full internship duration (e.g. 6 months full-time or hybrid), and are there any academic constraints we should plan for?", "BEHAVIORAL", "Contractual Availability", "Confirms duration and attendance feasibility"));
+                list.add(new InterviewQuestionDto(4, "In a hybrid or remote working arrangement, how do you proactively maintain clear daily communication with your lead and mentor?", "BEHAVIORAL", "Remote Work Accountability", "Assesses communication cadence and autonomy"));
+                list.add(new InterviewQuestionDto(5, "If an unexpected university conflict arises during a sprint release, what steps would you take to inform your team in advance?", "BEHAVIORAL", "Proactive Responsibility", "Tests professional workplace etiquette"));
+            }
+            case "Learning Ability & Career Goals" -> {
+                list.add(new InterviewQuestionDto(1, "Tell us about a time you had to learn an unfamiliar programming language or framework under a tight deadline. How did you ramp up quickly?", "BEHAVIORAL", "Fast Learning & Self-Teaching", "Assesses learning agility"));
+                list.add(new InterviewQuestionDto(2, "What are your specific technical milestones and career goals over the next 1 to 2 years?", "BEHAVIORAL", "Career Vision & Milestones", "Evaluates ambition and direction"));
+                list.add(new InterviewQuestionDto(3, "Which emerging technologies or tools are you currently exploring on your own time, and how do you experiment with them?", "BEHAVIORAL", "Continuous Learning & Curiosity", "Identifies self-driven tech enthusiasm"));
+                list.add(new InterviewQuestionDto(4, "Describe a situation where a requirement pushed you far outside your comfort zone. How did you adapt and deliver?", "BEHAVIORAL", "Adaptability & Resilience", "Tests adaptability to new environments"));
+                list.add(new InterviewQuestionDto(5, "What kind of mentorship, guidance, and feedback environment helps you perform at your best?", "BEHAVIORAL", "Mentorship Alignment", "Helps matching with senior mentors"));
+            }
+            case "Situational & Scenario-Based Questions" -> {
+                list.add(new InterviewQuestionDto(1, "Scenario: You deploy an update to a production service, and error rates immediately jump to 15%. What are your first steps to triage and stabilize the system?", "SYSTEM_SCENARIO", "Production Incident Response", "Tests incident handling and composure"));
+                list.add(new InterviewQuestionDto(2, "Scenario: Halfway through a two-week sprint, a major product requirement changes, invalidating part of your code. How do you respond and reprioritize?", "SYSTEM_SCENARIO", "Agile Requirement Pivot", "Tests flexibility and pragmatism"));
+                list.add(new InterviewQuestionDto(3, "Scenario: You discover an undocumented security vulnerability or hardcoded credential in a repository right before release. What is your immediate course of action?", "SYSTEM_SCENARIO", "Security Incident & Ethics", "Tests integrity and escalation protocol"));
+                list.add(new InterviewQuestionDto(4, "Scenario: You are blocked on an essential API integration and the responsible team member is unavailable. How do you keep making progress?", "SYSTEM_SCENARIO", "Unblocking Development & Mocking", "Tests initiative and problem unblocking"));
+                list.add(new InterviewQuestionDto(5, "Scenario: Your backend service experiences intermittent database connection timeouts during peak traffic. How would you systematically diagnose and resolve the issue?", "SYSTEM_SCENARIO", "Database Bottleneck Diagnosis", "Assesses backend troubleshooting acumen"));
+            }
+            default -> { // Technical Knowledge
+                list.add(new InterviewQuestionDto(1, "How does " + skill1 + " handle concurrency, memory management, and thread safety in production applications?", "TECHNICAL", skill1 + " Architecture", "Tailored to target role: " + role));
+                list.add(new InterviewQuestionDto(2, "When building with " + skill2 + ", how do you optimize database query performance, structure indexes, and avoid the N+1 query problem?", "TECHNICAL", skill2 + " & Data Persistence", "Tailored to core database skills"));
+                list.add(new InterviewQuestionDto(3, "Explain the trade-offs between monolithic architectures and microservices. How would you design secure inter-service communication using JWTs and API gateways?", "TECHNICAL", "Microservices & Distributed Systems", "Tailored to target role: " + role));
+                list.add(new InterviewQuestionDto(4, "How do you design RESTful APIs for idempotency, robust error handling, and backward compatibility in evolving distributed systems?", "TECHNICAL", "RESTful API Standards", "Tests API design excellence"));
+                list.add(new InterviewQuestionDto(5, "What caching strategies (e.g. Cache-Aside, Write-Through) would you use with Redis to reduce database read pressure while avoiding stale data?", "TECHNICAL", "Distributed Caching & Redis", "Assesses high-throughput scaling skills"));
+            }
+        }
 
         return list;
     }

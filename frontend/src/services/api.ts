@@ -26,6 +26,34 @@ export interface StudentProfile {
   skills?: string;
   preferredLocation?: string;
   preferredWorkMode?: string;
+  profilePicture?: string;
+}
+
+export interface StudentResume {
+  id: number;
+  studentId?: number;
+  fileName: string;
+  fileType?: string;
+  fileSize?: number;
+  uploadedAt: string;
+  extractedSkills: string[];
+}
+
+export interface RoadmapStep {
+  stepNumber: number;
+  title: string;
+  estimatedTime: string;
+  description: string;
+  recommendedResources: string[];
+}
+
+export interface SkillDiagnosisResponse {
+  targetRole: string;
+  resumeFileName: string;
+  matchScore: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  roadmap: RoadmapStep[];
 }
 
 export interface CompanyProfile {
@@ -47,6 +75,7 @@ export interface Internship {
   description?: string;
   location?: string;
   workMode?: string;
+  duration?: string;
   requirements?: string;
   skills?: string;
   stipend?: string;
@@ -256,6 +285,14 @@ export const studentApi = {
       method: 'PUT',
       body: JSON.stringify(profile),
     }),
+  uploadPhoto: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request<StudentProfile>('/students/me/photo', {
+      method: 'POST',
+      body: formData,
+    });
+  },
 };
 
 export const companyApi = {
@@ -300,10 +337,12 @@ export const internshipApi = {
 
 export const applicationApi = {
   getMyApplications: () => request<Application[]>('/applications/my-applications'),
-  apply: (internshipId: number | string) =>
-    request<Application>(`/applications/apply/${internshipId}`, {
+  apply: (internshipId: number | string, resumeId?: number | string) => {
+    const query = resumeId ? `?resumeId=${resumeId}` : '';
+    return request<Application>(`/applications/apply/${internshipId}${query}`, {
       method: 'POST',
-    }),
+    });
+  },
   getForInternship: (internshipId: number | string) =>
     request<Application[]>(`/applications/internship/${internshipId}`),
   updateStatus: (applicationId: number | string, status: string) =>
@@ -333,6 +372,32 @@ export const resumeApi = {
       headers,
     });
   },
+  getMyResumes: () => request<StudentResume[]>('/resume/my-resumes'),
+  uploadResume: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request<StudentResume>('/resume/upload', {
+      method: 'POST',
+      body: formData,
+    });
+  },
+  deleteResume: (id: number | string) =>
+    request<void>(`/resume/${id}`, {
+      method: 'DELETE',
+    }),
+  getResumeFile: async (id: number | string): Promise<Blob> => {
+    const token = getToken();
+    const res = await fetch(`/api/resume/${id}/file`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error('Failed to load resume file');
+    return res.blob();
+  },
+  diagnose: (params: { resumeId?: number; targetRole?: string; internshipId?: number }) =>
+    request<SkillDiagnosisResponse>('/resume/diagnose', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
 };
 
 export interface InterviewQuestion {
@@ -366,6 +431,7 @@ export interface InterviewSessionRecord {
 export interface GenerateInterviewParams {
   internshipId?: number;
   targetRole?: string;
+  questionCategory?: string;
 }
 
 export interface EvaluateInterviewParams {

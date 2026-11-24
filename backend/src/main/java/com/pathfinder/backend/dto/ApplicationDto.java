@@ -9,12 +9,14 @@ public class ApplicationDto {
     private String studentName;
     private String status;
     private String appliedAt;
+    private Long resumeId;
+    private String resumeFileName;
 
     public ApplicationDto() {
     }
 
     public ApplicationDto(Long id, Long internshipId, String internshipTitle, String companyName, Long studentId,
-                          String studentName, String status, String appliedAt) {
+                          String studentName, String status, String appliedAt, Long resumeId, String resumeFileName) {
         this.id = id;
         this.internshipId = internshipId;
         this.internshipTitle = internshipTitle;
@@ -23,6 +25,8 @@ public class ApplicationDto {
         this.studentName = studentName;
         this.status = status;
         this.appliedAt = appliedAt;
+        this.resumeId = resumeId;
+        this.resumeFileName = resumeFileName;
     }
 
     public Long getId() { return id; }
@@ -41,6 +45,10 @@ public class ApplicationDto {
     public void setStatus(String status) { this.status = status; }
     public String getAppliedAt() { return appliedAt; }
     public void setAppliedAt(String appliedAt) { this.appliedAt = appliedAt; }
+    public Long getResumeId() { return resumeId; }
+    public void setResumeId(Long resumeId) { this.resumeId = resumeId; }
+    public String getResumeFileName() { return resumeFileName; }
+    public void setResumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -53,6 +61,8 @@ public class ApplicationDto {
         private String studentName;
         private String status;
         private String appliedAt;
+        private Long resumeId;
+        private String resumeFileName;
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder internshipId(Long internshipId) { this.internshipId = internshipId; return this; }
@@ -62,8 +72,10 @@ public class ApplicationDto {
         public Builder studentName(String studentName) { this.studentName = studentName; return this; }
         public Builder status(String status) { this.status = status; return this; }
         public Builder appliedAt(String appliedAt) { this.appliedAt = appliedAt; return this; }
+        public Builder resumeId(Long resumeId) { this.resumeId = resumeId; return this; }
+        public Builder resumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; return this; }
         public ApplicationDto build() {
-            return new ApplicationDto(id, internshipId, internshipTitle, companyName, studentId, studentName, status, appliedAt);
+            return new ApplicationDto(id, internshipId, internshipTitle, companyName, studentId, studentName, status, appliedAt, resumeId, resumeFileName);
         }
     }
 }

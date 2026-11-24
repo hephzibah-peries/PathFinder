@@ -139,8 +139,15 @@ export default function CompanyLayout() {
                 <div className="truncate text-sm font-bold text-[#2B1B17]" title={companyDisplayName}>
                   {companyDisplayName}
                 </div>
-                <div className="truncate text-xs text-[#7A6A65]" title={user?.email || displayRole}>
-                  {user?.email || displayRole}
+                {user?.email ? (
+                  <div className="truncate text-xs text-[#7A6A65]" title={user.email}>
+                    {user.email}
+                  </div>
+                ) : null}
+                <div className="mt-1">
+                  <span className="inline-flex items-center rounded-md bg-[#FAF6F4] border border-[#E5D5CE] px-2 py-0.5 text-[11px] font-bold text-[#7A4B43]">
+                    {displayRole}
+                  </span>
                 </div>
               </div>
             </div>

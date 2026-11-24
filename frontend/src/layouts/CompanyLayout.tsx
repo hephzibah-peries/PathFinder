@@ -108,12 +108,10 @@ export default function CompanyLayout() {
             <span className="font-serif text-xl font-bold tracking-tight text-[#2B1B17]">
               Path<span className="text-[#7A4B43]">Finder</span>
             </span>
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#7A6A65]">Corporate Portal</span>
           </div>
         </Link>
 
         <nav className="sidebar-nav">
-          <div className="sidebar-section-label">Navigation</div>
           {navItems.map((item) => {
             const active = isItemActive(item.to);
             return (
@@ -130,75 +128,40 @@ export default function CompanyLayout() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white border border-[#E5D5CE] text-sm font-bold text-[#7A4B43] shadow-xs">
-                {initials}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FDF2ED] border border-[#E5D5CE] text-sm font-bold text-[#7A4B43] shadow-xs">
+              {initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-bold text-[#2B1B17]" title={companyDisplayName}>
+                {companyDisplayName}
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-bold text-[#2B1B17]" title={companyDisplayName}>
-                  {companyDisplayName}
-                </div>
-                <div className="truncate text-xs text-[#7A6A65]" title={user?.email || displayRole}>
-                  {user?.email || displayRole}
-                </div>
+              <div className="truncate text-xs text-[#7A6A65]" title={user?.email || displayRole}>
+                {user?.email || displayRole}
+              </div>
+              <div className="mt-1">
+                <span className="inline-flex items-center rounded-full border border-[#E5D5CE] bg-[#FDF2ED] px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#7A4B43]">
+                  COMPANY PORTAL
+                </span>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              title="Sign out"
-              className="rounded-lg p-2 text-[#7A6A65] hover:bg-[#F2E8E4] hover:text-rose-600 transition-colors"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-            </button>
           </div>
+          <button
+            onClick={handleLogout}
+            className="mt-3.5 w-full flex items-center justify-center gap-2 rounded-xl border border-[#E5D5CE] bg-white px-3 py-2 text-xs font-semibold text-[#7A6A65] shadow-2xs hover:bg-[#F2E8E4] hover:text-rose-600 hover:border-rose-200 transition-all"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span>Sign out</span>
+          </button>
         </div>
       </aside>
 
       {/* ── Main content wrapper ── */}
       <div className="ml-[270px] flex-1 flex flex-col min-h-screen">
-        {/* Top bar */}
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[#E5D5CE] bg-[#FAF6F4]/90 px-8 py-4 backdrop-blur-md shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="h-2.5 w-2.5 rounded-full bg-[#2D6A4F] animate-pulse" />
-            <span className="text-sm font-medium text-[#7A6A65]">
-              {profile?.companyName ? `${profile.companyName} Talent Hub` : 'Employer Recruitment Engine'}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-5">
-            <Link to="/company?post=true" className="btn btn-primary py-2.5 px-5 text-sm">
-              <span className="flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Post New Internship
-              </span>
-            </Link>
-
-            <div className="h-5 w-px bg-[#E5D5CE]" />
-
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-[#E5D5CE] text-xs font-bold text-[#7A4B43] shadow-xs">
-                {initials}
-              </div>
-              <div className="hidden md:block text-left">
-                <span className="block text-xs font-bold text-[#2B1B17] leading-tight truncate max-w-[150px]">
-                  {companyDisplayName}
-                </span>
-                <span className="block text-[11px] font-medium text-[#7A6A65] leading-tight">
-                  Verified Employer
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Page body */}
         <main className="flex-1 p-8">
           <div className="mx-auto max-w-7xl animate-fade-in">

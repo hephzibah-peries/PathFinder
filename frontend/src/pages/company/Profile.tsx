@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SectionTitle } from '../../components/ui';
 import { companyApi, CompanyProfile as CompanyProfileType } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -8,6 +8,49 @@ export default function CompanyProfile() {
   const [profile, setProfile] = useState<CompanyProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Logo / Profile Image State & Refs
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const modalFileInputRef = useRef<HTMLInputElement>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  // Load persisted logo from localStorage on mount or when user session resolves
+  useEffect(() => {
+    const storageKey = `company_logo_${user?.email || 'default'}`;
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      setLogoUrl(saved);
+    }
+  }, [user?.email]);
+
+  const handleLogoFile = (file: File) => {
+    if (!file) return;
+    if (!file.type.match(/^image\/(png|jpe?g|webp)$/i)) {
+      alert('Please upload a valid image file (.png, .jpg, .jpeg, or .webp).');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size exceeds 2MB. Please select a smaller photo.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        setLogoUrl(dataUrl);
+        const storageKey = `company_logo_${user?.email || 'default'}`;
+        localStorage.setItem(storageKey, dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoUrl(null);
+    const storageKey = `company_logo_${user?.email || 'default'}`;
+    localStorage.removeItem(storageKey);
+  };
 
   // Edit Modal State
   const [isEditing, setIsEditing] = useState(false);
@@ -78,9 +121,58 @@ export default function CompanyProfile() {
 
       <div className="card flex items-center justify-between bg-gradient-to-br from-[#FAF6F4] to-white">
         <div className="flex items-center gap-5">
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#7A4B43] text-2xl font-bold text-white shadow-sm">
-            {avatar}
+          {/* Avatar Box with Logo / Initials Badge and Upload Overlay */}
+          <div className="relative group">
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="relative flex h-20 w-20 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[#7A4B43] text-2xl font-bold text-white shadow-sm border-2 border-[#E5D5CE] transition-all hover:ring-2 hover:ring-[#7A4B43]/40"
+              title="Click to upload or change company logo"
+            >
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span>{avatar}</span>
+              )}
+
+              {/* Hover Camera Overlay */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+                <span className="text-[10px] font-bold text-white mt-0.5">Upload</span>
+              </div>
+            </div>
+
+            {/* Corner camera indicator badge */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white border border-[#E5D5CE] text-[#7A4B43] shadow-xs hover:bg-[#FDF2ED] transition-colors"
+              title="Change logo"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            </button>
           </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleLogoFile(file);
+              e.target.value = '';
+            }}
+          />
           <div>
             <div className="flex items-center gap-2.5">
               <h1 className="m-0 font-serif text-3xl font-bold text-[#2B1B17]">{name}</h1>
@@ -144,6 +236,49 @@ export default function CompanyProfile() {
           <div className="w-full max-w-lg rounded-2xl border border-[#E5D5CE] bg-white p-7 shadow-xl">
             <h2 className="mb-5 font-serif text-2xl font-bold text-[#2B1B17]">Edit Company Profile</h2>
             <form onSubmit={handleSaveProfile} className="space-y-4">
+              {/* Company Logo / Profile Photo Field */}
+              <div>
+                <label className="form-label">Company Logo / Profile Photo</label>
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#7A4B43] text-xl font-bold text-white border-2 border-[#E5D5CE] shadow-xs">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Logo preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <span>{avatar}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => modalFileInputRef.current?.click()}
+                      className="rounded-lg border border-[#E5D5CE] bg-white px-3.5 py-2 text-xs font-semibold text-[#2B1B17] hover:bg-[#FAF6F4] hover:border-[#D6C1B8] shadow-2xs transition-all"
+                    >
+                      {logoUrl ? 'Change Photo' : 'Upload Logo'}
+                    </button>
+                    {logoUrl && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveLogo}
+                        className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline transition-colors"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    ref={modalFileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleLogoFile(file);
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="form-label">Company Name</label>
                 <input

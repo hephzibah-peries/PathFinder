@@ -205,14 +205,28 @@ export default function InternshipSearch() {
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-[#7A6A65]">
                             <span className="font-semibold text-[#2B1B17]">{companyTitle}</span>
                             <span>•</span>
-                            <span>{i.location || 'Colombo, Sri Lanka'}</span>
+                            {i.location ? (
+                              <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(i.location)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[#7A4B43] hover:underline font-semibold"
+                                title="View on Google Maps / Get Directions"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                  <circle cx="12" cy="10" r="3" />
+                                </svg>
+                                <span>{i.location}</span>
+                                <span className="text-[10px]">↗</span>
+                              </a>
+                            ) : (
+                              <span>Colombo, Sri Lanka</span>
+                            )}
                             <span>•</span>
                             <span className="rounded-md bg-[#FAF6F4] px-2.5 py-0.5 text-xs font-semibold text-[#7A6A65] border border-[#E5D5CE]">
                               {i.workMode || 'Hybrid'}
-                            </span>
-                            <span>•</span>
-                            <span className="text-[#7A6A65]">
-                              Stipend: <span className="font-semibold text-[#2B1B17]">{i.stipend || 'Competitive'}</span>
                             </span>
                           </div>
 
@@ -247,7 +261,22 @@ export default function InternshipSearch() {
                         Application Deadline: {i.deadline || 'Rolling basis'}
                       </span>
 
-                      <div className="flex gap-3">
+                      <div className="flex gap-2.5 items-center">
+                        {i.location && (
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(i.location)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-secondary py-2 px-3 text-xs font-semibold inline-flex items-center gap-1.5 shadow-2xs"
+                            title="Get directions on Google Maps"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                            </svg>
+                            <span className="hidden sm:inline">Directions</span>
+                          </a>
+                        )}
                         <button
                           onClick={() => setDrawerInternship(i)}
                           className="btn btn-ghost py-2.5 px-4 text-sm font-semibold"

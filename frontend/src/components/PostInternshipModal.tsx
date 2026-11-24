@@ -29,7 +29,6 @@ export default function PostInternshipModal({
   const [duration, setDuration] = useState('3 Months');
   const [workMode, setWorkMode] = useState('Hybrid');
   const [location, setLocation] = useState('Colombo, Sri Lanka');
-  const [stipend, setStipend] = useState('');
   const [deadline, setDeadline] = useState('');
   const [description, setDescription] = useState('');
 
@@ -39,7 +38,6 @@ export default function PostInternshipModal({
   const [newReqSkill, setNewReqSkill] = useState('');
   const [newPrefSkill, setNewPrefSkill] = useState('');
   const [minGpa, setMinGpa] = useState('');
-  const [academicYear, setAcademicYear] = useState<string[]>(['Final Year']);
   const [experience, setExperience] = useState('');
 
   useEffect(() => {
@@ -54,7 +52,6 @@ export default function PostInternshipModal({
         setTitle(initialData.title || '');
         setWorkMode(initialData.workMode || 'Hybrid');
         setLocation(initialData.location || (initialData.workMode === 'Remote' ? 'Remote' : 'Colombo, Sri Lanka'));
-        setStipend(initialData.stipend || '');
         setDeadline(initialData.deadline || '');
         setDescription(initialData.description || '');
 
@@ -97,13 +94,11 @@ export default function PostInternshipModal({
     setDuration('3 Months');
     setWorkMode('Hybrid');
     setLocation('Colombo, Sri Lanka');
-    setStipend('');
     setDeadline('');
     setDescription('');
     setRequiredSkills(['Java', 'Spring Boot']);
     setPreferredSkills(['Docker', 'PostgreSQL']);
     setMinGpa('');
-    setAcademicYear(['Final Year']);
     setExperience('');
     setError(null);
   }
@@ -145,14 +140,6 @@ export default function PostInternshipModal({
     setPreferredSkills(preferredSkills.filter((s) => s !== skill));
   }
 
-  function toggleAcademicYear(year: string) {
-    if (academicYear.includes(year)) {
-      setAcademicYear(academicYear.filter((y) => y !== year));
-    } else {
-      setAcademicYear([...academicYear, year]);
-    }
-  }
-
   function handleNextStep() {
     if (!title.trim()) {
       setError('Please provide an internship title.');
@@ -181,9 +168,6 @@ export default function PostInternshipModal({
 
       // Aggregate requirements
       const reqList: string[] = [];
-      if (academicYear.length > 0) {
-        reqList.push(`Academic Level: ${academicYear.join(', ')}`);
-      }
       if (minGpa.trim()) {
         reqList.push(`Minimum GPA: ${minGpa}`);
       }
@@ -211,7 +195,7 @@ export default function PostInternshipModal({
         workMode,
         requirements: requirementsStr,
         skills: skillsStr,
-        stipend: stipend.trim() || 'Competitive',
+        stipend: '',
         deadline: finalDeadline,
       };
 
@@ -324,35 +308,37 @@ export default function PostInternshipModal({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">Location</label>
+                  <div className="flex items-center justify-between">
+                    <label className="form-label">Location</label>
+                    {location.trim() && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.trim())}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] font-semibold text-[#7A4B43] hover:underline inline-flex items-center gap-0.5"
+                        title="Preview this location on Google Maps"
+                      >
+                        Preview on Google Maps ↗
+                      </a>
+                    )}
+                  </div>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. Colombo, Sri Lanka"
+                    placeholder="e.g. Colombo, Sri Lanka or office address"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="form-label">Stipend / Compensation</label>
+                  <label className="form-label">Application Deadline</label>
                   <input
-                    type="text"
+                    type="date"
                     className="form-input"
-                    placeholder="e.g. LKR 65,000 / month"
-                    value={stipend}
-                    onChange={(e) => setStipend(e.target.value)}
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="form-label">Application Deadline</label>
-                <input
-                  type="date"
-                  className="form-input"
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
-                />
               </div>
 
               <div>
@@ -424,36 +410,18 @@ export default function PostInternshipModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="form-label">
-                    Min. Academic GPA <span className="text-[#7A6A65]">(Optional)</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    className="form-input"
-                    placeholder="e.g. 3.0"
-                    value={minGpa}
-                    onChange={(e) => setMinGpa(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Target Academic Level</label>
-                  <div className="mt-2 space-y-2">
-                    {['3rd Year', 'Final Year', 'Graduated'].map((year) => (
-                      <label key={year} className="flex items-center gap-2 text-sm text-[#2B1B17] font-medium cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="rounded bg-white border-[#E5D5CE] text-[#7A4B43] focus:ring-[#7A4B43]/20"
-                          checked={academicYear.includes(year)}
-                          onChange={() => toggleAcademicYear(year)}
-                        />
-                        {year}
-                      </label>
-                    ))}
-                  </div>
-                </div>
+              <div>
+                <label className="form-label">
+                  Min. Academic GPA <span className="text-[#7A6A65]">(Optional)</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="form-input"
+                  placeholder="e.g. 3.0"
+                  value={minGpa}
+                  onChange={(e) => setMinGpa(e.target.value)}
+                />
               </div>
 
               <div>

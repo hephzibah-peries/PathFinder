@@ -88,7 +88,7 @@ export default function Register() {
                     : 'border-[#E5D5CE] bg-white text-[#7A6A65] hover:text-[#2B1B17] hover:bg-[#F2E8E4]'
                 }`}
               >
-                Employer
+                Company
               </button>
             </div>
           </div>

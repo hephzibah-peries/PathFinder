@@ -11,7 +11,6 @@ interface RoleTemplate {
   category: string;
   workMode: string;
   location: string;
-  stipend: string;
   duration: string;
   skills: string;
   requirements: string;
@@ -24,7 +23,6 @@ const ROLE_TEMPLATES: RoleTemplate[] = [
     category: 'Engineering & Cloud',
     workMode: 'Hybrid',
     location: 'Colombo, Sri Lanka',
-    stipend: 'LKR 65,000 / month',
     duration: '6 Months',
     skills: 'Java, Spring Boot, React, TypeScript, PostgreSQL, REST API',
     requirements: 'Academic Level: Final Year. Minimum GPA: 3.2. Duration: 6 Months. Proficient in modern web architecture, relational databases, and REST APIs.',
@@ -35,7 +33,6 @@ const ROLE_TEMPLATES: RoleTemplate[] = [
     category: 'Machine Learning',
     workMode: 'Remote',
     location: 'Remote (Sri Lanka)',
-    stipend: 'LKR 70,000 / month',
     duration: '6 Months',
     skills: 'Python, TensorFlow, PyTorch, SQL, Pandas, Scikit-learn',
     requirements: 'Academic Level: Final Year or Penultimate. Minimum GPA: 3.5. Duration: 6 Months. Experience in ML modeling, feature engineering, and data wrangling.',
@@ -46,7 +43,6 @@ const ROLE_TEMPLATES: RoleTemplate[] = [
     category: 'Product & Design',
     workMode: 'Hybrid',
     location: 'Colombo, Sri Lanka',
-    stipend: 'LKR 55,000 / month',
     duration: '3-6 Months',
     skills: 'Figma, Wireframing, User Research, Prototyping, Design Systems',
     requirements: 'Academic Level: 3rd / Final Year. Minimum GPA: 3.0. Duration: 3-6 Months. Strong visual design portfolio showcasing interaction design and design system thinking.',
@@ -160,7 +156,6 @@ export default function ManageInternships() {
       title: tpl.title,
       workMode: tpl.workMode,
       location: tpl.location,
-      stipend: tpl.stipend,
       skills: tpl.skills,
       requirements: tpl.requirements,
       description: tpl.description,
@@ -453,7 +448,7 @@ export default function ManageInternships() {
                             </p>
                             <div className="space-y-1.5 text-xs text-[#7A6A65] border-t border-[#E5D5CE]/60 pt-3">
                               <div>
-                                <strong className="text-[#2B1B17]">Compensation:</strong> {tpl.stipend}
+                                <strong className="text-[#2B1B17]">Duration:</strong> {tpl.duration}
                               </div>
                               <div className="truncate">
                                 <strong className="text-[#2B1B17]">Key Stack:</strong> {tpl.skills}
@@ -544,10 +539,23 @@ export default function ManageInternships() {
                               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                               <circle cx="12" cy="10" r="3" />
                             </svg>
-                            <span>{job.location || 'Colombo'}</span>
+                            {job.location ? (
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.location)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-[#7A4B43] hover:underline inline-flex items-center gap-1"
+                                title="View on Google Maps"
+                              >
+                                <span>{job.location}</span>
+                                <span className="text-[10px] text-[#7A6A65]">↗</span>
+                              </a>
+                            ) : (
+                              <span>Colombo</span>
+                            )}
                           </div>
                           <div className="text-xs text-[#7A6A65] mt-0.5 font-medium">
-                            {job.workMode || 'Hybrid'} · {job.stipend || 'Competitive'}
+                            {job.workMode || 'Hybrid'}
                           </div>
                         </td>
 

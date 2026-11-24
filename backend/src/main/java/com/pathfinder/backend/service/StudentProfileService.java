@@ -7,6 +7,7 @@ import com.pathfinder.backend.repository.StudentProfileRepository;
 import com.pathfinder.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -24,24 +25,37 @@ public class StudentProfileService {
         this.userRepository = userRepository;
     }
 
+    @Transactional(readOnly = true)
     public StudentProfileDto getProfileByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (email == null || email.isBlank()) {
+            return StudentProfileDto.builder().build();
+        }
+
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return StudentProfileDto.builder().email(email).build();
+        }
 
         StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
-                .orElseGet(() -> studentProfileRepository.save(
-                        StudentProfile.builder().user(user).build()
-                ));
+                .orElse(null);
+
+        if (profile == null) {
+            return StudentProfileDto.builder()
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .build();
+        }
 
         return mapToDto(profile);
     }
 
+    @Transactional
     public StudentProfileDto updateProfile(String email, StudentProfileDto dto) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
-                .orElse(StudentProfile.builder().user(user).build());
+                .orElseGet(() -> StudentProfile.builder().user(user).build());
 
         if (dto.getFullName() != null) profile.setFullName(dto.getFullName());
         if (dto.getUniversity() != null) profile.setUniversity(dto.getUniversity());
@@ -57,6 +71,7 @@ public class StudentProfileService {
         return mapToDto(studentProfileRepository.save(profile));
     }
 
+    @Transactional
     public StudentProfileDto uploadProfilePicture(String email, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File must not be empty");
@@ -67,10 +82,10 @@ public class StudentProfileService {
         }
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
-                .orElse(StudentProfile.builder().user(user).build());
+                .orElseGet(() -> StudentProfile.builder().user(user).build());
 
         try {
             String base64 = Base64.getEncoder().encodeToString(file.getBytes());
@@ -83,10 +98,12 @@ public class StudentProfileService {
     }
 
     private StudentProfileDto mapToDto(StudentProfile profile) {
+        Long userId = profile.getUser() != null ? profile.getUser().getId() : null;
+        String email = profile.getUser() != null ? profile.getUser().getEmail() : null;
         return StudentProfileDto.builder()
                 .id(profile.getId())
-                .userId(profile.getUser().getId())
-                .email(profile.getUser().getEmail())
+                .userId(userId)
+                .email(email)
                 .fullName(profile.getFullName())
                 .university(profile.getUniversity())
                 .gpa(profile.getGpa())

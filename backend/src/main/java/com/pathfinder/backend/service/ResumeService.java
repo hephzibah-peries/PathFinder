@@ -142,6 +142,7 @@ public class ResumeService {
         return keys;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public StudentResumeDto uploadStudentResume(String email, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resume file must not be empty");
@@ -181,9 +182,15 @@ public class ResumeService {
         }
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<StudentResumeDto> getStudentResumes(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (email == null || email.isBlank()) {
+            return List.of();
+        }
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return List.of();
+        }
         StudentProfile student = studentProfileRepository.findByUserId(user.getId())
                 .orElse(null);
         if (student == null) {
@@ -194,6 +201,7 @@ public class ResumeService {
                 .collect(Collectors.toList());
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteStudentResume(String email, Long resumeId) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -206,6 +214,7 @@ public class ResumeService {
         studentResumeRepository.delete(resume);
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public org.springframework.http.ResponseEntity<byte[]> getStudentResumeFile(String email, Long resumeId) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));

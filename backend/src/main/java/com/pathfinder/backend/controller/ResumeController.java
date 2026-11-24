@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/resume")
+@RequestMapping({"/api/resume", "/api/resumes", "/api/student/resumes", "/api/student/resume"})
 public class ResumeController {
 
     private final ResumeService resumeService;
@@ -32,7 +32,7 @@ public class ResumeController {
         return ResponseEntity.ok(resumeService.analyzeResume(file, internshipId));
     }
 
-    @GetMapping("/my-resumes")
+    @GetMapping({"/my-resumes", "", "/resumes"})
     @PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN')")
     public ResponseEntity<List<StudentResumeDto>> getMyResumes(Authentication authentication) {
         return ResponseEntity.ok(resumeService.getStudentResumes(authentication.getName()));

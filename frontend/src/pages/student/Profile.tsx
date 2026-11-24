@@ -49,19 +49,38 @@ export default function StudentProfile() {
     try {
       setLoading(true);
       setError(null);
-      const [data, resumesData] = await Promise.all([
+      const [profileResult, resumesResult] = await Promise.allSettled([
         studentApi.getProfile(),
         resumeApi.getMyResumes(),
       ]);
-      setProfile(data);
-      setResumes(resumesData || []);
-      setEditFullName(data.fullName || '');
-      setEditUniversity(data.university || '');
-      setEditGpa(data.gpa != null ? (Number.isInteger(Number(data.gpa)) ? Number(data.gpa).toFixed(2) : String(data.gpa)) : '');
-      setEditBio(data.bio || '');
-      setEditProfilePicture(data.profilePicture || null);
+
+      let data: StudentProfileType | null = null;
+      if (profileResult.status === 'fulfilled') {
+        data = profileResult.value;
+      }
+
+      let resumesData: StudentResume[] = [];
+      if (resumesResult.status === 'fulfilled') {
+        resumesData = resumesResult.value || [];
+      }
+
+      if (data) {
+        setProfile(data);
+        setEditFullName(data.fullName || '');
+        setEditUniversity(data.university || '');
+        setEditGpa(data.gpa != null ? (Number.isInteger(Number(data.gpa)) ? Number(data.gpa).toFixed(2) : String(data.gpa)) : '');
+        setEditBio(data.bio || '');
+        setEditProfilePicture(data.profilePicture || null);
+      } else {
+        setProfile({
+          email: user?.email,
+          fullName: user?.name,
+        });
+        setEditFullName(user?.name || '');
+      }
+      setResumes(resumesData);
     } catch (err: any) {
-      setError(err.message || 'Failed to load profile');
+      console.error('Failed to load profile:', err);
     } finally {
       setLoading(false);
     }

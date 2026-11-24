@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import MatchExplanationDrawer from '../../components/MatchExplanationDrawer';
 import { internshipApi, resumeApi, applicationApi, Internship, StudentResume } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import type { MissingSkillEntry } from '../../components/MatchExplanationDrawer';
 
 const ROOTCODE_SAMPLE_INTERNSHIP: Internship = {
   id: 99999,
@@ -37,9 +35,6 @@ export default function InternshipSearch() {
   const [submittingApp, setSubmittingApp] = useState(false);
   const [appSuccessMessage, setAppSuccessMessage] = useState<string | null>(null);
   const [appErrorMessage, setAppErrorMessage] = useState<string | null>(null);
-
-  // Fit Explanation Drawer state
-  const [drawerInternship, setDrawerInternship] = useState<Internship | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -247,60 +242,49 @@ export default function InternshipSearch() {
             const displayDuration = item.duration || '6 Months';
             const displayWorkMode = item.workMode || 'Hybrid';
             const hasValidStipend = item.stipend && item.stipend.toLowerCase() !== 'competitive';
-            const matchPct = 88;
 
             return (
               <div key={item.id} className="card p-6 hover:border-[#D6C1B8] transition-all space-y-4">
-                {/* Header: Company Name, Role Title, Details, Fit score */}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-serif text-sm font-bold uppercase tracking-wider text-[#7A4B43]">
-                        {displayCompany}
-                      </span>
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#E5D5CE]" />
-                      <span className="inline-flex items-center rounded-md bg-[#FAF6F4] border border-[#E5D5CE] px-2 py-0.5 text-xs font-semibold text-[#7A6A65]">
-                        {displayWorkMode}
-                      </span>
-                    </div>
-
-                    <h2 className="font-serif text-2xl font-bold text-[#2B1B17]">
-                      {displayTitle}
-                    </h2>
-
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-[#7A6A65] pt-0.5">
-                      <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(displayLocation)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 font-medium text-[#7A6A65] hover:text-[#7A4B43] hover:underline transition-colors"
-                        title="View directions on Google Maps"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                          <circle cx="12" cy="10" r="3" />
-                        </svg>
-                        <span>{displayLocation}</span>
-                        <span className="text-[10px]">↗</span>
-                      </a>
-                      <span>•</span>
-                      <span>{displayDuration}</span>
-                      {hasValidStipend ? (
-                        <>
-                          <span>•</span>
-                          <span className="font-bold text-[#2D6A4F]">{item.stipend}</span>
-                        </>
-                      ) : null}
-                    </div>
+                {/* Header: Company Name, Role Title, Details */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-serif text-sm font-bold uppercase tracking-wider text-[#7A4B43]">
+                      {displayCompany}
+                    </span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#E5D5CE]" />
+                    <span className="inline-flex items-center rounded-md bg-[#FAF6F4] border border-[#E5D5CE] px-2 py-0.5 text-xs font-semibold text-[#7A6A65]">
+                      {displayWorkMode}
+                    </span>
                   </div>
 
-                  {/* Fit score badge */}
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 shrink-0">
-                    <div className="rounded-2xl border border-[#E5D5CE] bg-[#FDF2ED] px-4 py-2 text-center">
-                      <div className="font-serif text-lg font-bold text-[#7A4B43] leading-none">{matchPct}%</div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#7A4B43]/90">Fit score</div>
-                    </div>
+                  <h2 className="font-serif text-2xl font-bold text-[#2B1B17]">
+                    {displayTitle}
+                  </h2>
+
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-[#7A6A65] pt-0.5">
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(displayLocation)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 font-medium text-[#7A6A65] hover:text-[#7A4B43] hover:underline transition-colors"
+                      title="View directions on Google Maps"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                      <span>{displayLocation}</span>
+                      <span className="text-[10px]">↗</span>
+                    </a>
+                    <span>•</span>
+                    <span>{displayDuration}</span>
+                    {hasValidStipend ? (
+                      <>
+                        <span>•</span>
+                        <span className="font-bold text-[#2D6A4F]">{item.stipend}</span>
+                      </>
+                    ) : null}
                   </div>
                 </div>
 
@@ -332,35 +316,13 @@ export default function InternshipSearch() {
                   </div>
                 </div>
 
-                {/* Action Footer: Deadline, Directions, Explain Fit, Apply */}
+                {/* Action Footer: Deadline, Apply */}
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between border-t border-[#E5D5CE] pt-3 gap-3">
                   <span className="text-sm text-[#7A6A65]">
                     Application Deadline: <span className="font-semibold text-[#2B1B17]">{item.deadline || 'Rolling basis'}</span>
                   </span>
 
-                  <div className="flex gap-2.5 items-center flex-wrap">
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(displayLocation)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-secondary py-2 px-3 text-xs font-semibold inline-flex items-center gap-1.5 shadow-2xs"
-                      title="Get directions on Google Maps"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                      </svg>
-                      <span className="hidden sm:inline">Directions</span>
-                    </a>
-
-                    <button
-                      type="button"
-                      onClick={() => setDrawerInternship(item)}
-                      className="btn btn-ghost py-2 px-3.5 text-xs font-semibold"
-                    >
-                      Explain Fit
-                    </button>
-
+                  <div className="flex items-center">
                     {isAlreadyApplied ? (
                       <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 border border-emerald-300 px-4 py-2 text-xs font-bold text-emerald-900">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -373,7 +335,7 @@ export default function InternshipSearch() {
                         onClick={() => handleOpenApplyModal(displayCompany, { ...item, companyName: displayCompany, title: displayTitle })}
                         className="btn btn-primary px-5 py-2 text-xs font-semibold whitespace-nowrap"
                       >
-                        Apply Now
+                        Apply
                       </button>
                     )}
                   </div>
@@ -482,32 +444,6 @@ export default function InternshipSearch() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* ── Explanation Drawer ── */}
-      {drawerInternship && (
-        <MatchExplanationDrawer
-          open={!!drawerInternship}
-          onClose={() => setDrawerInternship(null)}
-          internshipTitle={drawerInternship.title}
-          company={drawerInternship.companyName || 'Rootcode'}
-          overallMatch={88}
-          matched={[
-            { name: 'Core Foundations', source: 'verified' },
-            { name: 'Problem Solving', source: 'verified' },
-          ]}
-          missing={[
-            {
-              name: 'Framework Proficiency',
-              source: 'self',
-              impact: 'Critical requirement listed in job posting description.',
-            },
-          ] as MissingSkillEntry[]}
-          factorBreakdown={[
-            { label: 'Technical Match', weight: 60, score: 88 },
-            { label: 'Location & Work Mode', weight: 40, score: 90 },
-          ]}
-        />
       )}
     </div>
   );

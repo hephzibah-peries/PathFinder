@@ -30,7 +30,9 @@ public class StudentResume {
     @Column(columnDefinition = "TEXT")
     private String extractedSkills;
 
-    @Column(name = "file_data")
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "file_data", columnDefinition = "BYTEA")
     private byte[] fileData;
 
     public StudentResume() {

@@ -123,8 +123,23 @@ export function setStoredUser(user: UserSession): void {
  */
 export function getBackendHost(): string {
   const rawUrl = (import.meta.env.VITE_API_URL || '').trim();
-  if (!rawUrl) return '';
-  return rawUrl.replace(/\/+$/, '').replace(/\/api$/, '');
+  if (rawUrl) {
+    return rawUrl.replace(/\/+$/, '').replace(/\/api$/, '');
+  }
+
+  // Automatic local development fallback:
+  // If VITE_API_URL is not set, default to http://localhost:8080 during local development
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '0.0.0.0' ||
+      window.location.hostname === '')
+  ) {
+    return 'http://localhost:8080';
+  }
+
+  return '';
 }
 
 /**

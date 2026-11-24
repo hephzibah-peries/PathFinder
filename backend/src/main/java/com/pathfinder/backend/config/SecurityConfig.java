@@ -31,6 +31,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final OAuth2AuthenticationSuccessHandler oauth2SuccessHandler;
 
+    @org.springframework.beans.factory.annotation.Value("${frontend.url:http://localhost:5173}")
+    private String frontendUrl;
+
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
                           OAuth2AuthenticationSuccessHandler oauth2SuccessHandler) {
         this.jwtAuthFilter = jwtAuthFilter;
@@ -75,12 +78,15 @@ public class SecurityConfig {
                 )
                 .successHandler(oauth2SuccessHandler)
                 .failureHandler((request, response, exception) -> {
-                    String frontendUrl = System.getenv("FRONTEND_URL");
-                    if (frontendUrl == null || frontendUrl.isBlank()) {
-                        frontendUrl = "http://localhost:5173";
+                    String redirectBase = (this.frontendUrl != null && !this.frontendUrl.isBlank())
+                            ? this.frontendUrl
+                            : "http://localhost:5173";
+                    String envFrontendUrl = System.getenv("FRONTEND_URL");
+                    if (envFrontendUrl != null && !envFrontendUrl.isBlank()) {
+                        redirectBase = envFrontendUrl;
                     }
-                    frontendUrl = frontendUrl.replaceAll("/+$", "");
-                    response.sendRedirect(frontendUrl + "/login?error=" + java.net.URLEncoder.encode(exception.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
+                    redirectBase = redirectBase.replaceAll("/+$", "");
+                    response.sendRedirect(redirectBase + "/login?error=" + java.net.URLEncoder.encode(exception.getMessage(), java.nio.charset.StandardCharsets.UTF_8));
                 })
             )
             .exceptionHandling(exceptions -> exceptions
@@ -105,6 +111,13 @@ public class SecurityConfig {
             "http://127.0.0.1:5174",
             "https://pathfinder123-rose.vercel.app"
         ));
+
+        if (this.frontendUrl != null && !this.frontendUrl.isBlank()) {
+            String clean = this.frontendUrl.trim().replaceAll("/+$", "");
+            if (!allowedOrigins.contains(clean)) {
+                allowedOrigins.add(clean);
+            }
+        }
 
         String envFrontendUrl = System.getenv("FRONTEND_URL");
         if (envFrontendUrl != null && !envFrontendUrl.isBlank()) {

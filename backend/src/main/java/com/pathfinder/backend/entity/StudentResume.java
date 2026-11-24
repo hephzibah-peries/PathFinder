@@ -13,6 +13,7 @@ public class StudentResume {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private StudentProfile student;
 
     @Column(nullable = false)

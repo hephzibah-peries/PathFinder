@@ -30,6 +30,10 @@ public class StudentProfile {
     @Column(columnDefinition = "TEXT")
     private String profilePicture;
 
+    @OneToMany(mappedBy = "student", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private java.util.List<StudentResume> resumes = new java.util.ArrayList<>();
+
     public StudentProfile() {
     }
 
@@ -67,6 +71,8 @@ public class StudentProfile {
     public void setPreferredWorkMode(String preferredWorkMode) { this.preferredWorkMode = preferredWorkMode; }
     public String getProfilePicture() { return profilePicture; }
     public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
+    public java.util.List<StudentResume> getResumes() { return resumes; }
+    public void setResumes(java.util.List<StudentResume> resumes) { this.resumes = resumes; }
 
     public static Builder builder() { return new Builder(); }
 

@@ -25,7 +25,7 @@ public class StudentProfileService {
         this.userRepository = userRepository;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public StudentProfileDto getProfileByEmail(String email) {
         if (email == null || email.isBlank()) {
             return StudentProfileDto.builder().build();
@@ -37,14 +37,12 @@ public class StudentProfileService {
         }
 
         StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
-                .orElse(null);
-
-        if (profile == null) {
-            return StudentProfileDto.builder()
-                    .userId(user.getId())
-                    .email(user.getEmail())
-                    .build();
-        }
+                .orElseGet(() -> studentProfileRepository.save(
+                        StudentProfile.builder()
+                                .user(user)
+                                .fullName(user.getEmail().split("@")[0])
+                                .build()
+                ));
 
         return mapToDto(profile);
     }

@@ -91,12 +91,13 @@ public class GoogleIdTokenVerifier {
 
         String token = idTokenString.trim();
 
-        // Check if token is a 3-part JWT ID token (OAuth access tokens starting with ya29. or non-3-part tokens route to verifyAccessToken)
+        // If the token contains 2 dots (split("\\.").length == 3) and is not ya29., verify as JWT ID token
         boolean is3PartJwt = !token.startsWith("ya29.") && token.split("\\.").length == 3;
 
         if (is3PartJwt) {
             return verifyIdToken(token);
         } else {
+            // Otherwise (Google OAuth access_token starting with ya29. or non-3-part token), verify via UserInfo API
             return verifyAccessToken(token);
         }
     }
@@ -228,7 +229,8 @@ public class GoogleIdTokenVerifier {
         try {
             String[] parts = jwtToken.split("\\.");
             if (parts.length != 3) {
-                throw new IllegalArgumentException("Invalid Google ID token format: expected 3-part JWT");
+                // If the token does not have 3 parts, attempt OAuth access token verification before failing
+                return verifyAccessToken(jwtToken);
             }
 
             byte[] decodedBytes = Base64.getUrlDecoder().decode(parts[1]);

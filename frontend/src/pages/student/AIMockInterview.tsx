@@ -351,10 +351,6 @@ export default function AIMockInterview() {
       {/* ── Page Header ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E5D5CE] pb-6">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#FDF2ED] px-3.5 py-1 text-xs font-bold text-[#7A4B43] border border-[#E5D5CE] mb-2">
-            <span className="flex h-2 w-2 rounded-full bg-[#2D6A4F] animate-ping" />
-            Gemini AI Live Interview Engine
-          </div>
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-[#2B1B17] tracking-tight">
             AI Mock Interview & Feedback
           </h1>

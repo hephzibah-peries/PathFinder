@@ -111,11 +111,6 @@ export default function Landing() {
       <section className="relative overflow-hidden mx-auto max-w-7xl px-8 pt-20 pb-20">
         <Hero3DBackground />
         <div className="max-w-3xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#E5D5CE] bg-[#FDF2ED] px-4 py-1.5 text-xs font-bold text-[#7A4B43] shadow-xs mb-6 uppercase tracking-wider">
-            <span className="h-2 w-2 rounded-full bg-[#E6A694] animate-ping" />
-            <span>Next-Generation Career Intelligence</span>
-          </div>
-
           <h1 className="font-serif text-5xl sm:text-6xl lg:text-[68px] font-bold tracking-tight leading-[1.08] text-[#2B1B17] mb-6">
             Find the right internship. <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7A4B43] via-[#6B3E36] to-[#E6A694]">

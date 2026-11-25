@@ -107,10 +107,13 @@ public class AuthService {
         if (user.getRole() == UserRole.STUDENT) {
             try {
                 if (studentProfileRepository.findByUserId(user.getId()).isEmpty()) {
-                    StudentProfile profile = StudentProfile.builder()
+                    StudentProfile.Builder profileBuilder = StudentProfile.builder()
                             .user(user)
-                            .fullName(name)
-                            .build();
+                            .fullName(name);
+                    if (payload.getPicture() != null && !payload.getPicture().isBlank()) {
+                        profileBuilder.profilePicture(payload.getPicture());
+                    }
+                    StudentProfile profile = profileBuilder.build();
                     studentProfileRepository.save(profile);
                     logger.info("Auto-created StudentProfile for user: {}", email);
                 }

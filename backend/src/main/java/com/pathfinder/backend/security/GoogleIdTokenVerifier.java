@@ -20,6 +20,7 @@ public class GoogleIdTokenVerifier {
 
     private static final Logger logger = LoggerFactory.getLogger(GoogleIdTokenVerifier.class);
     private static final String GOOGLE_TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo?id_token=";
+    private static final String GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
 
     @Value("${spring.security.oauth2.client.registration.google.client-id:}")
     private String expectedClientId;
@@ -39,12 +40,18 @@ public class GoogleIdTokenVerifier {
         private final String name;
         private final String sub;
         private final boolean emailVerified;
+        private final String picture;
 
         public GoogleUserPayload(String email, String name, String sub, boolean emailVerified) {
+            this(email, name, sub, emailVerified, null);
+        }
+
+        public GoogleUserPayload(String email, String name, String sub, boolean emailVerified, String picture) {
             this.email = email;
             this.name = name;
             this.sub = sub;
             this.emailVerified = emailVerified;
+            this.picture = picture;
         }
 
         public String getEmail() {
@@ -62,24 +69,43 @@ public class GoogleIdTokenVerifier {
         public boolean isEmailVerified() {
             return emailVerified;
         }
+
+        public String getPicture() {
+            return picture;
+        }
     }
 
     /**
-     * Verifies a Google ID token by querying Google's tokeninfo API,
-     * falling back to local JWT payload parsing if offline or in simulated mode.
+     * Verifies a Google token. Supports both:
+     * 1. 3-part OpenID Connect JWT ID tokens (via Google tokeninfo / offline parsing)
+     * 2. Google OAuth2 access tokens (ya29... via Google UserInfo endpoint)
      *
-     * @param idTokenString raw Google JWT ID token
+     * @param idTokenString raw Google token (JWT ID token or OAuth access token)
      * @return GoogleUserPayload containing verified user details
      * @throws IllegalArgumentException if token is invalid, expired, or unverified
      */
     public GoogleUserPayload verify(String idTokenString) {
         if (idTokenString == null || idTokenString.trim().isEmpty()) {
-            throw new IllegalArgumentException("Google ID token cannot be empty");
+            throw new IllegalArgumentException("Google token cannot be empty");
         }
 
         String token = idTokenString.trim();
 
-        // 1. Attempt official online verification via Google OAuth2 tokeninfo endpoint (for ID tokens)
+        // Check if token is a 3-part JWT ID token
+        boolean isJwt = token.split("\\.").length == 3;
+
+        if (isJwt) {
+            return verifyIdToken(token);
+        } else {
+            return verifyAccessToken(token);
+        }
+    }
+
+    /**
+     * Verifies a 3-part OpenID Connect JWT ID token.
+     */
+    private GoogleUserPayload verifyIdToken(String token) {
+        // 1. Attempt official online verification via Google OAuth2 tokeninfo endpoint
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(GOOGLE_TOKEN_INFO_URL + token))
@@ -121,59 +147,81 @@ public class GoogleIdTokenVerifier {
                 }
 
                 String sub = root.path("sub").asText(null);
+                String picture = root.path("picture").asText(null);
 
                 logger.info("Successfully verified Google ID token for email: {}", email);
-                return new GoogleUserPayload(email, name, sub, true);
+                return new GoogleUserPayload(email, name, sub, true, picture);
             } else {
                 logger.warn("Google tokeninfo returned HTTP {}: {}", response.statusCode(), response.body());
             }
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception ex) {
-            logger.warn("Online verification via Google tokeninfo failed or timed out: {}. Attempting OAuth2 userinfo fallback.", ex.getMessage());
+            logger.warn("Online verification via Google tokeninfo failed: {}. Attempting fallback parsing.", ex.getMessage());
         }
 
-        // 2. Attempt online verification via Google OAuth2 userinfo endpoint (for OAuth2 access tokens)
+        // 2. Fallback: Parse and validate JWT payload locally (for test environments or offline verification)
+        return parseJwtFallback(token);
+    }
+
+    /**
+     * Verifies a Google OAuth access token (e.g. ya29...) via Google UserInfo endpoint.
+     */
+    private GoogleUserPayload verifyAccessToken(String token) {
+        logger.info("Verifying Google OAuth access_token via Google UserInfo API...");
         try {
-            HttpRequest userInfoRequest = HttpRequest.newBuilder()
-                    .uri(URI.create("https://www.googleapis.com/oauth2/v3/userinfo"))
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(GOOGLE_USER_INFO_URL))
                     .header("Authorization", "Bearer " + token)
                     .timeout(Duration.ofSeconds(6))
                     .GET()
                     .build();
 
-            HttpResponse<String> userInfoResponse = httpClient.send(userInfoRequest, HttpResponse.BodyHandlers.ofString());
-            if (userInfoResponse.statusCode() == 200) {
-                JsonNode userRoot = objectMapper.readTree(userInfoResponse.body());
-                String email = userRoot.path("email").asText(null);
-                if (email != null && !email.isBlank()) {
-                    boolean emailVerified = userRoot.path("email_verified").asBoolean(true) ||
-                            "true".equalsIgnoreCase(userRoot.path("email_verified").asText());
-                    if (!emailVerified) {
-                        throw new IllegalArgumentException("Google account email is not verified");
-                    }
-                    String name = userRoot.path("name").asText(null);
-                    if (name == null || name.isBlank()) {
-                        String givenName = userRoot.path("given_name").asText("");
-                        String familyName = userRoot.path("family_name").asText("");
-                        name = (givenName + " " + familyName).trim();
-                    }
-                    String sub = userRoot.path("sub").asText(null);
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-                    logger.info("Successfully verified Google access token via userinfo for email: {}", email);
-                    return new GoogleUserPayload(email, name, sub, true);
+            if (response.statusCode() == 200) {
+                JsonNode root = objectMapper.readTree(response.body());
+
+                String email = root.path("email").asText(null);
+                if (email == null || email.isBlank()) {
+                    logger.warn("Google userinfo returned blank email for access token");
+                    throw new IllegalArgumentException("Email address missing from Google access token");
                 }
+
+                // Check email verification (defaults to true if field omitted, but rejects if explicitly false)
+                boolean emailVerified = !root.has("email_verified") ||
+                        root.path("email_verified").asBoolean(true) ||
+                        "true".equalsIgnoreCase(root.path("email_verified").asText());
+                if (!emailVerified) {
+                    logger.warn("Google account email is not verified for email: {}", email);
+                    throw new IllegalArgumentException("Google account email is not verified");
+                }
+
+                String name = root.path("name").asText(null);
+                if (name == null || name.isBlank()) {
+                    String givenName = root.path("given_name").asText("");
+                    String familyName = root.path("family_name").asText("");
+                    name = (givenName + " " + familyName).trim();
+                }
+                if (name == null || name.isBlank()) {
+                    name = email.split("@")[0];
+                }
+
+                String sub = root.path("sub").asText(null);
+                String picture = root.path("picture").asText(null);
+
+                logger.info("Successfully verified Google access_token via userinfo for email: {}", email);
+                return new GoogleUserPayload(email, name, sub, true, picture);
             } else {
-                logger.warn("Google userinfo returned HTTP {}: {}", userInfoResponse.statusCode(), userInfoResponse.body());
+                logger.warn("Google userinfo returned HTTP {}: {}", response.statusCode(), response.body());
+                throw new IllegalArgumentException("Invalid or expired Google OAuth access token (HTTP " + response.statusCode() + ")");
             }
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception ex) {
-            logger.warn("Online verification via Google userinfo failed: {}. Attempting fallback parsing.", ex.getMessage());
+            logger.error("Failed to verify Google access token via userinfo: {}", ex.getMessage());
+            throw new IllegalArgumentException("Failed to verify Google access token: " + ex.getMessage());
         }
-
-        // 2. Fallback: Parse and validate JWT payload locally (for test environments or offline verification)
-        return parseJwtFallback(token);
     }
 
     private GoogleUserPayload parseJwtFallback(String jwtToken) {

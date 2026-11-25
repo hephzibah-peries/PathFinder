@@ -130,7 +130,8 @@ public class DatabaseMigrationConfig {
                 "status VARCHAR(50) DEFAULT 'PENDING', " +
                 "applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
                 "resume_id BIGINT, " +
-                "resume_file_name VARCHAR(255))"
+                "resume_file_name VARCHAR(255), " +
+                "cover_letter TEXT)"
             );
         } catch (Exception e) {
             log.warn("applications table create check notice: {}", e.getMessage());
@@ -138,10 +139,13 @@ public class DatabaseMigrationConfig {
 
         // 8. Ensure columns in applications table
         try {
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS student_id BIGINT");
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS internship_id BIGINT");
             jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS resume_id BIGINT");
             jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS resume_file_name VARCHAR(255)");
             jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'PENDING'");
             jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS cover_letter TEXT");
         } catch (Exception e) {
             log.warn("applications column check notice: {}", e.getMessage());
         }

@@ -55,6 +55,16 @@ public class ApplicationService {
     }
 
     @Transactional
+    public ApplicationDto applyToInternship(String studentEmail, Long internshipId) {
+        return applyForInternship(studentEmail, internshipId, null);
+    }
+
+    @Transactional
+    public ApplicationDto applyToInternship(String studentEmail, Long internshipId, Long resumeId) {
+        return applyForInternship(studentEmail, internshipId, resumeId);
+    }
+
+    @Transactional
     public ApplicationDto applyForInternship(String studentEmail, Long internshipId, Long resumeId) {
         if (studentEmail == null || studentEmail.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User authentication required");
@@ -105,6 +115,11 @@ public class ApplicationService {
         Application saved = applicationRepository.save(application);
         log.info("Saved application id {} for student '{}' on internship {}", saved.getId(), studentEmail, internshipId);
         return mapToDto(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ApplicationDto> getMyApplications(String studentEmail) {
+        return getStudentApplications(studentEmail);
     }
 
     @Transactional(readOnly = true)
@@ -191,6 +206,7 @@ public class ApplicationService {
                 .appliedAt(appliedAt)
                 .resumeId(app.getResumeId())
                 .resumeFileName(app.getResumeFileName())
+                .coverLetter(app.getCoverLetter())
                 .build();
     }
 }

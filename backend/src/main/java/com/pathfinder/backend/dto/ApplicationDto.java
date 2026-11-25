@@ -12,12 +12,18 @@ public class ApplicationDto {
     private String appliedAt;
     private Long resumeId;
     private String resumeFileName;
+    private String coverLetter;
 
     public ApplicationDto() {
     }
 
     public ApplicationDto(Long id, Long internshipId, String internshipTitle, String companyName, String location, Long studentId,
                           String studentName, String status, String appliedAt, Long resumeId, String resumeFileName) {
+        this(id, internshipId, internshipTitle, companyName, location, studentId, studentName, status, appliedAt, resumeId, resumeFileName, null);
+    }
+
+    public ApplicationDto(Long id, Long internshipId, String internshipTitle, String companyName, String location, Long studentId,
+                          String studentName, String status, String appliedAt, Long resumeId, String resumeFileName, String coverLetter) {
         this.id = id;
         this.internshipId = internshipId;
         this.internshipTitle = internshipTitle;
@@ -29,6 +35,7 @@ public class ApplicationDto {
         this.appliedAt = appliedAt;
         this.resumeId = resumeId;
         this.resumeFileName = resumeFileName;
+        this.coverLetter = coverLetter;
     }
 
     public Long getId() { return id; }
@@ -53,6 +60,8 @@ public class ApplicationDto {
     public void setResumeId(Long resumeId) { this.resumeId = resumeId; }
     public String getResumeFileName() { return resumeFileName; }
     public void setResumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; }
+    public String getCoverLetter() { return coverLetter; }
+    public void setCoverLetter(String coverLetter) { this.coverLetter = coverLetter; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -68,6 +77,7 @@ public class ApplicationDto {
         private String appliedAt;
         private Long resumeId;
         private String resumeFileName;
+        private String coverLetter;
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder internshipId(Long internshipId) { this.internshipId = internshipId; return this; }
@@ -80,8 +90,9 @@ public class ApplicationDto {
         public Builder appliedAt(String appliedAt) { this.appliedAt = appliedAt; return this; }
         public Builder resumeId(Long resumeId) { this.resumeId = resumeId; return this; }
         public Builder resumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; return this; }
+        public Builder coverLetter(String coverLetter) { this.coverLetter = coverLetter; return this; }
         public ApplicationDto build() {
-            return new ApplicationDto(id, internshipId, internshipTitle, companyName, location, studentId, studentName, status, appliedAt, resumeId, resumeFileName);
+            return new ApplicationDto(id, internshipId, internshipTitle, companyName, location, studentId, studentName, status, appliedAt, resumeId, resumeFileName, coverLetter);
         }
     }
 }

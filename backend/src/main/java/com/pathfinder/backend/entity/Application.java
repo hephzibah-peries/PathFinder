@@ -30,11 +30,19 @@ public class Application {
     private Long resumeId;
     private String resumeFileName;
 
+    @Column(columnDefinition = "TEXT")
+    private String coverLetter;
+
     public Application() {
     }
 
     public Application(Long id, Internship internship, StudentProfile student, String status, LocalDateTime appliedAt,
                        Long resumeId, String resumeFileName) {
+        this(id, internship, student, status, appliedAt, resumeId, resumeFileName, null);
+    }
+
+    public Application(Long id, Internship internship, StudentProfile student, String status, LocalDateTime appliedAt,
+                       Long resumeId, String resumeFileName, String coverLetter) {
         this.id = id;
         this.internship = internship;
         this.student = student;
@@ -42,6 +50,7 @@ public class Application {
         this.appliedAt = appliedAt;
         this.resumeId = resumeId;
         this.resumeFileName = resumeFileName;
+        this.coverLetter = coverLetter;
     }
 
     public Long getId() { return id; }
@@ -58,6 +67,8 @@ public class Application {
     public void setResumeId(Long resumeId) { this.resumeId = resumeId; }
     public String getResumeFileName() { return resumeFileName; }
     public void setResumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; }
+    public String getCoverLetter() { return coverLetter; }
+    public void setCoverLetter(String coverLetter) { this.coverLetter = coverLetter; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -69,6 +80,7 @@ public class Application {
         private LocalDateTime appliedAt = LocalDateTime.now();
         private Long resumeId;
         private String resumeFileName;
+        private String coverLetter;
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder internship(Internship internship) { this.internship = internship; return this; }
@@ -77,6 +89,7 @@ public class Application {
         public Builder appliedAt(LocalDateTime appliedAt) { this.appliedAt = appliedAt; return this; }
         public Builder resumeId(Long resumeId) { this.resumeId = resumeId; return this; }
         public Builder resumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; return this; }
-        public Application build() { return new Application(id, internship, student, status, appliedAt, resumeId, resumeFileName); }
+        public Builder coverLetter(String coverLetter) { this.coverLetter = coverLetter; return this; }
+        public Application build() { return new Application(id, internship, student, status, appliedAt, resumeId, resumeFileName, coverLetter); }
     }
 }

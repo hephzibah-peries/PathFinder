@@ -76,6 +76,29 @@ export default function Applicants() {
   const [loadingCvId, setLoadingCvId] = useState<number | null>(null);
   const [candidateNote, setCandidateNote] = useState('');
 
+  // Confirmation & Email Preview Modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    application: Application | null;
+    targetStage: string;
+    stageLabel: string;
+    candidateName: string;
+    targetRole: string;
+    recipientEmail: string;
+    emailMessage: string;
+  }>({
+    isOpen: false,
+    application: null,
+    targetStage: '',
+    stageLabel: '',
+    candidateName: '',
+    targetRole: '',
+    recipientEmail: '',
+    emailMessage: '',
+  });
+  const [confirmSubmitting, setConfirmSubmitting] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
   const handleViewCv = async (applicationId: number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     try {
@@ -188,24 +211,82 @@ export default function Applicants() {
     }
   };
 
-  const handleStatusChange = async (applicationId: number, newStatus: string, note?: string) => {
+  const getStageTemplate = (stage: string, candidateName: string, roleTitle: string, note?: string): string => {
+    let base = '';
+    const upper = stage.toUpperCase();
+    if (upper === 'SHORTLISTED') {
+      base = `Dear ${candidateName},\n\nCongratulations! We are pleased to inform you that your application for the ${roleTitle} position has been shortlisted. Our hiring team was impressed by your skills and project background.\n\nNext steps regarding your application will be shared with you shortly.`;
+    } else if (upper === 'INTERVIEW') {
+      base = `Dear ${candidateName},\n\nWe would like to invite you for an interview for the ${roleTitle} position! We would love to discuss your experience, career aspirations, and how your skills align with our team.\n\nPlease reply with your available dates and times over the coming days.`;
+    } else if (upper === 'REJECTED') {
+      base = `Dear ${candidateName},\n\nThank you for applying for the ${roleTitle} position. After careful review, we have decided to move forward with other candidates whose experience more closely matches our current needs.\n\nWe appreciate your time and interest in our company, and wish you all the best in your career pursuits.`;
+    } else {
+      base = `Dear ${candidateName},\n\nThis is an update regarding your application for the ${roleTitle} position.\n\nStage: ${stage}`;
+    }
+
+    if (note && note.trim()) {
+      base += `\n\nAdditional Note from Recruiter:\n${note.trim()}`;
+    }
+    return base;
+  };
+
+  const openConfirmModal = (application: Application, targetStage: string, existingNote?: string) => {
+    const candidateName = application.studentName || 'Candidate';
+    const targetRole = application.internshipTitle || 'Internship Position';
+    const recipientEmail = application.cvEmail || application.studentEmail || 'candidate@example.com';
+    const stageLabel = targetStage === 'SHORTLISTED' ? 'Shortlist' : targetStage === 'INTERVIEW' ? 'Interview' : targetStage === 'REJECTED' ? 'Reject' : targetStage;
+    const initialMessage = getStageTemplate(targetStage, candidateName, targetRole, existingNote || candidateNote);
+
+    setConfirmModal({
+      isOpen: true,
+      application,
+      targetStage,
+      stageLabel,
+      candidateName,
+      targetRole,
+      recipientEmail,
+      emailMessage: initialMessage,
+    });
+  };
+
+  const handleCloseConfirmModal = () => {
+    if (confirmSubmitting) return;
+    setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleConfirmAndSend = async () => {
+    if (!confirmModal.application || !confirmModal.targetStage) return;
     try {
-      setUpdatingId(applicationId);
-      await applicationApi.updateStatus(applicationId, newStatus, note);
+      setConfirmSubmitting(true);
+      const appId = confirmModal.application.id;
+      setUpdatingId(appId);
+      const stage = confirmModal.targetStage;
+      const noteToSend = confirmModal.emailMessage.trim();
+      const recipient = confirmModal.recipientEmail;
+
+      await applicationApi.updateStatus(appId, stage, noteToSend);
 
       // Update in applications list
       setApplications((prev) =>
-        prev.map((app) => (app.id === applicationId ? { ...app, status: newStatus } : app))
+        prev.map((app) => (app.id === appId ? { ...app, status: stage } : app))
       );
 
       // If drawer is open with this candidate, update drawer state too
-      if (selectedCandidate && selectedCandidate.id === applicationId) {
-        setSelectedCandidate((prev) => (prev ? { ...prev, status: newStatus } : null));
+      if (selectedCandidate && selectedCandidate.id === appId) {
+        setSelectedCandidate((prev) => (prev ? { ...prev, status: stage } : null));
       }
       setCandidateNote('');
+      setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+
+      // Display confirmation toast
+      setToastMessage(`Stage updated & email sent to ${recipient}`);
+      setTimeout(() => {
+        setToastMessage((cur) => (cur?.includes(recipient) ? null : cur));
+      }, 5000);
     } catch (err: any) {
-      alert(`Failed to update application status: ${err.message}`);
+      alert(`Failed to update application status: ${err.message || 'Unknown error'}`);
     } finally {
+      setConfirmSubmitting(false);
       setUpdatingId(null);
     }
   };
@@ -577,12 +658,10 @@ export default function Applicants() {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (window.confirm(`Reject application for ${app.studentName || 'this candidate'}? An automated notification email will be sent directly to their CV email.`)) {
-                                  handleStatusChange(app.id, 'REJECTED');
-                                }
+                                openConfirmModal(app, 'REJECTED');
                               }}
-                              disabled={updatingId === app.id}
-                              title="1-click Reject & send automated email to CV contact email"
+                              disabled={updatingId === app.id || confirmSubmitting}
+                              title="Review & send rejection email to candidate"
                               className="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-700 hover:text-white transition-colors shadow-xs inline-flex items-center gap-1 disabled:opacity-50"
                             >
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -919,8 +998,8 @@ export default function Applicants() {
               </div>
               <div className="grid grid-cols-3 gap-2.5">
                 <button
-                  onClick={() => handleStatusChange(selectedCandidate.id, 'SHORTLISTED', candidateNote)}
-                  disabled={updatingId === selectedCandidate.id}
+                  onClick={() => openConfirmModal(selectedCandidate, 'SHORTLISTED', candidateNote)}
+                  disabled={updatingId === selectedCandidate.id || confirmSubmitting}
                   className={`rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
                     selectedCandidate.status === 'SHORTLISTED'
                       ? 'bg-[#2D6A4F] text-white shadow-xs'
@@ -931,8 +1010,8 @@ export default function Applicants() {
                 </button>
 
                 <button
-                  onClick={() => handleStatusChange(selectedCandidate.id, 'INTERVIEW', candidateNote)}
-                  disabled={updatingId === selectedCandidate.id}
+                  onClick={() => openConfirmModal(selectedCandidate, 'INTERVIEW', candidateNote)}
+                  disabled={updatingId === selectedCandidate.id || confirmSubmitting}
                   className={`rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
                     selectedCandidate.status === 'INTERVIEW'
                       ? 'bg-[#4A6D88] text-white shadow-xs'
@@ -943,8 +1022,8 @@ export default function Applicants() {
                 </button>
 
                 <button
-                  onClick={() => handleStatusChange(selectedCandidate.id, 'REJECTED', candidateNote)}
-                  disabled={updatingId === selectedCandidate.id}
+                  onClick={() => openConfirmModal(selectedCandidate, 'REJECTED', candidateNote)}
+                  disabled={updatingId === selectedCandidate.id || confirmSubmitting}
                   className={`rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
                     selectedCandidate.status === 'REJECTED'
                       ? 'bg-rose-700 text-white shadow-xs'
@@ -958,6 +1037,185 @@ export default function Applicants() {
           </>
         )}
       </div>
+
+      {/* ── Confirmation & Email Preview Modal ── */}
+      {confirmModal.isOpen && confirmModal.application && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2B1B17]/60 backdrop-blur-xs animate-fade-in">
+          <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-[#E5D5CE] overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-[#E5D5CE] flex items-center justify-between bg-[#FAF6F4]">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl font-bold ${
+                    confirmModal.targetStage === 'SHORTLISTED'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : confirmModal.targetStage === 'INTERVIEW'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-rose-100 text-rose-800'
+                  }`}
+                >
+                  {confirmModal.targetStage === 'SHORTLISTED' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                  {confirmModal.targetStage === 'INTERVIEW' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  )}
+                  {confirmModal.targetStage === 'REJECTED' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#2B1B17]">
+                    Confirm {confirmModal.stageLabel} & Preview Email
+                  </h3>
+                  <p className="text-xs text-[#7A6A65]">
+                    Review recipient details and edit the email message before confirming.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseConfirmModal}
+                disabled={confirmSubmitting}
+                className="text-[#7A6A65] hover:text-[#2B1B17] p-1.5 rounded-lg hover:bg-[#E5D5CE]/40 transition-colors"
+                title="Cancel and close"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 overflow-y-auto">
+              {/* Recipient & Action Info Card */}
+              <div className="rounded-xl border border-[#E5D5CE] bg-[#FAF6F4] p-3.5 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[#7A6A65] font-semibold">Candidate:</span>
+                  <span className="font-bold text-[#2B1B17] text-sm">{confirmModal.candidateName}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#7A6A65] font-semibold">Target Position:</span>
+                  <span className="font-semibold text-[#2B1B17]">{confirmModal.targetRole}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#7A6A65] font-semibold">Recipient Email:</span>
+                  <span className="inline-flex items-center gap-1 font-mono font-bold text-[#7A4B43] bg-white px-2 py-0.5 rounded border border-[#E5D5CE]">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    {confirmModal.recipientEmail}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-[#E5D5CE]/60">
+                  <span className="text-[#7A6A65] font-semibold">Stage to Apply:</span>
+                  <span
+                    className={`font-bold px-2.5 py-0.5 rounded-full text-[11px] uppercase tracking-wider ${
+                      confirmModal.targetStage === 'SHORTLISTED'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : confirmModal.targetStage === 'INTERVIEW'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-rose-100 text-rose-800'
+                    }`}
+                  >
+                    {confirmModal.stageLabel}
+                  </span>
+                </div>
+              </div>
+
+              {/* Editable Message / Note Preview */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#7A6A65]">
+                    Notification Email & Note Preview
+                  </label>
+                  <span className="text-[11px] text-[#7A6A65]">Editable template</span>
+                </div>
+                <textarea
+                  rows={6}
+                  value={confirmModal.emailMessage}
+                  onChange={(e) =>
+                    setConfirmModal((prev) => ({ ...prev, emailMessage: e.target.value }))
+                  }
+                  className="form-input text-xs w-full font-sans leading-relaxed p-3 border-[#E5D5CE] focus:border-[#7A4B43] focus:ring-1 focus:ring-[#7A4B43] rounded-xl"
+                  placeholder="Type an optional personalized message or instructions..."
+                />
+                <p className="text-[11px] text-[#7A6A65] mt-1.5">
+                  💡 This message will be sent to the candidate via automated notification email and saved to their application status log.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3.5 bg-[#FAF6F4] border-t border-[#E5D5CE] flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleCloseConfirmModal}
+                disabled={confirmSubmitting}
+                className="btn btn-ghost px-4 py-2 text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAndSend}
+                disabled={confirmSubmitting}
+                className={`btn px-5 py-2 text-xs font-bold flex items-center gap-2 shadow-sm ${
+                  confirmModal.targetStage === 'SHORTLISTED'
+                    ? 'btn-primary'
+                    : confirmModal.targetStage === 'INTERVIEW'
+                    ? 'bg-[#4A6D88] text-white hover:bg-[#3B576D]'
+                    : 'bg-rose-700 text-white hover:bg-rose-800'
+                }`}
+              >
+                {confirmSubmitting ? (
+                  <>
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Updating & Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    <span>Confirm & Send Email</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirmation Floating Toast ── */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl bg-[#2D6A4F] px-4 py-3 text-sm font-semibold text-white shadow-xl animate-fade-in border border-emerald-400">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <span>{toastMessage}</span>
+          <button
+            onClick={() => setToastMessage(null)}
+            className="ml-2 text-white/80 hover:text-white"
+            title="Close notification"
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
   );
 }

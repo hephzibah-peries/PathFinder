@@ -1,0 +1,63 @@
+{
+  "model_type": "RandomForestClassifier",
+  "hyperparameters": {
+    "n_estimators": 100,
+    "max_depth": 6,
+    "min_samples_split": 4,
+    "min_samples_leaf": 2,
+    "random_state": 42
+  },
+  "dataset_summary": {
+    "total_samples": 1200,
+    "train_samples": 960,
+    "test_samples": 240,
+    "feature_names": [
+      "semantic_similarity",
+      "skill_overlap_ratio",
+      "missing_core_skills",
+      "project_count",
+      "cv_completeness"
+    ],
+    "class_distribution": {
+      "shortlisted": 675,
+      "not_shortlisted": 525
+    }
+  },
+  "cross_validation": {
+    "k_folds": 5,
+    "cv_accuracy_scores": [
+      0.9062,
+      0.9062,
+      0.8958,
+      0.8854,
+      0.8906
+    ],
+    "cv_accuracy_mean": 0.8969,
+    "cv_accuracy_std": 0.0083,
+    "cv_f1_mean": 0.9081
+  },
+  "test_metrics": {
+    "accuracy": 0.8792,
+    "precision": 0.9015,
+    "recall": 0.8815,
+    "f1_score": 0.8914,
+    "roc_auc": 0.9651
+  },
+  "confusion_matrix": [
+    [
+      92,
+      13
+    ],
+    [
+      16,
+      119
+    ]
+  ],
+  "feature_importances": {
+    "semantic_similarity": 0.2463,
+    "skill_overlap_ratio": 0.3534,
+    "missing_core_skills": 0.2184,
+    "project_count": 0.1226,
+    "cv_completeness": 0.0594
+  }
+}

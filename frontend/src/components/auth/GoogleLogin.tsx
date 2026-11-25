@@ -78,53 +78,37 @@ export const GoogleLogin: React.FC<GoogleLoginProps> = ({
     document.body.appendChild(script);
   }, []);
 
-  // 3. Initialize OAuth2 token client once GIS script is ready
+  // 3. Initialize OAuth 2.0 Token Client once GIS script is ready
   useEffect(() => {
-    if (!scriptLoaded || !window.google?.accounts) {
+    if (!scriptLoaded || !window.google?.accounts?.oauth2) {
       return;
     }
 
     try {
-      // Ensure auto_select is explicitly disabled
-      if (window.google.accounts.id) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-          callback: (response) => {
-            if (response?.credential) {
-              onSuccess(response.credential);
-            }
-          },
-        });
-      }
-
       // Initialize OAuth 2.0 Token Client for explicit user-triggered account selection
-      if (window.google.accounts.oauth2) {
-        tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
-          client_id: clientId,
-          scope: 'openid email profile',
-          prompt: 'select_account',
-          callback: (tokenResponse) => {
-            setIsConnecting(false);
-            if (tokenResponse?.error) {
-              console.warn('[PathFinder Auth] Google OAuth popup response error:', tokenResponse.error);
-              onError?.(tokenResponse.error_description || tokenResponse.error || 'Google Sign-In was cancelled or failed.');
-              return;
-            }
-            if (tokenResponse?.access_token) {
-              onSuccess(tokenResponse.access_token);
-            } else {
-              onError?.('No access token returned from Google.');
-            }
-          },
-          error_callback: (err) => {
-            setIsConnecting(false);
-            console.warn('[PathFinder Auth] Google OAuth client error:', err);
-            onError?.('Google Sign-In window encountered an error.');
-          },
-        });
-      }
+      tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'openid email profile',
+        prompt: 'select_account',
+        callback: (tokenResponse) => {
+          setIsConnecting(false);
+          if (tokenResponse?.error) {
+            console.warn('[PathFinder Auth] Google OAuth popup response error:', tokenResponse.error);
+            onError?.(tokenResponse.error_description || tokenResponse.error || 'Google Sign-In was cancelled or failed.');
+            return;
+          }
+          if (tokenResponse?.access_token) {
+            onSuccess(tokenResponse.access_token);
+          } else {
+            onError?.('No access token returned from Google.');
+          }
+        },
+        error_callback: (err) => {
+          setIsConnecting(false);
+          console.warn('[PathFinder Auth] Google OAuth client error:', err);
+          onError?.('Google Sign-In window encountered an error.');
+        },
+      });
     } catch (err: any) {
       console.error('Failed to initialize Google OAuth token client:', err);
     }

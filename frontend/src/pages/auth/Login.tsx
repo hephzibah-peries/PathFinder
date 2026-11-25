@@ -45,12 +45,17 @@ export default function Login() {
   };
 
   const handleGoogleSuccess = async (credential: string) => {
+    if (!credential || typeof credential !== 'string' || !credential.trim()) {
+      setError('Received an empty token from Google. Please try again.');
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
     try {
       console.log('[PathFinder Auth] Received Google credential token, submitting via authApi.loginWithGoogle...');
-      const response = await loginWithGoogle(credential);
+      const response = await loginWithGoogle(credential.trim());
       console.log('[PathFinder Auth] Google login successful. Authenticated as:', response.email, response.role);
 
       // Verify persistence in local storage

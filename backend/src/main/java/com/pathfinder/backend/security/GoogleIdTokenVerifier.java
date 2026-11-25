@@ -91,10 +91,10 @@ public class GoogleIdTokenVerifier {
 
         String token = idTokenString.trim();
 
-        // Check if token is a 3-part JWT ID token
-        boolean isJwt = token.split("\\.").length == 3;
+        // Check if token is a 3-part JWT ID token (OAuth access tokens starting with ya29. or non-3-part tokens route to verifyAccessToken)
+        boolean is3PartJwt = !token.startsWith("ya29.") && token.split("\\.").length == 3;
 
-        if (isJwt) {
+        if (is3PartJwt) {
             return verifyIdToken(token);
         } else {
             return verifyAccessToken(token);

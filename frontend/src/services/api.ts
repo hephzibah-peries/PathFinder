@@ -299,11 +299,17 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  loginWithGoogle: (idToken: string) =>
-    request<AuthResponse>('/auth/google', {
+  loginWithGoogle: (token: string) => {
+    const cleanToken = (token || '').trim();
+    return request<AuthResponse>('/auth/google', {
       method: 'POST',
-      body: JSON.stringify({ idToken, token: idToken, credential: idToken }),
-    }),
+      body: JSON.stringify({
+        token: cleanToken,
+        credential: cleanToken,
+        idToken: cleanToken,
+      }),
+    });
+  },
   getMe: () => request<any>('/test/me'),
 };
 

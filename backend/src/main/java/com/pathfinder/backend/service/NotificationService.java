@@ -237,7 +237,7 @@ public class NotificationService {
                 );
 
                 if (response.getStatusCode().is2xxSuccessful()) {
-                    log.info("Sent email via Brevo HTTPS API to '{}' [Subject: '{}']", toEmail, subject);
+                    log.info("Email sent via Brevo to: " + toEmail);
                 } else {
                     log.error("Brevo HTTPS API returned non-2xx response for '{}': status={}, body={}",
                             toEmail, response.getStatusCode(), response.getBody());

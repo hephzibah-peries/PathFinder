@@ -276,7 +276,7 @@ export default function PostInternshipModal({
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="e.g. Backend Developer Intern"
+                  placeholder="e.g. Software Engineer, Financial Analyst, Mechanical Engineer, Marketing Intern"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   autoFocus
@@ -355,7 +355,7 @@ export default function PostInternshipModal({
             <div className="space-y-6">
               <div>
                 <label className="form-label">
-                  Required Technical Skills <span className="text-[#7A4B43]">*</span>
+                  Required Skills & Competencies <span className="text-[#7A4B43]">*</span>
                 </label>
                 <p className="text-xs text-[#7A6A65] mb-2 font-medium">Type a skill name and press Enter to append.</p>
                 <div className="rounded-xl border border-[#E5D5CE] bg-[#FAF6F4] p-3.5 flex flex-wrap gap-2">
@@ -374,7 +374,7 @@ export default function PostInternshipModal({
                   <input
                     type="text"
                     className="flex-1 min-w-[140px] bg-transparent outline-none text-sm text-[#2B1B17] placeholder-[#9C8E89]"
-                    placeholder="Add skill (e.g. Java)..."
+                    placeholder="Add skill (e.g. Financial Modeling, AutoCAD, Python)..."
                     value={newReqSkill}
                     onChange={(e) => setNewReqSkill(e.target.value)}
                     onKeyDown={handleAddReqSkill}
@@ -402,7 +402,7 @@ export default function PostInternshipModal({
                   <input
                     type="text"
                     className="flex-1 min-w-[140px] bg-transparent outline-none text-sm text-[#2B1B17] placeholder-[#9C8E89]"
-                    placeholder="Add skill (e.g. Docker)..."
+                    placeholder="Add skill (e.g. SQL, PowerBI, Clinical Research)..."
                     value={newPrefSkill}
                     onChange={(e) => setNewPrefSkill(e.target.value)}
                     onKeyDown={handleAddPrefSkill}

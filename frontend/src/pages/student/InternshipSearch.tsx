@@ -196,7 +196,7 @@ export default function InternshipSearch() {
               value={roleSearch}
               onChange={(e) => setRoleSearch(e.target.value)}
               className="form-input pl-10 text-sm"
-              placeholder="e.g. Software Engineer, Frontend Intern, QA..."
+              placeholder="e.g. Software Engineer, Financial Analyst, Mechanical Engineer, Marketing Intern..."
             />
             <svg
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A6A65]"

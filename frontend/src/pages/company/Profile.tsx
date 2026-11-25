@@ -298,7 +298,7 @@ export default function CompanyProfile() {
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                   className="form-input"
-                  placeholder="e.g. Enterprise Software & FinTech"
+                  placeholder="e.g. Technology, Engineering, Banking & Finance, Healthcare, Creative Media"
                 />
               </div>
 
@@ -309,7 +309,7 @@ export default function CompanyProfile() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="form-input"
-                  placeholder="Describe your company culture, technology stack, and hiring goals..."
+                  placeholder="Describe your company culture, core domains, and internship opportunities..."
                 />
               </div>
 

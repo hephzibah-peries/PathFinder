@@ -38,11 +38,30 @@ public class ResumeService {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ResumeService.class);
     private static final int MAX_EXTRACTED_CHARACTERS = 5_000_000;
     private static final List<String> KNOWN_SKILLS = List.of(
+            // Software & IT
             "Spring Boot", "Spring", "JavaScript", "TypeScript", "Node.js", "React", "Angular",
             "Python", "Django", "Flask", "C++", "C#", ".NET", "ASP.NET", "PostgreSQL", "MySQL",
             "MongoDB", "Kubernetes", "Machine Learning", "Data Analysis", "REST API", "GraphQL",
             "Microservices", "Docker", "Redis", "HTML", "CSS", "SQL", "Java", "AWS", "Azure",
-            "Git", "Excel", "Figma", "Agile", "Kotlin", "Go"
+            "Git", "Excel", "Figma", "Agile", "Kotlin", "Go",
+            // Engineering & Physical Sciences
+            "AutoCAD", "SolidWorks", "MATLAB", "Circuit Design", "Thermodynamics", "PLC", "LabVIEW",
+            "Embedded Systems", "ANSYS", "Finite Element Analysis", "CATIA",
+            // Finance, Business & Accounting
+            "Financial Modeling", "Accounting", "Financial Analysis", "Auditing", "Taxation",
+            "Valuation", "Risk Management", "Corporate Finance", "PowerBI", "Tableau", "QuickBooks",
+            "Budgeting", "Forecasting",
+            // Marketing, Media & Design
+            "Digital Marketing", "SEO", "Content Strategy", "Social Media Marketing", "Copywriting",
+            "Google Analytics", "Adobe Creative Suite", "Photoshop", "Illustrator", "InDesign",
+            "UI/UX Design", "Wireframing", "User Research", "Brand Management",
+            // Healthcare & Life Sciences
+            "Clinical Research", "Biostatistics", "Molecular Biology", "Biochemistry", "PCR",
+            "Laboratory Safety", "Good Laboratory Practice", "Pharmacology", "Bioinformatics",
+            // Operations, HR & Law
+            "Talent Acquisition", "Human Resources", "Onboarding", "HR Policies", "Supply Chain",
+            "Logistics", "Procurement", "Inventory Management", "Project Management", "Compliance",
+            "Contract Law", "Legal Research", "Due Diligence"
     );
 
     private final InternshipRepository internshipRepository;
@@ -367,11 +386,27 @@ public class ResumeService {
             return List.of("Selenium", "Test Automation", "JUnit", "Cypress", "API Testing", "Postman", "JIRA", "Regression Testing", "SQL", "Python", "Performance Testing");
         } else if (lower.contains("cyber") || lower.contains("security")) {
             return List.of("Network Security", "Penetration Testing", "Linux", "Python", "Vulnerability Assessment", "Cryptography", "SIEM", "Firewalls", "OWASP", "Ethical Hacking");
-        } else if (lower.contains("ui/ux") || lower.contains("design")) {
-            return List.of("Figma", "Wireframing", "Prototyping", "User Research", "Usability Testing", "UI Design", "Design Systems", "Adobe XD", "Information Architecture", "HTML/CSS");
-        } else {
-            // Default backend / software engineer
+        } else if (lower.contains("ui/ux") || lower.contains("graphic") || lower.contains("design") || lower.contains("creative")) {
+            return List.of("Figma", "Wireframing", "Prototyping", "User Research", "Usability Testing", "UI Design", "Design Systems", "Adobe Creative Suite", "Photoshop", "Illustrator");
+        } else if (lower.contains("finance") || lower.contains("financial") || lower.contains("accounting") || lower.contains("audit")) {
+            return List.of("Financial Modeling", "Excel", "Data Analysis", "Financial Reporting", "Accounting", "Valuation", "Forecasting", "Budgeting", "SQL", "Risk Management", "PowerBI");
+        } else if (lower.contains("mechanical") || lower.contains("civil") || lower.contains("electrical") || lower.contains("hardware") || (lower.contains("engineer") && !lower.contains("software"))) {
+            return List.of("AutoCAD", "SolidWorks", "MATLAB", "Engineering Design", "Circuit Design", "Thermodynamics", "Project Planning", "Quality Assurance", "Technical Documentation", "Problem Solving");
+        } else if (lower.contains("marketing") || lower.contains("brand") || lower.contains("content") || lower.contains("social media")) {
+            return List.of("Digital Marketing", "Social Media Strategy", "Content Creation", "SEO", "Google Analytics", "Brand Management", "Copywriting", "Market Research", "Email Marketing", "Campaign Management");
+        } else if (lower.contains("hr") || lower.contains("human resource") || lower.contains("talent") || lower.contains("recruiting")) {
+            return List.of("Talent Acquisition", "HR Policies", "Employee Engagement", "Onboarding", "Interviewing", "HRIS", "Communication", "Labor Compliance", "Workplace Relations", "Organizational Development");
+        } else if (lower.contains("health") || lower.contains("clinical") || lower.contains("biology") || lower.contains("lab") || lower.contains("medical") || lower.contains("biomedical") || lower.contains("pharm")) {
+            return List.of("Clinical Research", "Laboratory Safety", "Data Analysis", "Biostatistics", "Quality Control", "Research Methodology", "Regulatory Compliance", "Documentation", "Scientific Writing", "Good Laboratory Practice");
+        } else if (lower.contains("supply chain") || lower.contains("logistics") || lower.contains("operation")) {
+            return List.of("Supply Chain", "Logistics", "Process Optimization", "Inventory Management", "Data Analysis", "ERP Systems", "Vendor Management", "Lean Six Sigma", "Forecasting", "Project Management");
+        } else if (lower.contains("law") || lower.contains("legal") || lower.contains("policy") || lower.contains("compliance")) {
+            return List.of("Legal Research", "Contract Law", "Compliance", "Due Diligence", "Legal Writing", "Regulatory Analysis", "Risk Assessment", "Policy Drafting", "Ethics", "Communication");
+        } else if (lower.contains("software") || lower.contains("backend") || lower.contains("developer") || lower.contains("programmer")) {
             return List.of("Java", "Spring Boot", "SQL", "PostgreSQL", "REST APIs", "Docker", "Git", "Data Structures", "Microservices", "Unit Testing", "CI/CD");
+        } else {
+            // General multi-disciplinary internship role
+            return List.of("Project Management", "Data Analysis", "Communication", "Problem Solving", "Excel", "Research", "Documentation", "Quality Assurance", "Critical Thinking", "Stakeholder Management");
         }
     }
 
@@ -379,19 +414,22 @@ public class ResumeService {
         List<RoadmapStepDto> steps = new ArrayList<>();
 
         if (missingSkills.isEmpty()) {
+            String masteryTitle = (role.toLowerCase().contains("software") || role.toLowerCase().contains("developer"))
+                    ? "Technical Mastery & Code Review"
+                    : "Domain Mastery & Best Practices";
             steps.add(new RoadmapStepDto(
                     1,
-                    "Technical Mastery & Code Review",
+                    masteryTitle,
                     "1-2 Weeks",
-                    "You have met all primary skills for " + role + "! Deepen your knowledge by writing comprehensive unit/integration tests and reviewing architectural trade-offs.",
-                    List.of("Clean Code Principles", "Spring Boot / React Testing Best Practices")
+                    "You have met all primary skills for " + role + "! Deepen your knowledge by reviewing advanced case studies, practical standards, and industry best practices.",
+                    List.of(role + " Advanced Standards", "Professional Best Practices")
             ));
             steps.add(new RoadmapStepDto(
                     2,
                     "AI Mock Interview Simulation",
                     "3-5 Days",
-                    "Practice answering technical and scenario-based interview questions on PathFinder AI Mock Interview with real-time feedback.",
-                    List.of("PathFinder AI Interviewer", "System Design Primer")
+                    "Practice answering domain and scenario-based interview questions on PathFinder AI Mock Interview with real-time feedback.",
+                    List.of("PathFinder AI Interviewer", "STAR Behavioral Framework")
             ));
             steps.add(new RoadmapStepDto(
                     3,
@@ -410,26 +448,36 @@ public class ResumeService {
                 1,
                 "Core Foundations: Master " + primaryMissing,
                 "1-2 Weeks",
-                "Dedicate dedicated hands-on practice to core mechanics of " + primaryMissing + ". Complete fundamental exercises and understand idiomatic patterns.",
-                List.of(primaryMissing + " Official Documentation", "FreeCodeCamp / Baeldung Tutorials")
+                "Dedicate focused hands-on practice to core mechanics of " + primaryMissing + ". Complete fundamental exercises and understand key principles.",
+                List.of(primaryMissing + " Official Guides", "Curated Reference Tutorials")
         ));
 
         if (secondaryMissing != null) {
             steps.add(new RoadmapStepDto(
                     2,
-                    "Integration & Hands-On Practice with " + secondaryMissing,
+                    "Integration & Practical Application with " + secondaryMissing,
                     "2 Weeks",
-                    "Build a working micro-project combining " + primaryMissing + " and " + secondaryMissing + " into a functional application stack.",
-                    List.of(secondaryMissing + " Guides", "GitHub Sample Repositories")
+                    "Build a working project or case study combining " + primaryMissing + " and " + secondaryMissing + " into a cohesive deliverable.",
+                    List.of(secondaryMissing + " Practical Guides", "Sample Templates & Exercises")
             ));
         }
 
+        String portfolioTitle = (role.toLowerCase().contains("software") || role.toLowerCase().contains("developer") || role.toLowerCase().contains("devops"))
+                ? "Portfolio Project & Deployment"
+                : "Professional Portfolio & Practical Case Study";
+        String portfolioDesc = (role.toLowerCase().contains("software") || role.toLowerCase().contains("developer"))
+                ? "Construct a demo project showcasing your newly acquired skills (" + String.join(", ", missingSkills) + "). Commit to GitHub and document architectural decisions."
+                : "Develop a comprehensive portfolio piece or case study showcasing your newly acquired skills (" + String.join(", ", missingSkills) + ") to present to recruiters.";
+        List<String> portfolioRes = (role.toLowerCase().contains("software") || role.toLowerCase().contains("developer"))
+                ? List.of("GitHub Portfolio Showcase", "Project Deployment Guide")
+                : List.of("Portfolio & Case Study Presentation", "Professional Documentation Best Practices");
+
         steps.add(new RoadmapStepDto(
                 steps.size() + 1,
-                "Portfolio Project & Deployment",
+                portfolioTitle,
                 "1-2 Weeks",
-                "Construct a full-stack demo showcasing your newly acquired skills (" + String.join(", ", missingSkills) + "). Containerize with Docker and commit to GitHub.",
-                List.of("GitHub Portfolio Showcase", "Docker & CI/CD Deployment")
+                portfolioDesc,
+                portfolioRes
         ));
 
         steps.add(new RoadmapStepDto(

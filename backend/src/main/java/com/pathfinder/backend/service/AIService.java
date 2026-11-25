@@ -99,18 +99,20 @@ public class AIService {
                  "Personal Introduction & Background",
                  "Company Knowledge & Motivation",
                  "Internship Availability & University Commitments",
-                 "Learning Ability & Career Goals" -> "BEHAVIORAL";
+                 "Learning Ability & Career Goals",
+                 "Behavioral & Situational",
+                 "Communication & Leadership" -> "BEHAVIORAL";
             default -> "TECHNICAL";
         };
     }
 
     private String buildQuestionGenerationPrompt(String profileJson, String targetRole, String questionCategory) {
-        String role = (targetRole != null && !targetRole.isBlank()) ? targetRole : "Software Engineer Intern";
-        String category = (questionCategory != null && !questionCategory.isBlank()) ? questionCategory : "Technical Knowledge";
+        String role = (targetRole != null && !targetRole.isBlank()) ? targetRole : "Internship Candidate";
+        String category = (questionCategory != null && !questionCategory.isBlank()) ? questionCategory : "Core Domain Knowledge";
         String qType = determineQuestionType(category);
 
         return """
-            You are a Principal Tech Interviewer and Hiring Committee Member.
+            You are a Principal Industry Interviewer and Hiring Committee Member across engineering, business, finance, healthcare, design, marketing, HR, law, and science domains.
             Generate an exact structured set of 5 interview questions for a candidate:
             Target Role: %s
             Selected Question Category: %s
@@ -118,19 +120,21 @@ public class AIService {
             %s
 
             CRITICAL DIRECTIVE:
-            All 5 questions MUST be strictly and deeply focused on the chosen category: "%s".
-            Tailor questions directly to the target position (%s).
+            All 5 questions MUST be strictly, professionally, and deeply focused on the candidate's target role (%s) and chosen category: "%s".
+            Adapt questions dynamically to the domain and industry standards of the target position (whether IT & Software, Engineering, Finance & Business, Healthcare & Life Sciences, Marketing & HR, Design & Media, Law, or Physical/Social Sciences).
+            
             Category Guidelines:
-            - "Personal Introduction & Background": Self-introduction, personal journey into software engineering, technical passions, and core developer strengths.
-            - "Educational Background": University degree coursework, Computer Science fundamentals, academic research, and key university learnings.
-            - "Technical Knowledge": Core programming language mechanisms, framework internals, architectural principles, database indexing, and API design.
-            - "Programming & Problem-Solving": Time/space complexity (Big-O), data structures, debugging tricky runtime bugs, edge cases, and code optimization.
-            - "Projects & Practical Experience": Hands-on software applications, architectural decisions, trade-offs made, and project technical hurdles overcome.
-            - "Company Knowledge & Motivation": Why this specific company, understanding of industry domain, culture fit, and long-term career drive.
-            - "Communication & Behavioral Questions": Collaboration, constructive disagreement resolution, handling critical code review feedback, and teamwork (STAR format).
-            - "Internship Availability & University Commitments": Time management, balancing university exams with internship deliverables, full-time commitment.
-            - "Learning Ability & Career Goals": How candidate rapidly masters unfamiliar technologies, adaptability, and 1-3 year career aspirations.
-            - "Situational & Scenario-Based Questions": Hypothetical production emergencies, handling urgent bug reports, tight sprint deadlines, and ambiguous specifications.
+            - "Personal Introduction & Background": Self-introduction, personal career journey into this profession, passions, core domain strengths, and motivations.
+            - "Educational Background": University degree coursework, academic research, foundational principles of the discipline, and key theoretical learnings applied to the field.
+            - "Technical Knowledge" / "Core Domain Knowledge": Domain-specific technical principles, tools, frameworks, industry standards, methodologies, and core analytical techniques relevant to %s.
+            - "Programming & Problem-Solving" / "Practical Case Study & Problem Solving": Analytical reasoning, practical problem-solving, real-world case analysis, quantitative/qualitative evaluations, root-cause troubleshooting, and strategic solutions.
+            - "Projects & Practical Experience": Hands-on projects, portfolio pieces, field work, lab research, or business initiatives; methods used, trade-offs made, and obstacles overcome.
+            - "Company Knowledge & Motivation": Why this specific organization, understanding of industry domain, market ecosystem, culture fit, and long-term career drive.
+            - "Communication & Behavioral Questions" / "Behavioral & Situational": Interpersonal collaboration, constructive conflict resolution, handling critical feedback, and teamwork in interdisciplinary environments (STAR format).
+            - "Communication & Leadership": Explaining complex domain concepts clearly, cross-functional stakeholder presentation, project coordination, and empathy.
+            - "Internship Availability & University Commitments": Time management, balancing university exams with internship deliverables, professional reliability, and full-time/hybrid commitment.
+            - "Learning Ability & Career Goals": How candidate rapidly masters unfamiliar concepts/tools, adaptability, curiosity, and 1-3 year career aspirations.
+            - "Situational & Scenario-Based Questions": Hypothetical workplace challenges, client/stakeholder requests, crisis or incident response, tight deadlines, and ambiguous specifications in this domain.
 
             Respond with ONLY a valid JSON array matching this format:
             [
@@ -170,24 +174,24 @@ public class AIService {
                 "context": "Context rationale"
               }
             ]
-            """.formatted(role, category, profileJson, category, role, category, qType, category, category, qType, category, category, qType, category, category, qType, category, category, qType, category);
+            """.formatted(role, category, profileJson, role, category, role, category, qType, category, category, qType, category, category, qType, category, category, qType, category, category, qType, category);
     }
 
     private String buildEvaluationPrompt(String question, String candidateAnswer) {
         return """
-            You are a Senior Technical Hiring Lead evaluating a candidate's mock interview response.
+            You are a Senior Industry Hiring Lead and Expert Interviewer evaluating a candidate's mock interview response for their target field.
             Question:
             "%s"
 
             Candidate Answer:
             "%s"
 
-            Evaluate the candidate's answer thoroughly and provide actionable, encouraging feedback.
+            Evaluate the candidate's answer thoroughly and provide actionable, encouraging feedback tailored to their field (IT, Engineering, Business, Finance, Healthcare, Design, Marketing, etc.).
             Return ONLY a valid JSON object matching this schema:
             {
-              "technicalScore": <integer between 0 and 100>,
+              "technicalScore": <integer between 0 and 100 representing domain technical/practical accuracy>,
               "communicationClarity": <integer between 0 and 100>,
-              "modelAnswer": "<An exemplary, industry-standard model response that covers all critical concepts>",
+              "modelAnswer": "<An exemplary, industry-standard model response that covers all critical concepts and best practices>",
               "constructiveFeedback": "<Specific guidance detailing what was done well and exactly what to strengthen>",
               "keyStrengths": ["Strength 1", "Strength 2"]
             }
@@ -258,6 +262,34 @@ public class AIService {
         List<InterviewQuestionDto> list = new ArrayList<>();
 
         switch (category) {
+            case "Core Domain Knowledge" -> {
+                list.add(new InterviewQuestionDto(1, "What core methodologies, tools, and industry standards are most essential when executing responsibilities as a " + role + "?", "TECHNICAL", "Core Methodologies & Standards", "Tailored to target role: " + role));
+                list.add(new InterviewQuestionDto(2, "When applying " + skill1 + " in practical scenarios, how do you ensure quality, accuracy, and compliance with best practices?", "TECHNICAL", skill1 + " Best Practices", "Evaluates practical domain proficiency"));
+                list.add(new InterviewQuestionDto(3, "How do you evaluate and integrate " + skill2 + " into your project workflows to maximize efficiency and outcomes?", "TECHNICAL", skill2 + " Workflow Integration", "Tests tools and systems mastery"));
+                list.add(new InterviewQuestionDto(4, "What emerging innovations or industry shifts are currently transforming the " + role + " landscape, and how do you prepare for them?", "TECHNICAL", "Industry Trends & Innovation", "Assesses forward-looking awareness"));
+                list.add(new InterviewQuestionDto(5, "How do you systematically identify and mitigate risks or errors when delivering critical work in " + role + "?", "TECHNICAL", "Risk Mitigation & Quality Control", "Tests professional rigor and dependability"));
+            }
+            case "Practical Case Study & Problem Solving" -> {
+                list.add(new InterviewQuestionDto(1, "Describe a complex problem or project challenge you faced in your studies or experience. How did you structure your analysis to find the solution?", "TECHNICAL", "Problem Structuring & Root Cause", "Evaluates analytical methodology"));
+                list.add(new InterviewQuestionDto(2, "When project constraints (time, budget, or resources) limit your options, what framework do you use to make optimal trade-offs?", "TECHNICAL", "Resource Constraints & Trade-offs", "Assesses pragmatic decision-making"));
+                list.add(new InterviewQuestionDto(3, "Walk us through a time you analyzed data or qualitative evidence to recommend a concrete course of action.", "TECHNICAL", "Evidence-Based Decision Making", "Tests data-informed reasoning"));
+                list.add(new InterviewQuestionDto(4, "How do you approach a project when requirements are ambiguous or critical information is missing?", "TECHNICAL", "Ambiguity Resolution", "Evaluates independence and problem framing"));
+                list.add(new InterviewQuestionDto(5, "Tell us about a time an initial solution failed. How did you diagnose what went wrong and pivot effectively?", "TECHNICAL", "Resilience & Iterative Solution", "Tests diagnostic insight and adaptability"));
+            }
+            case "Behavioral & Situational" -> {
+                list.add(new InterviewQuestionDto(1, "Tell us about a time you worked in a team where members held contrasting viewpoints. How did you build consensus and deliver results?", "BEHAVIORAL", "Conflict Resolution & Collaboration", "Evaluates interpersonal maturity (STAR format)"));
+                list.add(new InterviewQuestionDto(2, "Scenario: An unexpected priority shift occurs right before a major project milestone. How do you triage your workload and communicate with leads?", "BEHAVIORAL", "Adaptability Under Pressure", "Tests poise and prioritization"));
+                list.add(new InterviewQuestionDto(3, "Describe a situation where you received constructive criticism. How did you incorporate that feedback into your work?", "BEHAVIORAL", "Coachability & Growth Mindset", "Assesses self-awareness and receptiveness"));
+                list.add(new InterviewQuestionDto(4, "Tell us about an initiative where you took ownership beyond your assigned responsibilities to ensure project success.", "BEHAVIORAL", "Ownership & Initiative", "Evaluates proactive commitment"));
+                list.add(new InterviewQuestionDto(5, "Scenario: You notice an ethical concern, compliance issue, or quality lapse in a deliverable. How would you handle and escalate it?", "BEHAVIORAL", "Professional Ethics & Integrity", "Tests accountability and judgment"));
+            }
+            case "Communication & Leadership" -> {
+                list.add(new InterviewQuestionDto(1, "How do you tailor your communication style when explaining complex technical or domain concepts to diverse stakeholders?", "BEHAVIORAL", "Stakeholder Communication", "Tests communication adaptability"));
+                list.add(new InterviewQuestionDto(2, "Describe an instance where you motivated teammates or coordinated project milestones to achieve a shared goal.", "BEHAVIORAL", "Collaborative Leadership", "Evaluates influence without authority"));
+                list.add(new InterviewQuestionDto(3, "How do you ensure transparency, active listening, and alignment across team members during fast-paced projects?", "BEHAVIORAL", "Active Listening & Alignment", "Tests empathetic leadership"));
+                list.add(new InterviewQuestionDto(4, "When leading a discussion where opinions are divided, how do you facilitate constructive dialogue and reach a decision?", "BEHAVIORAL", "Facilitation & Consensus", "Evaluates decision leadership"));
+                list.add(new InterviewQuestionDto(5, "What communication habits do you rely on to keep mentors, supervisors, and collaborators updated without micromanagement?", "BEHAVIORAL", "Proactive Status Reporting", "Tests professional cadence and clarity"));
+            }
             case "Personal Introduction & Background" -> {
                 list.add(new InterviewQuestionDto(1, "Could you walk us through your background, your journey into software engineering, and why you are interested in the " + role + " position?", "BEHAVIORAL", "Self-Introduction & Career Story", "Assesses communication clarity and personal narrative"));
                 list.add(new InterviewQuestionDto(2, "What sparked your passion for technology, and what specific engineering problems excite you most?", "BEHAVIORAL", "Engineering Passion & Drive", "Evaluates intrinsic developer curiosity"));
@@ -376,9 +408,10 @@ public class AIService {
         int commScore = 70;
 
         List<String> keyTerms = List.of(
-                "cache", "redis", "index", "thread", "connection", "scalab", "latency",
-                "jwt", "security", "database", "spring", "react", "component", "async",
-                "docker", "microservice", "transaction", "isolation", "rest", "api"
+                "analysis", "design", "method", "process", "framework", "result", "metric",
+                "strategy", "data", "system", "quality", "collaborat", "objective", "implement",
+                "solution", "research", "compliance", "stakeholder", "performance", "optim",
+                "cache", "redis", "database", "spring", "react", "docker", "api", "model", "test"
         );
         int matchedTerms = 0;
         for (String term : keyTerms) {
@@ -396,15 +429,15 @@ public class AIService {
         techScore = Math.min(95, Math.max(35, techScore));
         commScore = Math.min(95, Math.max(40, commScore));
 
-        String modelAnswer = "An exemplary answer directly addresses the problem by: 1) Defining the fundamental architecture or trade-off involved, 2) Explaining how key mechanisms operate in production (e.g., connection pools, caching layers, or thread management), and 3) Concluding with measurable outcomes such as latency reduction and fault tolerance.";
+        String modelAnswer = "An exemplary response directly addresses the problem by: 1) Defining the fundamental principles or domain mechanisms involved, 2) Explaining how methodologies or tools operate in real-world scenarios, and 3) Concluding with measurable outcomes, quality control, or trade-off evaluation.";
 
         String feedback = String.format(
-                "You demonstrated a good fundamental grasp of the core concepts with %d technical key indicators identified. To reach a senior level, include concrete metric examples (e.g., target latency or throughput numbers) and discuss how you would test and monitor this in a staging/production pipeline.",
+                "You demonstrated a solid understanding of the core concepts with %d key domain indicators identified. To further elevate your response, incorporate concrete metrics, real-world case examples, and discuss how you validate outcomes or manage trade-offs in practice.",
                 matchedTerms
         );
 
         List<String> strengths = new ArrayList<>();
-        if (matchedTerms >= 2) strengths.add("Solid technical vocabulary and concept recognition");
+        if (matchedTerms >= 2) strengths.add("Solid domain vocabulary and concept recognition");
         if (wordCount >= 50) strengths.add("Comprehensive depth and structural elaboration");
         strengths.add("Clear logical flow and problem-oriented thinking");
 

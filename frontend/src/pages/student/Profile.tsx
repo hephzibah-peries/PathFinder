@@ -604,14 +604,26 @@ export default function StudentProfile() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">University / Institution</label>
+                  <label className="form-label">University / Institution & Degree</label>
                   <input
                     type="text"
                     value={editUniversity}
                     onChange={(e) => setEditUniversity(e.target.value)}
                     className="form-input"
-                    placeholder="e.g. University of Colombo"
+                    list="field-of-study-suggestions"
+                    placeholder="e.g. University of Colombo · Engineering / Business / CS"
                   />
+                  <datalist id="field-of-study-suggestions">
+                    <option value="Computer Science / IT" />
+                    <option value="Engineering (Mechanical, Civil, Electrical)" />
+                    <option value="Business & Management" />
+                    <option value="Finance & Economics" />
+                    <option value="Biological & Health Sciences" />
+                    <option value="Physical Sciences" />
+                    <option value="Arts, Design & Media" />
+                    <option value="Law & Social Sciences" />
+                    <option value="Other" />
+                  </datalist>
                 </div>
                 <div>
                   <label className="form-label">GPA</label>
@@ -627,13 +639,13 @@ export default function StudentProfile() {
               </div>
 
               <div>
-                <label className="form-label">About / Bio</label>
+                <label className="form-label">About / Bio & Disciplines</label>
                 <textarea
                   rows={4}
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
                   className="form-input"
-                  placeholder="Tell recruiters about yourself and your career goals..."
+                  placeholder="Tell recruiters about your field of study, skills (e.g. Financial Modeling, AutoCAD, Python, Clinical Research, Digital Marketing), and career aspirations..."
                 />
               </div>
 

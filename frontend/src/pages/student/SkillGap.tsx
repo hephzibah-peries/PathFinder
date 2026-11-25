@@ -5,6 +5,15 @@ import TrafficLightBadge from '../../components/TrafficLightBadge';
 
 const POPULAR_ROLES = [
   'Software Engineer',
+  'Data & Business Analyst',
+  'Mechanical / Civil Engineer',
+  'Electrical & Electronics Engineer',
+  'Financial & Accounting Analyst',
+  'Marketing & Brand Intern',
+  'Human Resources (HR) Intern',
+  'Healthcare / Lab Research Intern',
+  'UI/UX & Graphic Designer',
+  'Operations & Supply Chain Intern',
   'Frontend Engineer',
   'Backend Engineer',
   'Full Stack Developer',
@@ -13,7 +22,6 @@ const POPULAR_ROLES = [
   'Mobile App Developer',
   'QA & Test Automation Engineer',
   'Cybersecurity Specialist',
-  'UI/UX Designer',
 ];
 
 function computeClientSideMlScore(
@@ -199,7 +207,7 @@ export default function SkillGap() {
                   type="text"
                   value={targetRole === 'OTHER' ? '' : targetRole}
                   onChange={(e) => setTargetRole(e.target.value)}
-                  placeholder="Enter custom target role title..."
+                  placeholder="e.g. Biomedical Engineer, Corporate Paralegal, Brand Strategist..."
                   className="form-input text-sm"
                 />
               )}

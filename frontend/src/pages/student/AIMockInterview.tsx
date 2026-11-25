@@ -21,20 +21,32 @@ interface QAHistoryItem {
 }
 
 const QUESTION_CATEGORIES = [
+  'Core Domain Knowledge',
+  'Practical Case Study & Problem Solving',
+  'Behavioral & Situational',
+  'Communication & Leadership',
   'Personal Introduction & Background',
   'Educational Background',
-  'Technical Knowledge',
-  'Programming & Problem-Solving',
   'Projects & Practical Experience',
   'Company Knowledge & Motivation',
-  'Communication & Behavioral Questions',
   'Internship Availability & University Commitments',
   'Learning Ability & Career Goals',
+  'Technical Knowledge',
+  'Programming & Problem-Solving',
   'Situational & Scenario-Based Questions',
 ] as const;
 
 const TARGET_POSITIONS = [
   'Software Engineer',
+  'Data & Business Analyst',
+  'Mechanical / Civil Engineer',
+  'Electrical & Electronics Engineer',
+  'Financial & Accounting Analyst',
+  'Marketing & Brand Intern',
+  'Human Resources (HR) Intern',
+  'Healthcare / Lab Research Intern',
+  'UI/UX & Graphic Designer',
+  'Operations & Supply Chain Intern',
   'Frontend Developer',
   'Backend Developer',
   'Full Stack Engineer',
@@ -43,7 +55,7 @@ const TARGET_POSITIONS = [
   'AI / Data Science Specialist',
   'QA & Test Automation Engineer',
   'Cybersecurity Specialist',
-  'UI/UX Designer',
+  'Or enter custom role...',
 ] as const;
 
 export default function AIMockInterview() {
@@ -53,7 +65,9 @@ export default function AIMockInterview() {
   // Setup state
   const [internships, setInternships] = useState<Internship[]>([]);
   const [targetRole, setTargetRole] = useState('Software Engineer');
-  const [questionCategory, setQuestionCategory] = useState<string>('Technical Knowledge');
+  const [customRole, setCustomRole] = useState('');
+  const [activeRole, setActiveRole] = useState('Software Engineer');
+  const [questionCategory, setQuestionCategory] = useState<string>('Core Domain Knowledge');
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -171,9 +185,14 @@ export default function AIMockInterview() {
     setLoadingQuestions(true);
     setErrorMsg(null);
 
+    const effectiveRole = (targetRole === 'Or enter custom role...' && customRole.trim())
+      ? customRole.trim()
+      : (targetRole === 'Or enter custom role...' ? 'Internship Candidate' : targetRole);
+    setActiveRole(effectiveRole);
+
     try {
       const generated = await aiInterviewApi.generateQuestions({
-        targetRole,
+        targetRole: effectiveRole,
         questionCategory,
       });
 
@@ -291,7 +310,7 @@ export default function AIMockInterview() {
 
     try {
       const saved = await aiInterviewApi.completeSession({
-        targetRole,
+        targetRole: activeRole || targetRole,
         overallScore,
         technicalAverage: techAvg,
         communicationAverage: commAvg,
@@ -428,6 +447,18 @@ export default function AIMockInterview() {
                       </option>
                     ))}
                 </select>
+
+                {targetRole === 'Or enter custom role...' && (
+                  <div className="mt-2.5">
+                    <input
+                      type="text"
+                      placeholder="e.g. Biomedical Engineer, Corporate Paralegal, Brand Strategist..."
+                      value={customRole}
+                      onChange={(e) => setCustomRole(e.target.value)}
+                      className="form-input w-full text-sm py-2 px-3 border border-[#E5D5CE] rounded-lg focus:border-[#7A4B43] focus:ring-1 focus:ring-[#7A4B43]"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* 2. Question Category Dropdown */}
@@ -488,7 +519,7 @@ export default function AIMockInterview() {
             <div className="flex items-center justify-between text-xs font-semibold text-[#7A6A65]">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="badge badge-peach uppercase tracking-wider font-bold">
-                  {targetRole}
+                  {activeRole || targetRole}
                 </span>
                 <span>•</span>
                 <span className="font-semibold text-[#7A4B43]">{questionCategory}</span>
@@ -784,7 +815,7 @@ export default function AIMockInterview() {
                 Interview Readiness Assessment
               </h2>
               <p className="text-sm text-[#7A6A65] mt-1">
-                Role Evaluated: <strong className="text-[#2B1B17]">{targetRole}</strong> • Category: <strong className="text-[#7A4B43]">{questionCategory}</strong>
+                Role Evaluated: <strong className="text-[#2B1B17]">{activeRole || targetRole}</strong> • Category: <strong className="text-[#7A4B43]">{questionCategory}</strong>
               </p>
             </div>
 

@@ -230,7 +230,7 @@ export default function CVSkillReview() {
           Extract & Verify Skills from Your CV
         </h1>
         <p className="m-0 text-base text-[#7A6A65] leading-relaxed">
-          Upload your resume in PDF or DOCX format. Our Apache Tika NLP engine will automatically scan and extract your technical skills into your profile.
+          Upload your resume in PDF or DOCX format. Our Apache Tika NLP engine will automatically scan and extract your technical, analytical, and professional skills into your profile.
         </p>
       </div>
 

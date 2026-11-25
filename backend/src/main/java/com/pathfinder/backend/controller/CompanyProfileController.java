@@ -2,10 +2,12 @@ package com.pathfinder.backend.controller;
 
 import com.pathfinder.backend.dto.CompanyProfileDto;
 import com.pathfinder.backend.service.CompanyProfileService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/companies")
@@ -18,16 +20,22 @@ public class CompanyProfileController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<CompanyProfileDto> getMyProfile(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
         return ResponseEntity.ok(companyProfileService.getProfileByEmail(authentication.getName()));
     }
 
     @PutMapping("/me")
-    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<CompanyProfileDto> updateMyProfile(
             Authentication authentication,
             @RequestBody CompanyProfileDto dto) {
+        if (authentication == null || authentication.getName() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
         return ResponseEntity.ok(companyProfileService.updateProfile(authentication.getName(), dto));
     }
 }

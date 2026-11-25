@@ -69,7 +69,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/internship/{internshipId}")
-    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<?> getApplicationsForInternship(@PathVariable Long internshipId) {
         try {
             List<ApplicationDto> dtos = applicationService.getApplicationsForInternship(internshipId);
@@ -84,7 +84,7 @@ public class ApplicationController {
     }
 
     @PutMapping("/{applicationId}/status")
-    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<?> updateStatus(
             @PathVariable Long applicationId,
             @RequestBody ApplicationStatusUpdateRequest request) {
@@ -103,7 +103,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/{applicationId}/resume")
-    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<byte[]> getApplicantResume(
             Authentication authentication,
             @PathVariable Long applicationId) {

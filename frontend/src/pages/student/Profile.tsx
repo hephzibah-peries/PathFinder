@@ -127,6 +127,13 @@ export default function StudentProfile() {
     }
   };
 
+  const closeViewer = () => {
+    if (viewingFile?.blobUrl) {
+      URL.revokeObjectURL(viewingFile.blobUrl);
+    }
+    setViewingFile(null);
+  };
+
   const handleViewResume = async (resume: StudentResume) => {
     try {
       setLoadingFileId(resume.id);
@@ -138,13 +145,12 @@ export default function StudentProfile() {
       } else {
         blob = await resumeApi.getResumeFile(resume.id);
       }
-      const isPdf = (resume.fileType && resume.fileType.includes('pdf')) || resume.fileName.toLowerCase().endsWith('.pdf');
-      const fileType = isPdf ? 'application/pdf' : (resume.fileType || 'application/octet-stream');
-      const blobUrl = URL.createObjectURL(new Blob([blob], { type: fileType }));
+      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(pdfBlob);
       setViewingFile({ resume, blobUrl });
     } catch (err: any) {
       console.error('Failed to preview resume file', err);
-      alert('Failed to load full resume document. Please try again.');
+      alert(err.message || 'Failed to load full resume document. Please try again.');
     } finally {
       setLoadingFileId(null);
     }
@@ -460,7 +466,12 @@ export default function StudentProfile() {
 
       {/* ── Full CV Document Viewer Modal ── */}
       {viewingFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeViewer();
+          }}
+        >
           <div className="relative w-full max-w-5xl h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-[#E5D5CE] overflow-hidden">
             {/* Top Toolbar */}
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#E5D5CE] bg-[#FAF6F2]">
@@ -502,10 +513,7 @@ export default function StudentProfile() {
                 {/* Close Button */}
                 <button
                   type="button"
-                  onClick={() => {
-                    URL.revokeObjectURL(viewingFile.blobUrl);
-                    setViewingFile(null);
-                  }}
+                  onClick={closeViewer}
                   className="rounded-xl p-1.5 text-[#7A6A65] hover:bg-[#E5D5CE]/50 hover:text-[#2B1B17] transition-colors"
                   title="Close viewer"
                 >

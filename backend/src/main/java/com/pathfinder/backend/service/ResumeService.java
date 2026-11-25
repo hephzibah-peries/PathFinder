@@ -241,13 +241,20 @@ public class ResumeService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Original resume file data is not available");
         }
 
-        String contentType = resume.getFileType() != null && !resume.getFileType().isBlank()
-                ? resume.getFileType()
-                : "application/pdf";
+        org.springframework.http.MediaType mediaType = org.springframework.http.MediaType.APPLICATION_PDF;
+        if (resume.getFileType() != null && !resume.getFileType().isBlank()) {
+            try {
+                mediaType = org.springframework.http.MediaType.parseMediaType(resume.getFileType());
+            } catch (Exception e) {
+                mediaType = org.springframework.http.MediaType.APPLICATION_PDF;
+            }
+        }
 
         return org.springframework.http.ResponseEntity.ok()
-                .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                .contentType(mediaType)
+                .contentLength(data.length)
                 .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resume.getFileName() + "\"")
+                .header(org.springframework.http.HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
                 .body(data);
     }
 

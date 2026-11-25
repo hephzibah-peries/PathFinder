@@ -402,11 +402,24 @@ export const resumeApi = {
     }),
   getResumeFile: async (id: number | string): Promise<Blob> => {
     const token = getToken();
-    const res = await fetch(`/api/resume/${id}/file`, {
+    const url = buildApiUrl(`/resume/${id}/file`);
+    const res = await fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    if (!res.ok) throw new Error('Failed to load resume file');
-    return res.blob();
+    if (!res.ok) {
+      let errText = `Failed to load resume file (${res.status})`;
+      try {
+        const errJson = await res.json();
+        if (errJson.message) errText = errJson.message;
+      } catch {}
+      throw new Error(errText);
+    }
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) {
+      throw new Error('Received HTML error page instead of PDF document');
+    }
+    const blob = await res.blob();
+    return new Blob([blob], { type: 'application/pdf' });
   },
   diagnose: (params: { resumeId?: number; targetRole?: string; internshipId?: number }) =>
     request<SkillDiagnosisResponse>('/resume/diagnose', {

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Badge, SectionTitle } from '../../components/ui';
 import { internshipApi, applicationApi, mlApi, Internship, Application, MlMatchResponse, MlBatchItem } from '../../services/api';
 
-type StageTab = 'all' | 'top_matches' | 'shortlisted' | 'interview' | 'rejected';
+type StageTab = 'all' | 'recommended' | 'flagged' | 'shortlisted' | 'interview' | 'rejected';
 
 const statusBadge: Record<string, 'success' | 'warn' | 'error' | 'info'> = {
   SHORTLISTED: 'success',
@@ -215,9 +215,16 @@ export default function Applicants() {
     return mlApplicantScores[app.id]?.shortlistProbability ?? getCandidateMeta(app).matchScore;
   };
 
+  // Helper to determine if an application is still in the unreviewed triage pool
+  const isUnreviewed = (status: string) => {
+    const s = (status || '').toUpperCase();
+    return s === 'PENDING' || s === 'APPLIED' || s === '' || s === 'UNDER REVIEW';
+  };
+
   // Stage counts for ATS filter tabs
   const countAll = applications.length;
-  const countTopMatches = applications.filter((a) => getApplicantScore(a) >= 80).length;
+  const countRecommended = applications.filter((a) => isUnreviewed(a.status) && getApplicantScore(a) >= 50).length;
+  const countFlagged = applications.filter((a) => isUnreviewed(a.status) && getApplicantScore(a) < 50).length;
   const countShortlisted = applications.filter((a) => {
     const s = (a.status || '').toUpperCase();
     return s === 'SHORTLISTED' || s === 'APPROVED';
@@ -237,7 +244,8 @@ export default function Applicants() {
     const score = getApplicantScore(app);
     const meta = getCandidateMeta(app);
 
-    if (stageTab === 'top_matches' && score < 80) return false;
+    if (stageTab === 'recommended' && (!isUnreviewed(status) || score < 50)) return false;
+    if (stageTab === 'flagged' && (!isUnreviewed(status) || score >= 50)) return false;
     if (stageTab === 'shortlisted' && status !== 'SHORTLISTED' && status !== 'APPROVED') return false;
     if (stageTab === 'interview' && status !== 'INTERVIEW') return false;
     if (stageTab === 'rejected' && status !== 'REJECTED') return false;
@@ -247,6 +255,7 @@ export default function Applicants() {
     return (
       (app.studentName && app.studentName.toLowerCase().includes(term)) ||
       (app.studentEmail && app.studentEmail.toLowerCase().includes(term)) ||
+      (app.cvEmail && app.cvEmail.toLowerCase().includes(term)) ||
       (app.internshipTitle && app.internshipTitle.toLowerCase().includes(term)) ||
       (app.status && app.status.toLowerCase().includes(term)) ||
       (meta.university && meta.university.toLowerCase().includes(term)) ||
@@ -289,21 +298,42 @@ export default function Applicants() {
         </button>
 
         <button
-          onClick={() => setStageTab('top_matches')}
+          onClick={() => setStageTab('recommended')}
           className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-            stageTab === 'top_matches'
-              ? 'bg-purple-700 text-white shadow-xs'
-              : 'bg-white text-purple-800 border border-purple-200 hover:bg-purple-50'
+            stageTab === 'recommended'
+              ? 'bg-[#2D6A4F] text-white shadow-xs'
+              : 'bg-white text-[#2D6A4F] border border-emerald-300 hover:bg-emerald-50'
           }`}
         >
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
-            Top AI Matches (80%+)
+            AI Recommended (OK)
           </span>
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-extrabold ${stageTab === 'top_matches' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-900'}`}>
-            {countTopMatches}
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-extrabold ${stageTab === 'recommended' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-[#2D6A4F]'}`}>
+            {countRecommended}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setStageTab('flagged')}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+            stageTab === 'flagged'
+              ? 'bg-amber-600 text-white shadow-xs'
+              : 'bg-white text-amber-800 border border-amber-300 hover:bg-amber-50'
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            AI Flagged (Low Match)
+          </span>
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-extrabold ${stageTab === 'flagged' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-900'}`}>
+            {countFlagged}
           </span>
         </button>
 
@@ -392,6 +422,20 @@ export default function Applicants() {
             />
           </div>
         </div>
+
+        {/* AI Flagged triage tab info banner */}
+        {stageTab === 'flagged' && (
+          <div className="flex items-center gap-2.5 border-b border-amber-200 bg-amber-50/70 px-6 py-2.5 text-xs text-amber-900 font-medium">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-amber-700 shrink-0">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span>
+              <strong>AI Flagged Candidates (&lt; 50% Match):</strong> Pre-screened unreviewed applicants with lower predicted match scores. Inspect via <strong>View CV</strong> and 1-click <strong>Reject</strong> (triggers automated email) or override to <strong>Shortlist</strong>.
+            </span>
+          </div>
+        )}
 
         {/* Candidate Applications Table */}
         {loading ? (
@@ -527,6 +571,28 @@ export default function Applicants() {
                             )}
                           </button>
 
+                          {/* 1-Click Reject Button */}
+                          {app.status !== 'REJECTED' && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Reject application for ${app.studentName || 'this candidate'}? An automated notification email will be sent directly to their CV email.`)) {
+                                  handleStatusChange(app.id, 'REJECTED');
+                                }
+                              }}
+                              disabled={updatingId === app.id}
+                              title="1-click Reject & send automated email to CV contact email"
+                              className="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-700 hover:text-white transition-colors shadow-xs inline-flex items-center gap-1 disabled:opacity-50"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                              </svg>
+                              <span>Reject</span>
+                            </button>
+                          )}
+
                           {isUpdating ? (
                             <span className="text-xs text-[#7A4B43] animate-pulse font-bold">Updating...</span>
                           ) : (
@@ -596,25 +662,50 @@ export default function Applicants() {
                     </Badge>
                   </div>
 
-                  {/* Candidate Direct Phone - visible ONLY for SHORTLISTED & INTERVIEW */}
-                  {(selectedCandidate.status === 'SHORTLISTED' || selectedCandidate.status === 'INTERVIEW') && selectedCandidate.studentPhone && (
-                    <div className="mt-2.5 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/80 p-2.5">
-                      <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#2D6A4F]">Candidate Direct Phone</div>
-                        <a
-                          href={`tel:${selectedCandidate.studentPhone}`}
-                          className="text-xs font-bold text-[#2B1B17] hover:text-[#7A4B43] flex items-center gap-1.5 mt-0.5"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                          </svg>
-                          <span>{selectedCandidate.studentPhone}</span>
-                        </a>
+                  {/* Candidate Direct Phone & CV Email - visible ONLY for SHORTLISTED & INTERVIEW */}
+                  {(selectedCandidate.status === 'SHORTLISTED' || selectedCandidate.status === 'INTERVIEW') && (
+                    <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#2D6A4F]">Candidate Direct Contact Details</span>
+                        <span className="text-[10px] font-semibold text-emerald-800 bg-white border border-emerald-300 rounded-md px-2 py-0.5">
+                          Verified Candidate
+                        </span>
                       </div>
-                      <span className="text-[10px] font-semibold text-emerald-800 bg-white border border-emerald-300 rounded-md px-2 py-0.5">
-                        Direct Contact
-                      </span>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1.5 border-t border-emerald-200/60">
+                        <div>
+                          <div className="text-[10px] font-bold text-[#7A6A65] uppercase">Direct Phone</div>
+                          {selectedCandidate.studentPhone ? (
+                            <a
+                              href={`tel:${selectedCandidate.studentPhone}`}
+                              className="text-xs font-bold text-[#2B1B17] hover:text-[#7A4B43] flex items-center gap-1.5 mt-0.5"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#2D6A4F]">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                              </svg>
+                              <span>{selectedCandidate.studentPhone}</span>
+                            </a>
+                          ) : (
+                            <span className="text-xs text-[#7A6A65] italic">Not provided</span>
+                          )}
+                        </div>
+
+                        <div>
+                          <div className="text-[10px] font-bold text-[#7A6A65] uppercase">CV Contact Email</div>
+                          <a
+                            href={`mailto:${selectedCandidate.cvEmail || selectedCandidate.studentEmail}`}
+                            className="text-xs font-bold text-[#2B1B17] hover:text-[#7A4B43] flex items-center gap-1.5 mt-0.5 truncate"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#2D6A4F]">
+                              <rect width="20" height="16" x="2" y="4" rx="2" />
+                              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                            </svg>
+                            <span className="truncate">{selectedCandidate.cvEmail || selectedCandidate.studentEmail}</span>
+                          </a>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

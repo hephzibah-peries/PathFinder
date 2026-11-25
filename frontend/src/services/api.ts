@@ -91,6 +91,7 @@ export interface Application {
   studentName?: string;
   studentEmail?: string;
   studentPhone?: string;
+  cvEmail?: string;
   university?: string;
   degree?: string;
   gpa?: number;

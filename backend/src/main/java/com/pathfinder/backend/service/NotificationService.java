@@ -62,6 +62,10 @@ public class NotificationService {
     }
 
     public void notifyApplicationStatusChange(Application application, String newStatus, String note) {
+        notifyApplicationStatusChange(application, newStatus, note, null);
+    }
+
+    public void notifyApplicationStatusChange(Application application, String newStatus, String note, String recipientEmail) {
         if (application == null || application.getStudent() == null) return;
 
         StudentProfile student = application.getStudent();
@@ -153,9 +157,13 @@ public class NotificationService {
             log.error("Failed to save in-app notification for user {}: {}", studentUser.getId(), ex.getMessage());
         }
 
-        // 2. Send async email alert
-        if (studentUser.getEmail() != null && !studentUser.getEmail().isBlank()) {
-            sendEmailAsync(studentUser.getEmail(), emailSubject, emailHtml);
+        // 2. Send async email alert directly to resolved CV email (fallback to account email)
+        String targetEmail = (recipientEmail != null && !recipientEmail.trim().isBlank())
+                ? recipientEmail.trim()
+                : (studentUser.getEmail() != null ? studentUser.getEmail().trim() : null);
+
+        if (targetEmail != null && !targetEmail.isBlank()) {
+            sendEmailAsync(targetEmail, emailSubject, emailHtml);
         }
     }
 

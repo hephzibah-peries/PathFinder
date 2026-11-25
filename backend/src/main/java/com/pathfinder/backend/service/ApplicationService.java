@@ -20,12 +20,17 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 public class ApplicationService {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationService.class);
+
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("(?:\\+?\\d{1,3}[- .]?)?\\(?\\d{2,4}\\)?[- .]?\\d{3,4}[- .]?\\d{3,4}");
 
     private final ApplicationRepository applicationRepository;
     private final InternshipRepository internshipRepository;
@@ -178,7 +183,17 @@ public class ApplicationService {
 
         if (notificationService != null) {
             try {
-                notificationService.notifyApplicationStatusChange(saved, status, note);
+                // Resolve recipient email directly from submitted CV (fallback to student account email)
+                StudentResume resume = resolveApplicationResume(saved);
+                String resumeText = resolveResumeText(resume);
+                String recipientEmail = extractFirstEmailFromText(resumeText);
+                if (recipientEmail == null || recipientEmail.isBlank()) {
+                    if (saved.getStudent() != null && saved.getStudent().getUser() != null) {
+                        recipientEmail = saved.getStudent().getUser().getEmail();
+                    }
+                }
+
+                notificationService.notifyApplicationStatusChange(saved, status, note, recipientEmail);
             } catch (Exception e) {
                 log.warn("Could not dispatch status change notification: {}", e.getMessage());
             }
@@ -227,22 +242,66 @@ public class ApplicationService {
             }
         }
 
-        StudentResume resume = null;
-        if (application.getResumeId() != null && studentResumeRepository != null) {
-            resume = studentResumeRepository.findById(application.getResumeId()).orElse(null);
-        }
-        if (resume == null && application.getStudent() != null && studentResumeRepository != null) {
-            List<StudentResume> resumes = studentResumeRepository.findByStudentIdOrderByUploadedAtDesc(application.getStudent().getId());
-            if (!resumes.isEmpty()) {
-                resume = resumes.get(0);
-            }
-        }
+        StudentResume resume = resolveApplicationResume(application);
 
         if (resume == null || resume.getFileData() == null || resume.getFileData().length == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resume file not found for this applicant");
         }
 
         return new ApplicantResumeData(resume.getFileData(), resume.getFileType(), resume.getFileName());
+    }
+
+    private StudentResume resolveApplicationResume(Application app) {
+        if (app == null) return null;
+        StudentResume resume = null;
+        if (app.getResumeId() != null && studentResumeRepository != null) {
+            resume = studentResumeRepository.findById(app.getResumeId()).orElse(null);
+        }
+        if (resume == null && app.getStudent() != null && studentResumeRepository != null) {
+            List<StudentResume> resumes = studentResumeRepository.findByStudentIdOrderByUploadedAtDesc(app.getStudent().getId());
+            if (!resumes.isEmpty()) {
+                resume = resumes.get(0);
+            }
+        }
+        return resume;
+    }
+
+    private String resolveResumeText(StudentResume resume) {
+        if (resume == null) return null;
+        if (resume.getExtractedText() != null && !resume.getExtractedText().isBlank()) {
+            return resume.getExtractedText();
+        }
+        if (resume.getFileData() != null && resume.getFileData().length > 0) {
+            try {
+                org.apache.tika.Tika tika = new org.apache.tika.Tika();
+                return tika.parseToString(new java.io.ByteArrayInputStream(resume.getFileData()));
+            } catch (Exception e) {
+                log.debug("Could not extract text via Tika: {}", e.getMessage());
+            }
+        }
+        return null;
+    }
+
+    private String extractFirstEmailFromText(String text) {
+        if (text == null || text.isBlank()) return null;
+        Matcher m = EMAIL_PATTERN.matcher(text);
+        if (m.find()) {
+            return m.group().trim();
+        }
+        return null;
+    }
+
+    private String extractFirstPhoneFromText(String text) {
+        if (text == null || text.isBlank()) return null;
+        Matcher m = PHONE_PATTERN.matcher(text);
+        while (m.find()) {
+            String candidate = m.group().trim();
+            String digitsOnly = candidate.replaceAll("[^0-9]", "");
+            if (digitsOnly.length() >= 9 && digitsOnly.length() <= 15) {
+                return candidate;
+            }
+        }
+        return null;
     }
 
     private ApplicationDto mapToDto(Application app) {
@@ -273,20 +332,12 @@ public class ApplicationService {
             university = studentProfile.getUniversity();
             gpa = studentProfile.getGpa();
             studentPhone = studentProfile.getPhone();
-            if (studentPhone == null || studentPhone.isBlank()) {
-                long seed = studentId != null ? studentId : (app.getId() != null ? app.getId() : 1L);
-                studentPhone = "+94 77 " + (100 + (seed * 37) % 900) + " " + (1000 + (seed * 83) % 9000);
-            }
 
             User user = studentProfile.getUser();
             if (user != null) {
                 studentEmail = user.getEmail();
             }
 
-            // Strictly resolve studentName:
-            // studentProfile.getFullName() (if non-blank)
-            // -> user.getEmail().split("@")[0]
-            // -> "Student #" + studentId
             if (studentProfile.getFullName() != null && !studentProfile.getFullName().trim().isBlank()) {
                 studentName = studentProfile.getFullName().trim();
             } else if (user != null && user.getEmail() != null && !user.getEmail().trim().isBlank()) {
@@ -296,6 +347,25 @@ public class ApplicationService {
             } else {
                 studentName = "Applicant";
             }
+        }
+
+        // 1. Resolve submitted resume and text
+        StudentResume resume = resolveApplicationResume(app);
+        String resumeText = resolveResumeText(resume);
+
+        // 2. Extract CV Contact Email (fallback to user account email)
+        String cvEmail = extractFirstEmailFromText(resumeText);
+        if (cvEmail == null || cvEmail.isBlank()) {
+            cvEmail = studentEmail;
+        }
+
+        // 3. Extract CV Phone (fallback to profile phone, or realistic format)
+        if (studentPhone == null || studentPhone.isBlank()) {
+            studentPhone = extractFirstPhoneFromText(resumeText);
+        }
+        if (studentPhone == null || studentPhone.isBlank()) {
+            long seed = studentId != null ? studentId : (app.getId() != null ? app.getId() : 1L);
+            studentPhone = "+94 77 " + (100 + (seed * 37) % 900) + " " + (1000 + (seed * 83) % 9000);
         }
 
         String appliedAt = app.getAppliedAt() != null
@@ -312,6 +382,7 @@ public class ApplicationService {
                 .studentName(studentName != null ? studentName : "")
                 .studentEmail(studentEmail)
                 .studentPhone(studentPhone)
+                .cvEmail(cvEmail)
                 .university(university)
                 .degree(degree)
                 .gpa(gpa)

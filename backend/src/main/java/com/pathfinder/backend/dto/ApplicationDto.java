@@ -10,6 +10,7 @@ public class ApplicationDto {
     private String studentName;
     private String studentEmail;
     private String studentPhone;
+    private String cvEmail;
     private String university;
     private String degree;
     private Double gpa;
@@ -41,6 +42,12 @@ public class ApplicationDto {
     public ApplicationDto(Long id, Long internshipId, String internshipTitle, String companyName, String location, Long studentId,
                           String studentName, String studentEmail, String studentPhone, String university, String degree, Double gpa,
                           String status, String appliedAt, Long resumeId, String resumeFileName, String coverLetter) {
+        this(id, internshipId, internshipTitle, companyName, location, studentId, studentName, studentEmail, studentPhone, null, university, degree, gpa, status, appliedAt, resumeId, resumeFileName, coverLetter);
+    }
+
+    public ApplicationDto(Long id, Long internshipId, String internshipTitle, String companyName, String location, Long studentId,
+                          String studentName, String studentEmail, String studentPhone, String cvEmail, String university, String degree, Double gpa,
+                          String status, String appliedAt, Long resumeId, String resumeFileName, String coverLetter) {
         this.id = id;
         this.internshipId = internshipId;
         this.internshipTitle = internshipTitle;
@@ -50,6 +57,7 @@ public class ApplicationDto {
         this.studentName = studentName;
         this.studentEmail = studentEmail;
         this.studentPhone = studentPhone;
+        this.cvEmail = cvEmail;
         this.university = university;
         this.degree = degree;
         this.gpa = gpa;
@@ -78,6 +86,8 @@ public class ApplicationDto {
     public void setStudentEmail(String studentEmail) { this.studentEmail = studentEmail; }
     public String getStudentPhone() { return studentPhone; }
     public void setStudentPhone(String studentPhone) { this.studentPhone = studentPhone; }
+    public String getCvEmail() { return cvEmail; }
+    public void setCvEmail(String cvEmail) { this.cvEmail = cvEmail; }
     public String getUniversity() { return university; }
     public void setUniversity(String university) { this.university = university; }
     public String getDegree() { return degree; }
@@ -107,6 +117,7 @@ public class ApplicationDto {
         private String studentName;
         private String studentEmail;
         private String studentPhone;
+        private String cvEmail;
         private String university;
         private String degree;
         private Double gpa;
@@ -125,6 +136,7 @@ public class ApplicationDto {
         public Builder studentName(String studentName) { this.studentName = studentName; return this; }
         public Builder studentEmail(String studentEmail) { this.studentEmail = studentEmail; return this; }
         public Builder studentPhone(String studentPhone) { this.studentPhone = studentPhone; return this; }
+        public Builder cvEmail(String cvEmail) { this.cvEmail = cvEmail; return this; }
         public Builder university(String university) { this.university = university; return this; }
         public Builder degree(String degree) { this.degree = degree; return this; }
         public Builder gpa(Double gpa) { this.gpa = gpa; return this; }
@@ -134,7 +146,7 @@ public class ApplicationDto {
         public Builder resumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; return this; }
         public Builder coverLetter(String coverLetter) { this.coverLetter = coverLetter; return this; }
         public ApplicationDto build() {
-            return new ApplicationDto(id, internshipId, internshipTitle, companyName, location, studentId, studentName, studentEmail, studentPhone, university, degree, gpa, status, appliedAt, resumeId, resumeFileName, coverLetter);
+            return new ApplicationDto(id, internshipId, internshipTitle, companyName, location, studentId, studentName, studentEmail, studentPhone, cvEmail, university, degree, gpa, status, appliedAt, resumeId, resumeFileName, coverLetter);
         }
     }
 }

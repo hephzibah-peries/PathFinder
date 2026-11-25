@@ -18,8 +18,16 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class NotificationService {
@@ -35,6 +43,12 @@ public class NotificationService {
 
     @Value("${spring.mail.username:}")
     private String mailUsername;
+
+    @Value("${brevo.api.key:}")
+    private String brevoApiKey;
+
+    @Value("${mail.from.email:${spring.mail.username:}}")
+    private String mailFromEmail;
 
     @Value("${frontend.url:http://localhost:5173}")
     private String frontendUrl;
@@ -190,24 +204,75 @@ public class NotificationService {
 
     @Async
     public void sendEmailAsync(String toEmail, String subject, String htmlContent) {
-        if (mailUsername == null || mailUsername.trim().isBlank() || mailSender == null) {
-            log.info("SMTP mail username not configured. Skipping email dispatch to '{}' for subject '{}'.", toEmail, subject);
+        String fromEmail = (mailFromEmail != null && !mailFromEmail.trim().isBlank())
+                ? mailFromEmail.trim()
+                : ((mailUsername != null && !mailUsername.trim().isBlank()) ? mailUsername.trim() : "noreply@pathfinder.com");
+
+        // Priority 1: HTTPS API (Brevo / Sendinblue) - works on Render free tier where outbound SMTP (587/465) is blocked
+        if (brevoApiKey != null && !brevoApiKey.trim().isBlank()) {
+            try {
+                RestTemplate restTemplate = new RestTemplate();
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.set("api-key", brevoApiKey.trim());
+
+                Map<String, Object> payload = new HashMap<>();
+                Map<String, String> sender = new HashMap<>();
+                sender.put("name", "PathFinder");
+                sender.put("email", fromEmail);
+                payload.put("sender", sender);
+
+                Map<String, String> recipient = new HashMap<>();
+                recipient.put("email", toEmail);
+                payload.put("to", List.of(recipient));
+
+                payload.put("subject", subject);
+                payload.put("htmlContent", htmlContent);
+
+                HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
+                ResponseEntity<String> response = restTemplate.postForEntity(
+                        "https://api.brevo.com/v3/smtp/email",
+                        requestEntity,
+                        String.class
+                );
+
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    log.info("Sent email via Brevo HTTPS API to '{}' [Subject: '{}']", toEmail, subject);
+                } else {
+                    log.error("Brevo HTTPS API returned non-2xx response for '{}': status={}, body={}",
+                            toEmail, response.getStatusCode(), response.getBody());
+                }
+                return;
+            } catch (HttpStatusCodeException httpEx) {
+                log.error("HTTP error sending email via Brevo HTTPS API to '{}'. Status: {}, Body: {}",
+                        toEmail, httpEx.getStatusCode(), httpEx.getResponseBodyAsString(), httpEx);
+                return;
+            } catch (Exception ex) {
+                log.error("Unexpected exception sending email via Brevo HTTPS API to '{}': {}",
+                        toEmail, ex.getMessage(), ex);
+                return;
+            }
+        }
+
+        // Priority 2: SMTP Fallback (works locally via JavaMailSender)
+        if (mailUsername != null && !mailUsername.trim().isBlank() && mailSender != null) {
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setFrom(fromEmail, "PathFinder Alerts");
+                helper.setTo(toEmail);
+                helper.setSubject(subject);
+                helper.setText(htmlContent, true);
+
+                mailSender.send(message);
+                log.info("Sent notification email via SMTP to '{}' [Subject: '{}']", toEmail, subject);
+            } catch (Exception ex) {
+                log.error("Failed to dispatch async email via SMTP to '{}': {}", toEmail, ex.getMessage(), ex);
+            }
             return;
         }
 
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(mailUsername, "PathFinder Alerts");
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-
-            mailSender.send(message);
-            log.info("Sent notification email to '{}' [Subject: '{}']", toEmail, subject);
-        } catch (Exception ex) {
-            log.warn("Could not dispatch async email to '{}': {}", toEmail, ex.getMessage());
-        }
+        log.info("Neither BREVO_API_KEY nor SMTP mail username configured. Skipping email dispatch to '{}' for subject '{}'.", toEmail, subject);
     }
 
     private String buildEmailTemplate(String recipientName, String heading, String bodyContent, String buttonUrl, String buttonText) {

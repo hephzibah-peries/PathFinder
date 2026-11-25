@@ -37,3 +37,7 @@ spring.mail.username=${MAIL_USERNAME:}
 spring.mail.password=${MAIL_PASSWORD:}
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
+
+# HTTPS Email API (Brevo / Sendinblue - works on Render without SMTP blocks)
+brevo.api.key=${BREVO_API_KEY:}
+mail.from.email=${MAIL_FROM_EMAIL:${MAIL_USERNAME:}}

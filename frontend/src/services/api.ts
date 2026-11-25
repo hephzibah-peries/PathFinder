@@ -90,6 +90,7 @@ export interface Application {
   studentId?: number;
   studentName?: string;
   studentEmail?: string;
+  studentPhone?: string;
   university?: string;
   degree?: string;
   gpa?: number;
@@ -97,6 +98,22 @@ export interface Application {
   resumeFileName?: string;
   status: string;
   appliedAt?: string;
+}
+
+export interface Notification {
+  id: number;
+  userId: number;
+  title: string;
+  message: string;
+  type: string;
+  link?: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface NotificationsResponse {
+  notifications: Notification[];
+  unreadCount: number;
 }
 
 export interface Recommendation {
@@ -366,10 +383,10 @@ export const applicationApi = {
   },
   getForInternship: (internshipId: number | string) =>
     request<Application[]>(`/applications/internship/${internshipId}`),
-  updateStatus: (applicationId: number | string, status: string) =>
+  updateStatus: (applicationId: number | string, status: string, note?: string) =>
     request<Application>(`/applications/${applicationId}/status`, {
       method: 'PUT',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, note }),
     }),
   getApplicantResumeBlob: async (applicationId: number | string): Promise<Blob> => {
     const token = getToken();
@@ -392,6 +409,18 @@ export const applicationApi = {
     const blob = await res.blob();
     return new Blob([blob], { type: 'application/pdf' });
   },
+};
+
+export const notificationApi = {
+  getMyNotifications: () => request<NotificationsResponse>('/notifications/my'),
+  markAsRead: (id: number | string) =>
+    request<void>(`/notifications/${id}/read`, {
+      method: 'PUT',
+    }),
+  markAllAsRead: () =>
+    request<void>('/notifications/read-all', {
+      method: 'PUT',
+    }),
 };
 
 export const recommendationApi = {

@@ -90,7 +90,8 @@ public class ApplicationController {
             @RequestBody ApplicationStatusUpdateRequest request) {
         try {
             String newStatus = request != null ? request.getStatus() : null;
-            ApplicationDto updated = applicationService.updateApplicationStatus(applicationId, newStatus);
+            String note = request != null ? request.getNote() : null;
+            ApplicationDto updated = applicationService.updateApplicationStatus(applicationId, newStatus, note);
             return ResponseEntity.ok(updated);
         } catch (ResponseStatusException rse) {
             log.warn("ResponseStatusException in updateStatus: {} - {}", rse.getStatusCode(), rse.getReason());

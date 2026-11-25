@@ -19,6 +19,9 @@ public class InternshipService {
     private final CompanyProfileRepository companyProfileRepository;
     private final UserRepository userRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private NotificationService notificationService;
+
     public InternshipService(InternshipRepository internshipRepository,
                              CompanyProfileRepository companyProfileRepository, UserRepository userRepository) {
         this.internshipRepository = internshipRepository;
@@ -46,7 +49,15 @@ public class InternshipService {
                 .deadline(dto.getDeadline())
                 .build();
 
-        return mapToDto(internshipRepository.save(internship));
+        Internship saved = internshipRepository.save(internship);
+        if (notificationService != null) {
+            try {
+                notificationService.notifyNewInternship(saved);
+            } catch (Exception e) {
+                // Ignore notification failure to ensure createInternship always succeeds
+            }
+        }
+        return mapToDto(saved);
     }
 
     public List<InternshipDto> getAllInternships() {

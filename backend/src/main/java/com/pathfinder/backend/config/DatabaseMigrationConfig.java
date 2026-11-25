@@ -176,5 +176,31 @@ public class DatabaseMigrationConfig {
         } catch (Exception e) {
             log.debug("applications index check notice: {}", e.getMessage());
         }
+
+        // 11. Ensure student_profiles has phone column
+        try {
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS student_profiles ADD COLUMN IF NOT EXISTS phone VARCHAR(50)");
+        } catch (Exception e) {
+            log.debug("student_profiles phone column check notice: {}", e.getMessage());
+        }
+
+        // 12. Ensure notifications table exists
+        try {
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS notifications (" +
+                "id BIGSERIAL PRIMARY KEY, " +
+                "user_id BIGINT NOT NULL, " +
+                "title VARCHAR(255) NOT NULL, " +
+                "message TEXT NOT NULL, " +
+                "type VARCHAR(50) NOT NULL, " +
+                "link VARCHAR(255), " +
+                "is_read BOOLEAN DEFAULT FALSE, " +
+                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+            );
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read)");
+        } catch (Exception e) {
+            log.warn("notifications table create check notice: {}", e.getMessage());
+        }
     }
 }

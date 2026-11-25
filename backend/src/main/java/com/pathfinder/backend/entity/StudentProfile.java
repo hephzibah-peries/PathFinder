@@ -27,6 +27,8 @@ public class StudentProfile {
     private String preferredLocation;
     private String preferredWorkMode;
 
+    private String phone;
+
     @Column(columnDefinition = "TEXT")
     private String profilePicture;
 
@@ -69,6 +71,8 @@ public class StudentProfile {
     public void setPreferredLocation(String preferredLocation) { this.preferredLocation = preferredLocation; }
     public String getPreferredWorkMode() { return preferredWorkMode; }
     public void setPreferredWorkMode(String preferredWorkMode) { this.preferredWorkMode = preferredWorkMode; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
     public String getProfilePicture() { return profilePicture; }
     public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
     public java.util.List<StudentResume> getResumes() { return resumes; }
@@ -86,6 +90,7 @@ public class StudentProfile {
         private String skills;
         private String preferredLocation;
         private String preferredWorkMode;
+        private String phone;
         private String profilePicture;
 
         public Builder id(Long id) { this.id = id; return this; }
@@ -97,9 +102,12 @@ public class StudentProfile {
         public Builder skills(String skills) { this.skills = skills; return this; }
         public Builder preferredLocation(String preferredLocation) { this.preferredLocation = preferredLocation; return this; }
         public Builder preferredWorkMode(String preferredWorkMode) { this.preferredWorkMode = preferredWorkMode; return this; }
+        public Builder phone(String phone) { this.phone = phone; return this; }
         public Builder profilePicture(String profilePicture) { this.profilePicture = profilePicture; return this; }
         public StudentProfile build() {
-            return new StudentProfile(id, user, fullName, university, gpa, bio, skills, preferredLocation, preferredWorkMode, profilePicture);
+            StudentProfile profile = new StudentProfile(id, user, fullName, university, gpa, bio, skills, preferredLocation, preferredWorkMode, profilePicture);
+            profile.setPhone(phone);
+            return profile;
         }
     }
 }

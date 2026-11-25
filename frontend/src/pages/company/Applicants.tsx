@@ -74,6 +74,7 @@ export default function Applicants() {
   // Slide-over drawer state
   const [selectedCandidate, setSelectedCandidate] = useState<Application | null>(null);
   const [loadingCvId, setLoadingCvId] = useState<number | null>(null);
+  const [candidateNote, setCandidateNote] = useState('');
 
   const handleViewCv = async (applicationId: number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -187,10 +188,10 @@ export default function Applicants() {
     }
   };
 
-  const handleStatusChange = async (applicationId: number, newStatus: string) => {
+  const handleStatusChange = async (applicationId: number, newStatus: string, note?: string) => {
     try {
       setUpdatingId(applicationId);
-      await applicationApi.updateStatus(applicationId, newStatus);
+      await applicationApi.updateStatus(applicationId, newStatus, note);
 
       // Update in applications list
       setApplications((prev) =>
@@ -201,6 +202,7 @@ export default function Applicants() {
       if (selectedCandidate && selectedCandidate.id === applicationId) {
         setSelectedCandidate((prev) => (prev ? { ...prev, status: newStatus } : null));
       }
+      setCandidateNote('');
     } catch (err: any) {
       alert(`Failed to update application status: ${err.message}`);
     } finally {
@@ -593,6 +595,28 @@ export default function Applicants() {
                       {selectedCandidate.status || 'PENDING'}
                     </Badge>
                   </div>
+
+                  {/* Candidate Direct Phone - visible ONLY for SHORTLISTED & INTERVIEW */}
+                  {(selectedCandidate.status === 'SHORTLISTED' || selectedCandidate.status === 'INTERVIEW') && selectedCandidate.studentPhone && (
+                    <div className="mt-2.5 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/80 p-2.5">
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#2D6A4F]">Candidate Direct Phone</div>
+                        <a
+                          href={`tel:${selectedCandidate.studentPhone}`}
+                          className="text-xs font-bold text-[#2B1B17] hover:text-[#7A4B43] flex items-center gap-1.5 mt-0.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                          </svg>
+                          <span>{selectedCandidate.studentPhone}</span>
+                        </a>
+                      </div>
+                      <span className="text-[10px] font-semibold text-emerald-800 bg-white border border-emerald-300 rounded-md px-2 py-0.5">
+                        Direct Contact
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -786,12 +810,25 @@ export default function Applicants() {
 
             {/* Drawer Footer Actions */}
             <div className="border-t border-[#E5D5CE] bg-[#FAF6F4] px-7 py-4">
+              <div className="mb-3">
+                <label className="block text-[11px] font-bold text-[#7A6A65] uppercase tracking-wider mb-1">
+                  Optional Note for Candidate (included in auto-email)
+                </label>
+                <input
+                  type="text"
+                  value={candidateNote}
+                  onChange={(e) => setCandidateNote(e.target.value)}
+                  placeholder="e.g. Please bring your portfolio; interview scheduled for Thursday 2 PM..."
+                  className="form-input text-xs w-full py-1.5"
+                />
+              </div>
+
               <div className="text-xs font-bold uppercase tracking-wider text-[#7A6A65] mb-2.5">
                 Update Candidate Stage
               </div>
               <div className="grid grid-cols-3 gap-2.5">
                 <button
-                  onClick={() => handleStatusChange(selectedCandidate.id, 'SHORTLISTED')}
+                  onClick={() => handleStatusChange(selectedCandidate.id, 'SHORTLISTED', candidateNote)}
                   disabled={updatingId === selectedCandidate.id}
                   className={`rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
                     selectedCandidate.status === 'SHORTLISTED'
@@ -803,7 +840,7 @@ export default function Applicants() {
                 </button>
 
                 <button
-                  onClick={() => handleStatusChange(selectedCandidate.id, 'INTERVIEW')}
+                  onClick={() => handleStatusChange(selectedCandidate.id, 'INTERVIEW', candidateNote)}
                   disabled={updatingId === selectedCandidate.id}
                   className={`rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
                     selectedCandidate.status === 'INTERVIEW'
@@ -815,7 +852,7 @@ export default function Applicants() {
                 </button>
 
                 <button
-                  onClick={() => handleStatusChange(selectedCandidate.id, 'REJECTED')}
+                  onClick={() => handleStatusChange(selectedCandidate.id, 'REJECTED', candidateNote)}
                   disabled={updatingId === selectedCandidate.id}
                   className={`rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
                     selectedCandidate.status === 'REJECTED'

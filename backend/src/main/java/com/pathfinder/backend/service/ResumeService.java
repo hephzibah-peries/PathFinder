@@ -310,7 +310,7 @@ public class ResumeService {
         List<String> missingSkills = new ArrayList<>();
 
         for (String targetSkill : targetSkills) {
-            if (resumeSkillKeys.contains(targetSkill.toLowerCase(Locale.ROOT))) {
+            if (isSkillMatch(resumeSkillKeys, targetSkill)) {
                 matchedSkills.add(targetSkill);
             } else {
                 missingSkills.add(targetSkill);
@@ -318,7 +318,7 @@ public class ResumeService {
         }
 
         int matchScore = targetSkills.isEmpty()
-                ? 85
+                ? 75
                 : (int) Math.round(((double) matchedSkills.size() / targetSkills.size()) * 100.0);
 
         List<RoadmapStepDto> roadmap = generateRoadmap(roleName, matchedSkills, missingSkills);
@@ -333,19 +333,45 @@ public class ResumeService {
                 .build();
     }
 
+    private boolean isSkillMatch(Set<String> resumeSkillKeys, String targetSkill) {
+        String targetLower = targetSkill.toLowerCase(Locale.ROOT).trim();
+        if (resumeSkillKeys.contains(targetLower)) {
+            return true;
+        }
+        for (String r : resumeSkillKeys) {
+            if (r.equalsIgnoreCase(targetLower)) {
+                return true;
+            }
+            if (r.length() > 2 && targetLower.length() > 2) {
+                if (r.contains(targetLower) || targetLower.contains(r)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private List<String> determineRoleSkills(String role) {
         String lower = role.toLowerCase(Locale.ROOT);
-        if (lower.contains("frontend") || lower.contains("front-end") || lower.contains("ui") || lower.contains("react")) {
-            return List.of("React", "TypeScript", "JavaScript", "HTML", "CSS", "Git", "REST API");
+        if (lower.contains("data") || lower.contains("machine learning") || lower.contains("ai") || lower.contains("analytics")) {
+            return List.of("Python", "SQL", "Machine Learning", "Deep Learning", "PyTorch", "TensorFlow", "NLP", "Pandas", "Scikit-Learn", "Statistics", "PostgreSQL", "MLOps");
+        } else if (lower.contains("frontend") || lower.contains("front-end") || lower.contains("ui") || lower.contains("react")) {
+            return List.of("React", "TypeScript", "JavaScript", "HTML", "CSS", "TailwindCSS", "Redux", "REST APIs", "Git", "Webpack", "Responsive Design");
         } else if (lower.contains("devops") || lower.contains("cloud") || lower.contains("site reliability") || lower.contains("sre")) {
-            return List.of("Docker", "Kubernetes", "AWS", "Git", "Python", "Microservices");
-        } else if (lower.contains("data") || lower.contains("machine learning") || lower.contains("ai") || lower.contains("analytics")) {
-            return List.of("Python", "SQL", "Machine Learning", "Data Analysis", "PostgreSQL");
+            return List.of("Docker", "Kubernetes", "AWS", "CI/CD", "Terraform", "Linux", "Git", "Python", "Prometheus", "Bash", "Microservices");
         } else if (lower.contains("full stack") || lower.contains("fullstack")) {
-            return List.of("Java", "Spring Boot", "React", "TypeScript", "PostgreSQL", "Docker", "REST API");
+            return List.of("Java", "Spring Boot", "React", "TypeScript", "JavaScript", "SQL", "PostgreSQL", "Docker", "REST APIs", "Git", "HTML/CSS");
+        } else if (lower.contains("mobile") || lower.contains("android") || lower.contains("ios") || lower.contains("flutter")) {
+            return List.of("Flutter", "Dart", "React Native", "Android", "iOS", "Kotlin", "Swift", "REST APIs", "Git", "State Management", "Firebase");
+        } else if (lower.contains("qa") || lower.contains("test") || lower.contains("quality")) {
+            return List.of("Selenium", "Test Automation", "JUnit", "Cypress", "API Testing", "Postman", "JIRA", "Regression Testing", "SQL", "Python", "Performance Testing");
+        } else if (lower.contains("cyber") || lower.contains("security")) {
+            return List.of("Network Security", "Penetration Testing", "Linux", "Python", "Vulnerability Assessment", "Cryptography", "SIEM", "Firewalls", "OWASP", "Ethical Hacking");
+        } else if (lower.contains("ui/ux") || lower.contains("design")) {
+            return List.of("Figma", "Wireframing", "Prototyping", "User Research", "Usability Testing", "UI Design", "Design Systems", "Adobe XD", "Information Architecture", "HTML/CSS");
         } else {
             // Default backend / software engineer
-            return List.of("Java", "Spring Boot", "SQL", "PostgreSQL", "REST API", "Docker", "Git");
+            return List.of("Java", "Spring Boot", "SQL", "PostgreSQL", "REST APIs", "Docker", "Git", "Data Structures", "Microservices", "Unit Testing", "CI/CD");
         }
     }
 

@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { GoogleLogin } from '../../components/auth/GoogleLogin';
-import { healthApi, DbStatusResponse } from '../../services/api';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,11 +13,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [dbStatus, setDbStatus] = useState<DbStatusResponse>({
-    status: 'LOADING',
-    database: 'Checking database...',
-    type: 'LOADING',
-  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -26,30 +20,6 @@ export default function Login() {
     if (errParam) {
       setError(decodeURIComponent(errParam));
     }
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function checkDb() {
-      try {
-        const res = await healthApi.getDbStatus();
-        if (isMounted) {
-          setDbStatus(res);
-        }
-      } catch {
-        if (isMounted) {
-          setDbStatus({
-            status: 'DISCONNECTED',
-            database: 'Backend Offline',
-            type: 'OFFLINE',
-          });
-        }
-      }
-    }
-    checkDb();
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -213,44 +183,6 @@ export default function Login() {
             Create account
           </Link>
         </p>
-
-        {/* ── Live Database Connection Status Pill ── */}
-        <div className="mt-5 pt-4 border-t border-[#E5D5CE]/60 flex items-center justify-center">
-          <div
-            id="live-db-pill"
-            className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold border transition-all ${
-              dbStatus.type === 'SUPABASE' || dbStatus.database.toLowerCase().includes('supabase')
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                : dbStatus.type === 'H2' || dbStatus.database.toLowerCase().includes('h2')
-                ? 'bg-amber-50 text-amber-800 border-amber-300'
-                : dbStatus.type === 'LOADING'
-                ? 'bg-slate-50 text-slate-700 border-slate-300'
-                : 'bg-rose-50 text-rose-800 border-rose-300'
-            }`}
-            title={`Active Database: ${dbStatus.database}`}
-          >
-            <span
-              className={`h-2 w-2 rounded-full shrink-0 ${
-                dbStatus.type === 'SUPABASE' || dbStatus.database.toLowerCase().includes('supabase')
-                  ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)] animate-pulse'
-                  : dbStatus.type === 'H2' || dbStatus.database.toLowerCase().includes('h2')
-                  ? 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.7)]'
-                  : dbStatus.type === 'LOADING'
-                  ? 'bg-slate-400 animate-ping'
-                  : 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.7)]'
-              }`}
-            />
-            <span className="tracking-wide">
-              {dbStatus.type === 'SUPABASE' || dbStatus.database.toLowerCase().includes('supabase')
-                ? 'DB: Supabase (Original)'
-                : dbStatus.type === 'H2' || dbStatus.database.toLowerCase().includes('h2')
-                ? 'DB: Local H2 (Dev Mode)'
-                : dbStatus.type === 'LOADING'
-                ? 'DB: Checking status...'
-                : 'DB: Backend Offline'}
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   );

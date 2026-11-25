@@ -169,7 +169,7 @@ export default function Login() {
         </div>
 
         {/* ── Official Google Identity Services OAuth Component ── */}
-        <div className="flex justify-center">
+        <div className="w-full">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}

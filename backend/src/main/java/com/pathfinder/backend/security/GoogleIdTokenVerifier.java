@@ -79,7 +79,7 @@ public class GoogleIdTokenVerifier {
 
         String token = idTokenString.trim();
 
-        // 1. Attempt official online verification via Google OAuth2 tokeninfo endpoint
+        // 1. Attempt official online verification via Google OAuth2 tokeninfo endpoint (for ID tokens)
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(GOOGLE_TOKEN_INFO_URL + token))
@@ -130,7 +130,46 @@ public class GoogleIdTokenVerifier {
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception ex) {
-            logger.warn("Online verification via Google tokeninfo failed or timed out: {}. Attempting fallback parsing.", ex.getMessage());
+            logger.warn("Online verification via Google tokeninfo failed or timed out: {}. Attempting OAuth2 userinfo fallback.", ex.getMessage());
+        }
+
+        // 2. Attempt online verification via Google OAuth2 userinfo endpoint (for OAuth2 access tokens)
+        try {
+            HttpRequest userInfoRequest = HttpRequest.newBuilder()
+                    .uri(URI.create("https://www.googleapis.com/oauth2/v3/userinfo"))
+                    .header("Authorization", "Bearer " + token)
+                    .timeout(Duration.ofSeconds(6))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> userInfoResponse = httpClient.send(userInfoRequest, HttpResponse.BodyHandlers.ofString());
+            if (userInfoResponse.statusCode() == 200) {
+                JsonNode userRoot = objectMapper.readTree(userInfoResponse.body());
+                String email = userRoot.path("email").asText(null);
+                if (email != null && !email.isBlank()) {
+                    boolean emailVerified = userRoot.path("email_verified").asBoolean(true) ||
+                            "true".equalsIgnoreCase(userRoot.path("email_verified").asText());
+                    if (!emailVerified) {
+                        throw new IllegalArgumentException("Google account email is not verified");
+                    }
+                    String name = userRoot.path("name").asText(null);
+                    if (name == null || name.isBlank()) {
+                        String givenName = userRoot.path("given_name").asText("");
+                        String familyName = userRoot.path("family_name").asText("");
+                        name = (givenName + " " + familyName).trim();
+                    }
+                    String sub = userRoot.path("sub").asText(null);
+
+                    logger.info("Successfully verified Google access token via userinfo for email: {}", email);
+                    return new GoogleUserPayload(email, name, sub, true);
+                }
+            } else {
+                logger.warn("Google userinfo returned HTTP {}: {}", userInfoResponse.statusCode(), userInfoResponse.body());
+            }
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception ex) {
+            logger.warn("Online verification via Google userinfo failed: {}. Attempting fallback parsing.", ex.getMessage());
         }
 
         // 2. Fallback: Parse and validate JWT payload locally (for test environments or offline verification)

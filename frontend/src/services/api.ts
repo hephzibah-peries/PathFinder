@@ -302,7 +302,7 @@ export const authApi = {
   loginWithGoogle: (idToken: string) =>
     request<AuthResponse>('/auth/google', {
       method: 'POST',
-      body: JSON.stringify({ idToken }),
+      body: JSON.stringify({ idToken, token: idToken, credential: idToken }),
     }),
   getMe: () => request<any>('/test/me'),
 };

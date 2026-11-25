@@ -505,3 +505,52 @@ export const aiInterviewApi = {
     request<InterviewSessionRecord[]>('/ai/interview/history'),
 };
 
+export interface MlMatchRequest {
+  cvText?: string;
+  jobTitle?: string;
+  jobDescription?: string;
+  requiredSkills?: string[];
+}
+
+export interface MlBatchItem {
+  id: number;
+  title?: string;
+  description?: string;
+  skills?: string[];
+  candidateName?: string;
+  candidateCvText?: string;
+}
+
+export interface MlBatchRankRequest {
+  cvText?: string;
+  internshipId?: number;
+  jobTitle?: string;
+  jobDescription?: string;
+  requiredSkills?: string[];
+  items: MlBatchItem[];
+}
+
+export interface MlMatchResponse {
+  itemId?: number;
+  shortlistProbability: number;
+  semanticScore: number;
+  fitCategory: 'Strong Fit' | 'Moderate Fit' | 'Low Fit' | string;
+  explanationFactors: string[];
+  modelSource: string;
+  matchedSkills: string[];
+  missingSkills: string[];
+}
+
+export const mlApi = {
+  predictMatch: (data: MlMatchRequest) =>
+    request<MlMatchResponse>('/ml/predict-match', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  rankBatch: (data: MlBatchRankRequest) =>
+    request<MlMatchResponse[]>('/ml/rank-batch', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+};
+

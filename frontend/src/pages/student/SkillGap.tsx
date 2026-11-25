@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { resumeApi, StudentResume, SkillDiagnosisResponse } from '../../services/api';
+import { resumeApi, mlApi, StudentResume, SkillDiagnosisResponse, MlMatchResponse } from '../../services/api';
 import { ProgressBar } from '../../components/ui';
 import TrafficLightBadge from '../../components/TrafficLightBadge';
 
@@ -23,6 +23,7 @@ export default function SkillGap() {
   const [loadingResumes, setLoadingResumes] = useState<boolean>(true);
   const [diagnosing, setDiagnosing] = useState<boolean>(false);
   const [diagnosisResult, setDiagnosisResult] = useState<SkillDiagnosisResponse | null>(null);
+  const [mlResult, setMlResult] = useState<MlMatchResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,6 +58,20 @@ export default function SkillGap() {
         targetRole: targetRole.trim(),
       });
       setDiagnosisResult(res);
+
+      // Trigger predictive ML matching engine
+      try {
+        const activeResume = resumes.find((r) => r.id === selectedResumeId);
+        const mlRes = await mlApi.predictMatch({
+          jobTitle: targetRole.trim(),
+          jobDescription: `Target internship opportunity for ${targetRole.trim()}`,
+          requiredSkills: [...(res.matchedSkills || []), ...(res.missingSkills || [])],
+          cvText: activeResume ? `${activeResume.fileName} ${(res.matchedSkills || []).join(' ')}` : targetRole.trim(),
+        });
+        setMlResult(mlRes);
+      } catch (mlErr) {
+        console.warn('ML match prediction notice:', mlErr);
+      }
     } catch (err: any) {
       setError(err.message || 'Diagnosis failed. Please check the backend connection.');
     } finally {
@@ -212,6 +227,80 @@ export default function SkillGap() {
               <ProgressBar value={diagnosisResult.matchScore} />
             </div>
           </div>
+
+          {/* ── Compact ML Matching Engine Card ── */}
+          {mlResult && (
+            <div className="card p-6 bg-gradient-to-br from-white to-[#FAF6F4] border border-[#E5D5CE] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#7A4B43]">
+                      AI Predictive Matching Engine
+                    </span>
+                    <span className="text-[10px] font-semibold text-[#7A6A65] bg-[#F5EBE6] px-2 py-0.5 rounded-full">
+                      {mlResult.modelSource}
+                    </span>
+                  </div>
+                  <h4 className="font-serif text-xl font-bold text-[#2B1B17] mt-1">
+                    Predictive Applicant Shortlist Evaluation
+                  </h4>
+                </div>
+
+                <div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border ${
+                      mlResult.fitCategory === 'Strong Fit'
+                        ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                        : mlResult.fitCategory === 'Moderate Fit'
+                        ? 'bg-amber-50 text-amber-900 border-amber-300'
+                        : 'bg-rose-50 text-rose-900 border-rose-300'
+                    }`}
+                  >
+                    {mlResult.fitCategory}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div className="p-4 rounded-xl bg-white border border-[#E5D5CE]/80 shadow-xs">
+                  <div className="flex items-center justify-between text-xs text-[#7A6A65] font-semibold mb-1">
+                    <span>AI Shortlist Probability</span>
+                    <span className="text-emerald-700 font-bold text-base font-serif">
+                      {mlResult.shortlistProbability}%
+                    </span>
+                  </div>
+                  <ProgressBar value={mlResult.shortlistProbability} />
+                </div>
+
+                <div className="p-4 rounded-xl bg-white border border-[#E5D5CE]/80 shadow-xs">
+                  <div className="flex items-center justify-between text-xs text-[#7A6A65] font-semibold mb-1">
+                    <span>Semantic Match Score</span>
+                    <span className="text-sky-700 font-bold text-base font-serif">
+                      {mlResult.semanticScore}%
+                    </span>
+                  </div>
+                  <ProgressBar value={mlResult.semanticScore} />
+                </div>
+              </div>
+
+              {mlResult.explanationFactors && mlResult.explanationFactors.length > 0 && (
+                <div className="pt-2 border-t border-[#E5D5CE]/60">
+                  <span className="text-xs font-bold text-[#7A6A65] uppercase tracking-wider">
+                    Key Decision Factors:
+                  </span>
+                  <ul className="mt-2 space-y-1.5">
+                    {mlResult.explanationFactors.map((factor, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-xs text-[#2B1B17]">
+                        <span className="text-[#7A4B43]">•</span>
+                        <span>{factor}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Matched Skills vs Skill Gaps */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

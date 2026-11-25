@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Badge, SectionTitle } from '../../components/ui';
-import { internshipApi, applicationApi, Internship, Application } from '../../services/api';
+import { internshipApi, applicationApi, mlApi, Internship, Application, MlMatchResponse, MlBatchItem } from '../../services/api';
 
 type StageTab = 'all' | 'top_matches' | 'shortlisted' | 'interview' | 'rejected';
 
@@ -78,6 +78,7 @@ export default function Applicants() {
   const [internships, setInternships] = useState<Internship[]>([]);
   const [selectedInternshipId, setSelectedInternshipId] = useState<string>(initialInternshipId || 'all');
   const [applications, setApplications] = useState<Application[]>([]);
+  const [mlApplicantScores, setMlApplicantScores] = useState<Record<number, MlMatchResponse>>({});
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -137,6 +138,43 @@ export default function Applicants() {
 
     loadApplications();
   }, [selectedInternshipId, internships.length]);
+
+  // 3. Compute real-time ML shortlist scores for applicants
+  useEffect(() => {
+    async function loadMlApplicantScores() {
+      if (applications.length === 0) return;
+      try {
+        const items: MlBatchItem[] = applications.map((app) => {
+          const meta = getCandidateMeta(app);
+          return {
+            id: app.id,
+            candidateName: app.studentName,
+            candidateCvText: `${app.studentName || 'Student'} - ${meta.degree} from ${meta.university}. GPA: ${meta.gpa}. Skills: ${meta.matchedSkills.join(', ')}. Projects: ${meta.summary}`,
+          };
+        });
+
+        const activeJob = internships.find((j) => String(j.id) === selectedInternshipId);
+        const ranked = await mlApi.rankBatch({
+          jobTitle: activeJob?.title || 'Software Engineering Intern',
+          jobDescription: activeJob?.description || 'Software Engineering Internship Position',
+          requiredSkills: activeJob?.skills ? activeJob.skills.split(',').map((s) => s.trim()).filter(Boolean) : [],
+          items,
+        });
+
+        const map: Record<number, MlMatchResponse> = {};
+        ranked.forEach((r) => {
+          if (r.itemId !== undefined) {
+            map[r.itemId] = r;
+          }
+        });
+        setMlApplicantScores(map);
+      } catch (err) {
+        console.warn('Could not rank applicants via ML engine:', err);
+      }
+    }
+
+    loadMlApplicantScores();
+  }, [applications.length, selectedInternshipId]);
 
   const handleRoleChange = (roleId: string) => {
     setSelectedInternshipId(roleId);
@@ -206,7 +244,15 @@ export default function Applicants() {
     );
   });
 
+  // Sort applicants highest-to-lowest by match score
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    const scoreA = mlApplicantScores[a.id]?.shortlistProbability ?? getCandidateMeta(a).matchScore;
+    const scoreB = mlApplicantScores[b.id]?.shortlistProbability ?? getCandidateMeta(b).matchScore;
+    return scoreB - scoreA;
+  });
+
   const selectedMeta = selectedCandidate ? getCandidateMeta(selectedCandidate) : null;
+  const selectedMlScore = selectedCandidate ? mlApplicantScores[selectedCandidate.id] : null;
 
   return (
     <div className="space-y-6">
@@ -345,7 +391,7 @@ export default function Applicants() {
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#7A4B43] border-t-transparent mx-auto mb-3" />
             Fetching candidate applications...
           </div>
-        ) : filtered.length === 0 ? (
+        ) : sortedFiltered.length === 0 ? (
           <div className="py-16 text-center text-[#7A6A65] text-sm">
             <p className="mb-2 text-base font-semibold text-[#2B1B17]">No candidate applications match this stage.</p>
             <p className="text-xs text-[#7A6A65] max-w-sm mx-auto mb-4">
@@ -367,16 +413,18 @@ export default function Applicants() {
                 <tr className="border-b border-[#E5D5CE] bg-[#FAF6F4] text-[#7A6A65] uppercase tracking-wider font-semibold text-xs">
                   <th className="px-6 py-4">Candidate & University</th>
                   <th className="px-6 py-4">Target Role</th>
-                  <th className="px-6 py-4">AI Fit Score</th>
+                  <th className="px-6 py-4">AI Shortlist %</th>
                   <th className="px-6 py-4">Review Status</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E5D5CE]/70">
-                {filtered.map((app) => {
+                {sortedFiltered.map((app) => {
                   const initial = (app.studentName || 'S').charAt(0).toUpperCase();
                   const isUpdating = updatingId === app.id;
                   const meta = getCandidateMeta(app);
+                  const mlScore = mlApplicantScores[app.id];
+                  const displayScore = mlScore?.shortlistProbability ?? meta.matchScore;
 
                   return (
                     <tr
@@ -411,13 +459,26 @@ export default function Applicants() {
                         </div>
                       </td>
 
-                      {/* AI Fit Score */}
+                      {/* AI Shortlist % */}
                       <td className="px-6 py-4">
-                        <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-[#2D6A4F]">
+                        <div
+                          title={
+                            mlScore
+                              ? `Shortlist Probability: ${mlScore.shortlistProbability}%\nSemantic Score: ${mlScore.semanticScore}%\nFit Category: ${mlScore.fitCategory}`
+                              : `Fit Score: ${displayScore}%`
+                          }
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${
+                            displayScore >= 75
+                              ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
+                              : displayScore >= 50
+                              ? 'border-amber-300 bg-amber-50 text-amber-900'
+                              : 'border-rose-200 bg-rose-50 text-rose-800'
+                          }`}
+                        >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                           </svg>
-                          <span>{meta.matchScore}% Match</span>
+                          <span>{displayScore}% Shortlist</span>
                         </div>
                       </td>
 
@@ -506,44 +567,49 @@ export default function Applicants() {
             {/* Drawer Body (Scrollable) */}
             <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
               {/* AI Fit Score Ring Card */}
-              <div className="rounded-2xl border border-[#E5D5CE] bg-[#FAF6F4] p-5 flex items-center gap-5">
-                {/* SVG Progress Ring */}
-                <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
-                  <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
-                    <path
-                      className="text-[#E5D5CE]"
-                      strokeWidth="3.2"
-                      stroke="currentColor"
-                      fill="none"
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                    <path
-                      className="text-[#2D6A4F] transition-all duration-1000 ease-out"
-                      strokeDasharray={`${selectedMeta.matchScore}, 100`}
-                      strokeWidth="3.2"
-                      strokeLinecap="round"
-                      stroke="currentColor"
-                      fill="none"
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                  </svg>
-                  <div className="absolute text-center">
-                    <span className="text-xl font-black text-[#2B1B17]">{selectedMeta.matchScore}%</span>
-                  </div>
-                </div>
+              {(() => {
+                const drawerScore = selectedMlScore?.shortlistProbability ?? selectedMeta.matchScore;
+                return (
+                  <div className="rounded-2xl border border-[#E5D5CE] bg-[#FAF6F4] p-5 flex items-center gap-5">
+                    {/* SVG Progress Ring */}
+                    <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
+                      <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
+                        <path
+                          className="text-[#E5D5CE]"
+                          strokeWidth="3.2"
+                          stroke="currentColor"
+                          fill="none"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        <path
+                          className="text-[#2D6A4F] transition-all duration-1000 ease-out"
+                          strokeDasharray={`${drawerScore}, 100`}
+                          strokeWidth="3.2"
+                          strokeLinecap="round"
+                          stroke="currentColor"
+                          fill="none"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                      </svg>
+                      <div className="absolute text-center">
+                        <span className="text-xl font-black text-[#2B1B17]">{drawerScore}%</span>
+                      </div>
+                    </div>
 
-                <div>
-                  <div className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-[#2D6A4F] mb-1">
-                    ✓ Strong AI Fit Recommendation
+                    <div>
+                      <div className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-[#2D6A4F] mb-1">
+                        {selectedMlScore ? `✓ ${selectedMlScore.fitCategory} (${selectedMlScore.shortlistProbability}% Shortlist)` : '✓ Strong AI Fit Recommendation'}
+                      </div>
+                      <h4 className="font-serif text-base font-bold text-[#2B1B17]">
+                        High Compatibility for {selectedCandidate.internshipTitle || 'Role'}
+                      </h4>
+                      <p className="text-xs text-[#7A6A65] mt-1 leading-relaxed">
+                        Student technical skills and university curriculum strongly match the prerequisite criteria of this position.
+                      </p>
+                    </div>
                   </div>
-                  <h4 className="font-serif text-base font-bold text-[#2B1B17]">
-                    High Compatibility for {selectedCandidate.internshipTitle || 'Role'}
-                  </h4>
-                  <p className="text-xs text-[#7A6A65] mt-1 leading-relaxed">
-                    Student technical skills and university curriculum strongly match the prerequisite criteria of this position.
-                  </p>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Matched vs Missing Skills */}
               <div className="space-y-4">

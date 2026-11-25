@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { internshipApi, resumeApi, applicationApi, Internship, StudentResume } from '../../services/api';
+import { internshipApi, resumeApi, applicationApi, mlApi, Internship, StudentResume, MlMatchResponse, MlBatchItem } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const ROOTCODE_SAMPLE_INTERNSHIP: Internship = {
@@ -35,6 +35,10 @@ export default function InternshipSearch() {
   const [submittingApp, setSubmittingApp] = useState(false);
   const [appSuccessMessage, setAppSuccessMessage] = useState<string | null>(null);
   const [appErrorMessage, setAppErrorMessage] = useState<string | null>(null);
+
+  // ML match scores and sorting
+  const [mlScores, setMlScores] = useState<Record<number, MlMatchResponse>>({});
+  const [sortByAiMatch, setSortByAiMatch] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -76,8 +80,43 @@ export default function InternshipSearch() {
   const activePostings: Internship[] =
     internshipsList.length > 0 ? internshipsList : [ROOTCODE_SAMPLE_INTERNSHIP];
 
+  // Load AI Match scores when postings or selected resume changes
+  useEffect(() => {
+    async function loadMlScores() {
+      if (activePostings.length === 0) return;
+      const activeResume = resumes.find((r) => r.id === selectedResumeId) || resumes[0];
+      const cvText = activeResume ? `${activeResume.fileName} Computer Science Engineering` : 'Software Engineering Student';
+
+      try {
+        const items: MlBatchItem[] = activePostings.map((p) => ({
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          skills: p.skills ? p.skills.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        }));
+
+        const ranked = await mlApi.rankBatch({
+          cvText,
+          items,
+        });
+
+        const scoreMap: Record<number, MlMatchResponse> = {};
+        ranked.forEach((r) => {
+          if (r.itemId !== undefined) {
+            scoreMap[r.itemId] = r;
+          }
+        });
+        setMlScores(scoreMap);
+      } catch (err) {
+        console.warn('Could not load ML scores:', err);
+      }
+    }
+
+    loadMlScores();
+  }, [internshipsList.length, resumes.length, selectedResumeId]);
+
   // Filter listings by Role / Position and Company Name
-  const filteredPostings = activePostings.filter((item) => {
+  const rawFiltered = activePostings.filter((item) => {
     const compName = (item.companyName || '').toLowerCase();
     const roleTitle = (item.title || '').toLowerCase();
     const skillsText = (item.skills || '').toLowerCase();
@@ -91,6 +130,14 @@ export default function InternshipSearch() {
 
     return matchesCompany && matchesRole;
   });
+
+  const filteredPostings = sortByAiMatch
+    ? [...rawFiltered].sort((a, b) => {
+        const scoreA = mlScores[a.id]?.shortlistProbability ?? 50;
+        const scoreB = mlScores[b.id]?.shortlistProbability ?? 50;
+        return scoreB - scoreA;
+      })
+    : rawFiltered;
 
   const handleOpenApplyModal = (companyName: string, position: Internship) => {
     setApplyModalItem({ companyName, position });
@@ -199,6 +246,22 @@ export default function InternshipSearch() {
         </div>
       </div>
 
+      {/* ── Results Info & Sort by AI Match Toggle ── */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-xs font-semibold text-[#7A6A65]">
+          Showing {filteredPostings.length} {filteredPostings.length === 1 ? 'opening' : 'openings'}
+        </span>
+        <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-[#7A4B43] select-none bg-white px-3 py-1.5 rounded-xl border border-[#E5D5CE] shadow-2xs hover:bg-[#FAF6F4] transition-colors">
+          <input
+            type="checkbox"
+            checked={sortByAiMatch}
+            onChange={(e) => setSortByAiMatch(e.target.checked)}
+            className="rounded border-[#D6C1B8] text-[#7A4B43] focus:ring-[#7A4B43]"
+          />
+          <span>Sort by AI Match</span>
+        </label>
+      </div>
+
       {/* ── Internship Cards Stream ── */}
       <div className="space-y-5">
         {loading ? (
@@ -242,6 +305,7 @@ export default function InternshipSearch() {
             const displayDuration = item.duration || '6 Months';
             const displayWorkMode = item.workMode || 'Hybrid';
             const hasValidStipend = item.stipend && item.stipend.toLowerCase() !== 'competitive';
+            const mlScore = mlScores[item.id];
 
             return (
               <div key={item.id} className="card p-6 hover:border-[#D6C1B8] transition-all space-y-4">
@@ -255,6 +319,23 @@ export default function InternshipSearch() {
                     <span className="inline-flex items-center rounded-md bg-[#FAF6F4] border border-[#E5D5CE] px-2 py-0.5 text-xs font-semibold text-[#7A6A65]">
                       {displayWorkMode}
                     </span>
+                    {mlScore && (
+                      <span
+                        title={`AI Match: ${mlScore.shortlistProbability}% (${mlScore.fitCategory})\nSemantic Score: ${mlScore.semanticScore}%`}
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold border transition-colors ${
+                          mlScore.shortlistProbability >= 75
+                            ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                            : mlScore.shortlistProbability >= 50
+                            ? 'bg-amber-50 text-amber-900 border-amber-300'
+                            : 'bg-stone-50 text-stone-700 border-stone-200'
+                        }`}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                        <span>{mlScore.shortlistProbability}% Match</span>
+                      </span>
+                    )}
                   </div>
 
                   <h2 className="font-serif text-2xl font-bold text-[#2B1B17]">

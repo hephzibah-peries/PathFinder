@@ -26,3 +26,6 @@ spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:
 # Gemini LLM API Configuration
 gemini.api.key=YOUR_GEMINI_API_KEY
 gemini.model=gemini-1.5-flash
+
+# ML Matching Microservice Configuration
+ml.service.url=http://localhost:8000

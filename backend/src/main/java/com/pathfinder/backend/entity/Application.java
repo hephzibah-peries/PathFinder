@@ -1,5 +1,6 @@
 package com.pathfinder.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -14,10 +15,12 @@ public class Application {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "internship_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Internship internship;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private StudentProfile student;
 
     private String status = "PENDING";

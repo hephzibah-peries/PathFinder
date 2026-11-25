@@ -119,5 +119,58 @@ public class DatabaseMigrationConfig {
         } catch (Exception e) {
             log.debug("Index check notice: {}", e.getMessage());
         }
+
+        // 7. Ensure applications table exists
+        try {
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS applications (" +
+                "id BIGSERIAL PRIMARY KEY, " +
+                "internship_id BIGINT NOT NULL, " +
+                "student_id BIGINT NOT NULL, " +
+                "status VARCHAR(50) DEFAULT 'PENDING', " +
+                "applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                "resume_id BIGINT, " +
+                "resume_file_name VARCHAR(255))"
+            );
+        } catch (Exception e) {
+            log.warn("applications table create check notice: {}", e.getMessage());
+        }
+
+        // 8. Ensure columns in applications table
+        try {
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS resume_id BIGINT");
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS resume_file_name VARCHAR(255)");
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'PENDING'");
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS applications ADD COLUMN IF NOT EXISTS applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+        } catch (Exception e) {
+            log.warn("applications column check notice: {}", e.getMessage());
+        }
+
+        // 9. Fix potential OID columns in applications
+        try {
+            List<String> appOidCols = jdbcTemplate.query(
+                "SELECT column_name FROM information_schema.columns " +
+                "WHERE table_name = 'applications' AND LOWER(data_type) = 'oid'",
+                (rs, rowNum) -> rs.getString("column_name")
+            );
+            for (String colName : appOidCols) {
+                log.warn("Detected OID column '{}' in applications! Converting to TEXT...", colName);
+                try {
+                    jdbcTemplate.execute("ALTER TABLE applications ALTER COLUMN " + colName + " TYPE TEXT USING " + colName + "::text");
+                } catch (Exception alterEx) {
+                    log.warn("Could not alter column '{}' in applications: {}", colName, alterEx.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.debug("applications OID check notice: {}", e.getMessage());
+        }
+
+        // 10. Ensure indexes on applications
+        try {
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_applications_student_id ON applications(student_id)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_applications_internship_id ON applications(internship_id)");
+        } catch (Exception e) {
+            log.debug("applications index check notice: {}", e.getMessage());
+        }
     }
 }

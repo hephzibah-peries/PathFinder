@@ -89,6 +89,12 @@ export interface Application {
   companyName?: string;
   studentId?: number;
   studentName?: string;
+  studentEmail?: string;
+  university?: string;
+  degree?: string;
+  gpa?: number;
+  resumeId?: number;
+  resumeFileName?: string;
   status: string;
   appliedAt?: string;
 }
@@ -365,6 +371,27 @@ export const applicationApi = {
       method: 'PUT',
       body: JSON.stringify({ status }),
     }),
+  getApplicantResumeBlob: async (applicationId: number | string): Promise<Blob> => {
+    const token = getToken();
+    const url = buildApiUrl(`/applications/${applicationId}/resume`);
+    const res = await fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      let errText = `Failed to load applicant resume (${res.status})`;
+      try {
+        const errJson = await res.json();
+        if (errJson.message) errText = errJson.message;
+      } catch {}
+      throw new Error(errText);
+    }
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) {
+      throw new Error('Received HTML error page instead of PDF document');
+    }
+    const blob = await res.blob();
+    return new Blob([blob], { type: 'application/pdf' });
+  },
 };
 
 export const recommendationApi = {

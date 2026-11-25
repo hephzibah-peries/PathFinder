@@ -8,6 +8,10 @@ public class ApplicationDto {
     private String location;
     private Long studentId;
     private String studentName;
+    private String studentEmail;
+    private String university;
+    private String degree;
+    private Double gpa;
     private String status;
     private String appliedAt;
     private Long resumeId;
@@ -19,11 +23,17 @@ public class ApplicationDto {
 
     public ApplicationDto(Long id, Long internshipId, String internshipTitle, String companyName, String location, Long studentId,
                           String studentName, String status, String appliedAt, Long resumeId, String resumeFileName) {
-        this(id, internshipId, internshipTitle, companyName, location, studentId, studentName, status, appliedAt, resumeId, resumeFileName, null);
+        this(id, internshipId, internshipTitle, companyName, location, studentId, studentName, null, null, null, null, status, appliedAt, resumeId, resumeFileName, null);
     }
 
     public ApplicationDto(Long id, Long internshipId, String internshipTitle, String companyName, String location, Long studentId,
                           String studentName, String status, String appliedAt, Long resumeId, String resumeFileName, String coverLetter) {
+        this(id, internshipId, internshipTitle, companyName, location, studentId, studentName, null, null, null, null, status, appliedAt, resumeId, resumeFileName, coverLetter);
+    }
+
+    public ApplicationDto(Long id, Long internshipId, String internshipTitle, String companyName, String location, Long studentId,
+                          String studentName, String studentEmail, String university, String degree, Double gpa,
+                          String status, String appliedAt, Long resumeId, String resumeFileName, String coverLetter) {
         this.id = id;
         this.internshipId = internshipId;
         this.internshipTitle = internshipTitle;
@@ -31,6 +41,10 @@ public class ApplicationDto {
         this.location = location;
         this.studentId = studentId;
         this.studentName = studentName;
+        this.studentEmail = studentEmail;
+        this.university = university;
+        this.degree = degree;
+        this.gpa = gpa;
         this.status = status;
         this.appliedAt = appliedAt;
         this.resumeId = resumeId;
@@ -52,6 +66,14 @@ public class ApplicationDto {
     public void setStudentId(Long studentId) { this.studentId = studentId; }
     public String getStudentName() { return studentName; }
     public void setStudentName(String studentName) { this.studentName = studentName; }
+    public String getStudentEmail() { return studentEmail; }
+    public void setStudentEmail(String studentEmail) { this.studentEmail = studentEmail; }
+    public String getUniversity() { return university; }
+    public void setUniversity(String university) { this.university = university; }
+    public String getDegree() { return degree; }
+    public void setDegree(String degree) { this.degree = degree; }
+    public Double getGpa() { return gpa; }
+    public void setGpa(Double gpa) { this.gpa = gpa; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public String getAppliedAt() { return appliedAt; }
@@ -73,6 +95,10 @@ public class ApplicationDto {
         private String location;
         private Long studentId;
         private String studentName;
+        private String studentEmail;
+        private String university;
+        private String degree;
+        private Double gpa;
         private String status;
         private String appliedAt;
         private Long resumeId;
@@ -86,13 +112,17 @@ public class ApplicationDto {
         public Builder location(String location) { this.location = location; return this; }
         public Builder studentId(Long studentId) { this.studentId = studentId; return this; }
         public Builder studentName(String studentName) { this.studentName = studentName; return this; }
+        public Builder studentEmail(String studentEmail) { this.studentEmail = studentEmail; return this; }
+        public Builder university(String university) { this.university = university; return this; }
+        public Builder degree(String degree) { this.degree = degree; return this; }
+        public Builder gpa(Double gpa) { this.gpa = gpa; return this; }
         public Builder status(String status) { this.status = status; return this; }
         public Builder appliedAt(String appliedAt) { this.appliedAt = appliedAt; return this; }
         public Builder resumeId(Long resumeId) { this.resumeId = resumeId; return this; }
         public Builder resumeFileName(String resumeFileName) { this.resumeFileName = resumeFileName; return this; }
         public Builder coverLetter(String coverLetter) { this.coverLetter = coverLetter; return this; }
         public ApplicationDto build() {
-            return new ApplicationDto(id, internshipId, internshipTitle, companyName, location, studentId, studentName, status, appliedAt, resumeId, resumeFileName, coverLetter);
+            return new ApplicationDto(id, internshipId, internshipTitle, companyName, location, studentId, studentName, studentEmail, university, degree, gpa, status, appliedAt, resumeId, resumeFileName, coverLetter);
         }
     }
 }

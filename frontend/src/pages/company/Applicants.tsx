@@ -26,20 +26,6 @@ const statusBadge: Record<string, 'success' | 'warn' | 'error' | 'info'> = {
 function getCandidateMeta(app: Application) {
   const seed = app.id || 1;
   const matchScore = 80 + ((seed * 11) % 19); // 80 - 98%
-  const universities = [
-    'University of Moratuwa',
-    'University of Colombo School of Computing (UCSC)',
-    'Sri Lanka Institute of Information Technology (SLIIT)',
-    'Informatics Institute of Technology (IIT)',
-    'University of Kelaniya',
-  ];
-  const degrees = [
-    'BSc (Hons) in Software Engineering',
-    'BSc (Hons) in Computer Science',
-    'BSc (Hons) in Information Technology',
-    'BSc (Hons) in Data Science & AI',
-  ];
-  const gpas = ['3.85', '3.72', '3.91', '3.65', '3.78'];
   const matchedSkillSets = [
     ['Java', 'Spring Boot', 'PostgreSQL', 'React', 'REST APIs', 'Git'],
     ['Python', 'TensorFlow', 'PyTorch', 'SQL', 'FastAPI', 'Pandas'],
@@ -53,9 +39,9 @@ function getCandidateMeta(app: Application) {
     ['Kafka', 'Terraform'],
   ];
 
-  const university = universities[seed % universities.length];
-  const degree = degrees[seed % degrees.length];
-  const gpa = gpas[seed % gpas.length];
+  const university = app.university || '';
+  const degree = app.degree || '';
+  const gpa = app.gpa != null ? String(app.gpa) : '';
   const matchedSkills = matchedSkillSets[seed % matchedSkillSets.length];
   const missingSkills = missingSkillSets[seed % missingSkillSets.length];
 
@@ -67,7 +53,7 @@ function getCandidateMeta(app: Application) {
     matchedSkills,
     missingSkills,
     summary:
-      'High-performing undergraduate with demonstrated experience designing and shipping scalable web applications. Strong foundations in data structures, algorithms, and microservice architectures with active contributions to open-source software and university technical societies.',
+      'Undergraduate candidate with evaluated technical background and project experience aligned with this internship position.',
   };
 }
 
@@ -87,6 +73,21 @@ export default function Applicants() {
 
   // Slide-over drawer state
   const [selectedCandidate, setSelectedCandidate] = useState<Application | null>(null);
+  const [loadingCvId, setLoadingCvId] = useState<number | null>(null);
+
+  const handleViewCv = async (applicationId: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      setLoadingCvId(applicationId);
+      const blob = await applicationApi.getApplicantResumeBlob(applicationId);
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    } catch (err: any) {
+      alert(err.message || 'Failed to open applicant CV. No CV file may be attached to this application.');
+    } finally {
+      setLoadingCvId(null);
+    }
+  };
 
   // 1. Fetch company's internships
   useEffect(() => {
@@ -207,9 +208,14 @@ export default function Applicants() {
     }
   };
 
+  // Helper to resolve candidate score (prioritizing ML shortlist probability)
+  const getApplicantScore = (app: Application) => {
+    return mlApplicantScores[app.id]?.shortlistProbability ?? getCandidateMeta(app).matchScore;
+  };
+
   // Stage counts for ATS filter tabs
   const countAll = applications.length;
-  const countTopMatches = applications.filter((a) => getCandidateMeta(a).matchScore >= 80).length;
+  const countTopMatches = applications.filter((a) => getApplicantScore(a) >= 80).length;
   const countShortlisted = applications.filter((a) => {
     const s = (a.status || '').toUpperCase();
     return s === 'SHORTLISTED' || s === 'APPROVED';
@@ -226,9 +232,10 @@ export default function Applicants() {
   // Filter based on stage tab and search query
   const filtered = applications.filter((app) => {
     const status = (app.status || '').toUpperCase();
+    const score = getApplicantScore(app);
     const meta = getCandidateMeta(app);
 
-    if (stageTab === 'top_matches' && meta.matchScore < 80) return false;
+    if (stageTab === 'top_matches' && score < 80) return false;
     if (stageTab === 'shortlisted' && status !== 'SHORTLISTED' && status !== 'APPROVED') return false;
     if (stageTab === 'interview' && status !== 'INTERVIEW') return false;
     if (stageTab === 'rejected' && status !== 'REJECTED') return false;
@@ -237,18 +244,17 @@ export default function Applicants() {
     if (!term) return true;
     return (
       (app.studentName && app.studentName.toLowerCase().includes(term)) ||
+      (app.studentEmail && app.studentEmail.toLowerCase().includes(term)) ||
       (app.internshipTitle && app.internshipTitle.toLowerCase().includes(term)) ||
       (app.status && app.status.toLowerCase().includes(term)) ||
-      meta.university.toLowerCase().includes(term) ||
+      (meta.university && meta.university.toLowerCase().includes(term)) ||
       meta.matchedSkills.some((s) => s.toLowerCase().includes(term))
     );
   });
 
   // Sort applicants highest-to-lowest by match score
   const sortedFiltered = [...filtered].sort((a, b) => {
-    const scoreA = mlApplicantScores[a.id]?.shortlistProbability ?? getCandidateMeta(a).matchScore;
-    const scoreB = mlApplicantScores[b.id]?.shortlistProbability ?? getCandidateMeta(b).matchScore;
-    return scoreB - scoreA;
+    return getApplicantScore(b) - getApplicantScore(a);
   });
 
   const selectedMeta = selectedCandidate ? getCandidateMeta(selectedCandidate) : null;
@@ -440,11 +446,18 @@ export default function Applicants() {
                           </div>
                           <div>
                             <div className="font-bold text-[#2B1B17] text-base group-hover:text-[#7A4B43] transition-colors">
-                              {app.studentName || `Student #${app.studentId || app.id}`}
+                              {app.studentName || (app.studentEmail ? app.studentEmail.split('@')[0] : `Student #${app.studentId || app.id}`)}
                             </div>
-                            <div className="text-xs text-[#7A6A65] font-medium">
-                              {meta.university} · GPA {meta.gpa}
-                            </div>
+                            {app.studentEmail && (
+                              <div className="text-xs text-[#7A6A65]">
+                                {app.studentEmail}
+                              </div>
+                            )}
+                            {(app.university || app.gpa != null) && (
+                              <div className="text-xs text-[#7A6A65] font-medium">
+                                {[app.university, app.gpa != null ? `GPA ${app.gpa}` : null].filter(Boolean).join(' · ')}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -490,6 +503,28 @@ export default function Applicants() {
                       {/* Action Button */}
                       <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="inline-flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => handleViewCv(app.id, e)}
+                            disabled={loadingCvId === app.id}
+                            title="Open candidate PDF CV in a new tab"
+                            className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-800 hover:bg-sky-600 hover:text-white transition-colors shadow-xs inline-flex items-center gap-1.5 disabled:opacity-50"
+                          >
+                            {loadingCvId === app.id ? (
+                              <span className="animate-pulse">Loading...</span>
+                            ) : (
+                              <>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                  <polyline points="14 2 14 8 20 8" />
+                                  <line x1="16" y1="13" x2="8" y2="13" />
+                                  <line x1="16" y1="17" x2="8" y2="17" />
+                                </svg>
+                                <span>View CV</span>
+                              </>
+                            )}
+                          </button>
+
                           {isUpdating ? (
                             <span className="text-xs text-[#7A4B43] animate-pulse font-bold">Updating...</span>
                           ) : (
@@ -536,15 +571,24 @@ export default function Applicants() {
                 </div>
                 <div>
                   <h3 className="font-serif text-xl font-bold text-[#2B1B17]">
-                    {selectedCandidate.studentName || `Candidate #${selectedCandidate.id}`}
+                    {selectedCandidate.studentName || (selectedCandidate.studentEmail ? selectedCandidate.studentEmail.split('@')[0] : `Candidate #${selectedCandidate.id}`)}
                   </h3>
-                  <p className="text-xs text-[#7A6A65] font-medium">
-                    {selectedMeta.degree} · {selectedMeta.university}
-                  </p>
+                  {selectedCandidate.studentEmail && (
+                    <p className="text-xs text-[#7A6A65] font-medium">
+                      {selectedCandidate.studentEmail}
+                    </p>
+                  )}
+                  {(selectedCandidate.university || selectedCandidate.degree) && (
+                    <p className="text-xs text-[#7A6A65] font-medium">
+                      {[selectedCandidate.degree, selectedCandidate.university].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
                   <div className="mt-1 flex items-center gap-2">
-                    <span className="inline-block rounded-md bg-white border border-[#E5D5CE] px-2 py-0.5 text-[11px] font-bold text-[#2B1B17]">
-                      GPA: {selectedMeta.gpa}
-                    </span>
+                    {selectedCandidate.gpa != null && (
+                      <span className="inline-block rounded-md bg-white border border-[#E5D5CE] px-2 py-0.5 text-[11px] font-bold text-[#2B1B17]">
+                        GPA: {selectedCandidate.gpa}
+                      </span>
+                    )}
                     <Badge kind={statusBadge[selectedCandidate.status] || 'warn'}>
                       {selectedCandidate.status || 'PENDING'}
                     </Badge>
@@ -552,16 +596,34 @@ export default function Applicants() {
                 </div>
               </div>
 
-              <button
-                onClick={() => setSelectedCandidate(null)}
-                className="rounded-lg p-2 text-[#7A6A65] hover:bg-[#F2E8E4] hover:text-[#2B1B17] transition-colors"
-                title="Close drawer"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleViewCv(selectedCandidate.id)}
+                  disabled={loadingCvId === selectedCandidate.id}
+                  className="rounded-xl border border-sky-300 bg-sky-50 px-3.5 py-2 text-xs font-bold text-sky-800 hover:bg-sky-600 hover:text-white transition-colors shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+                  title="Open candidate PDF CV in a new tab"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  <span>{loadingCvId === selectedCandidate.id ? 'Loading...' : 'View CV'}</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedCandidate(null)}
+                  className="rounded-lg p-2 text-[#7A6A65] hover:bg-[#F2E8E4] hover:text-[#2B1B17] transition-colors"
+                  title="Close drawer"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Drawer Body (Scrollable) */}
@@ -657,6 +719,40 @@ export default function Applicants() {
                       </span>
                     ))}
                   </div>
+                </div>
+              </div>
+
+              {/* Submitted Resume Attachment */}
+              <div className="space-y-2">
+                <h4 className="font-serif text-sm font-bold uppercase tracking-wider text-[#7A6A65]">
+                  Submitted CV / Resume
+                </h4>
+                <div className="rounded-xl border border-[#E5D5CE] bg-[#FAF6F4] p-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 text-sky-800">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-[#2B1B17]">
+                        {selectedCandidate.resumeFileName || 'Submitted_CV.pdf'}
+                      </div>
+                      <div className="text-[11px] text-[#7A6A65]">
+                        Candidate PDF Document
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleViewCv(selectedCandidate.id)}
+                    disabled={loadingCvId === selectedCandidate.id}
+                    className="rounded-lg border border-sky-300 bg-white px-3 py-1.5 text-xs font-bold text-sky-800 hover:bg-sky-600 hover:text-white transition-colors shadow-xs inline-flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    <span>{loadingCvId === selectedCandidate.id ? 'Loading...' : 'View Full CV'} &rarr;</span>
+                  </button>
                 </div>
               </div>
 

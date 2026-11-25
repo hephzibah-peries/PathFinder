@@ -169,6 +169,64 @@ public class ApplicationService {
         return mapToDto(applicationRepository.save(application));
     }
 
+    public static class ApplicantResumeData {
+        private final byte[] fileData;
+        private final String contentType;
+        private final String fileName;
+
+        public ApplicantResumeData(byte[] fileData, String contentType, String fileName) {
+            this.fileData = fileData;
+            this.contentType = contentType != null && !contentType.isBlank() ? contentType : "application/pdf";
+            this.fileName = fileName != null && !fileName.isBlank() ? fileName : "resume.pdf";
+        }
+
+        public byte[] getFileData() { return fileData; }
+        public String getContentType() { return contentType; }
+        public String getFileName() { return fileName; }
+    }
+
+    @Transactional(readOnly = true)
+    public ApplicantResumeData getApplicantResumeForCompany(Long applicationId, String companyEmail) {
+        if (applicationId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application ID must be provided");
+        }
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found: " + applicationId));
+
+        // Verify that the application belongs to the authenticated company's internship
+        if (companyEmail != null && !companyEmail.isBlank()) {
+            User authUser = userRepository.findByEmail(companyEmail).orElse(null);
+            boolean isAdmin = authUser != null && authUser.getRole() != null && "ADMIN".equalsIgnoreCase(authUser.getRole().name());
+            if (!isAdmin) {
+                String ownerEmail = null;
+                if (application.getInternship() != null && application.getInternship().getCompany() != null
+                        && application.getInternship().getCompany().getUser() != null) {
+                    ownerEmail = application.getInternship().getCompany().getUser().getEmail();
+                }
+                if (ownerEmail == null || !ownerEmail.equalsIgnoreCase(companyEmail)) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: application does not belong to your company");
+                }
+            }
+        }
+
+        StudentResume resume = null;
+        if (application.getResumeId() != null && studentResumeRepository != null) {
+            resume = studentResumeRepository.findById(application.getResumeId()).orElse(null);
+        }
+        if (resume == null && application.getStudent() != null && studentResumeRepository != null) {
+            List<StudentResume> resumes = studentResumeRepository.findByStudentIdOrderByUploadedAtDesc(application.getStudent().getId());
+            if (!resumes.isEmpty()) {
+                resume = resumes.get(0);
+            }
+        }
+
+        if (resume == null || resume.getFileData() == null || resume.getFileData().length == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resume file not found for this applicant");
+        }
+
+        return new ApplicantResumeData(resume.getFileData(), resume.getFileType(), resume.getFileName());
+    }
+
     private ApplicationDto mapToDto(Application app) {
         Long internshipId = null;
         String internshipTitle = null;
@@ -185,9 +243,35 @@ public class ApplicationService {
 
         Long studentId = null;
         String studentName = null;
+        String studentEmail = null;
+        String university = null;
+        String degree = null;
+        Double gpa = null;
+
         if (app.getStudent() != null) {
-            studentId = app.getStudent().getId();
-            studentName = app.getStudent().getFullName();
+            StudentProfile studentProfile = app.getStudent();
+            studentId = studentProfile.getId();
+            university = studentProfile.getUniversity();
+            gpa = studentProfile.getGpa();
+
+            User user = studentProfile.getUser();
+            if (user != null) {
+                studentEmail = user.getEmail();
+            }
+
+            // Strictly resolve studentName:
+            // studentProfile.getFullName() (if non-blank)
+            // -> user.getEmail().split("@")[0]
+            // -> "Student #" + studentId
+            if (studentProfile.getFullName() != null && !studentProfile.getFullName().trim().isBlank()) {
+                studentName = studentProfile.getFullName().trim();
+            } else if (user != null && user.getEmail() != null && !user.getEmail().trim().isBlank()) {
+                studentName = user.getEmail().split("@")[0];
+            } else if (studentId != null) {
+                studentName = "Student #" + studentId;
+            } else {
+                studentName = "Applicant";
+            }
         }
 
         String appliedAt = app.getAppliedAt() != null
@@ -202,6 +286,10 @@ public class ApplicationService {
                 .location(location != null ? location : "")
                 .studentId(studentId)
                 .studentName(studentName != null ? studentName : "")
+                .studentEmail(studentEmail)
+                .university(university)
+                .degree(degree)
+                .gpa(gpa)
                 .status(app.getStatus() != null ? app.getStatus() : "PENDING")
                 .appliedAt(appliedAt)
                 .resumeId(app.getResumeId())

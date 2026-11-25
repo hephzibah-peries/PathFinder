@@ -5,7 +5,9 @@ import com.pathfinder.backend.dto.ApplicationStatusUpdateRequest;
 import com.pathfinder.backend.service.ApplicationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -97,6 +99,28 @@ public class ApplicationController {
             log.error("Failed to update status for application {}: {}", applicationId, e.getMessage(), e);
             return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Failed to update application status: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/{applicationId}/resume")
+    @PreAuthorize("hasRole('COMPANY') or hasRole('ADMIN')")
+    public ResponseEntity<byte[]> getApplicantResume(
+            Authentication authentication,
+            @PathVariable Long applicationId) {
+        String companyEmail = authentication != null ? authentication.getName() : null;
+        ApplicationService.ApplicantResumeData resumeData = applicationService.getApplicantResumeForCompany(applicationId, companyEmail);
+
+        MediaType mediaType = MediaType.APPLICATION_PDF;
+        if (resumeData.getContentType() != null && !resumeData.getContentType().isBlank()) {
+            try {
+                mediaType = MediaType.parseMediaType(resumeData.getContentType());
+            } catch (Exception ignored) {
+            }
+        }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resumeData.getFileName() + "\"")
+                .body(resumeData.getFileData());
     }
 
     private ResponseEntity<Map<String, Object>> buildErrorResponse(int status, String message) {

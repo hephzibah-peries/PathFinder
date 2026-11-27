@@ -156,11 +156,62 @@ export function setToken(token: string): void {
   localStorage.setItem('token', token);
 }
 
+export function clearCompanyCache(): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (
+        key &&
+        (key.startsWith('company_') ||
+          key.startsWith('pathfinder_internship_') ||
+          key.includes('company_logo') ||
+          key.includes('company_name'))
+      ) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch (err) {
+    console.debug('Failed to clear company cache', err);
+  }
+}
+
 export function removeToken(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem('token');
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem('user');
+  localStorage.removeItem('email');
+  localStorage.removeItem('role');
+  clearCompanyCache();
+}
+
+export function decodeJwtClaims(token: string): { email?: string; role?: string; exp?: number } | null {
+  try {
+    const cleanToken = token.trim().replace(/^"|"$/g, '');
+    const parts = cleanToken.split('.');
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const parsed = JSON.parse(jsonPayload);
+    const email = parsed.sub || parsed.email;
+    const role = parsed.role || parsed.roles || parsed.authorities || parsed.auth;
+    return {
+      email: typeof email === 'string' ? email : undefined,
+      role: typeof role === 'string' ? role : undefined,
+      exp: typeof parsed.exp === 'number' ? parsed.exp : undefined,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function getStoredUser(): UserSession | null {
@@ -329,7 +380,7 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ token, newPassword }),
     }),
-  getMe: () => request<any>('/test/me'),
+  getMe: () => request<{ email: string; role: string }>('/auth/me'),
 };
 
 export interface DbStatusResponse {

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import Landing from './pages/Landing';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -39,7 +40,15 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
 
-          <Route path="/student" element={<StudentLayout />}>
+          {/* Student Portal - Strictly STUDENT only */}
+          <Route
+            path="/student"
+            element={
+              <ProtectedRoute allowedRole="STUDENT">
+                <StudentLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Navigate to="profile" replace />} />
             <Route path="profile" element={<StudentProfile />} />
             <Route path="internships" element={<InternshipSearch />} />
@@ -52,7 +61,15 @@ export default function App() {
             <Route path="mock-interview" element={<AIMockInterview />} />
           </Route>
 
-          <Route path="/company" element={<CompanyLayout />}>
+          {/* Company Portal - Strictly COMPANY only */}
+          <Route
+            path="/company"
+            element={
+              <ProtectedRoute allowedRole="COMPANY">
+                <CompanyLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Navigate to="/company/profile" replace />} />
             <Route path="internships" element={<ManageInternships />} />
             <Route path="applicants" element={<Applicants />} />
@@ -60,9 +77,20 @@ export default function App() {
             <Route path="profile" element={<CompanyProfile />} />
           </Route>
 
-          <Route path="/admin" element={<AdminLayout />}>
+          {/* Admin Portal - Strictly ADMIN only */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRole="ADMIN">
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<AdminDashboard />} />
           </Route>
+
+          {/* Catch-all fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

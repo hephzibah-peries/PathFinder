@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { studentApi } from '../services/api';
 
@@ -7,6 +7,11 @@ export default function StudentLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
+
+  // Defense-in-depth: If authenticated with non-student role, redirect to company portal
+  if (user && user.role !== 'STUDENT' && user.role !== 'ADMIN') {
+    return <Navigate to="/company/profile" replace />;
+  }
 
   useEffect(() => {
     let isMounted = true;

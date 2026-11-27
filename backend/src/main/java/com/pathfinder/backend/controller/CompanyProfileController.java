@@ -20,6 +20,7 @@ public class CompanyProfileController {
     }
 
     @GetMapping({"/me", "/profile"})
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN')")
     public ResponseEntity<CompanyProfileDto> getMyProfile(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
@@ -28,6 +29,7 @@ public class CompanyProfileController {
     }
 
     @PutMapping({"/me", "/profile"})
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN')")
     public ResponseEntity<CompanyProfileDto> updateMyProfile(
             Authentication authentication,
             @RequestBody CompanyProfileDto dto) {

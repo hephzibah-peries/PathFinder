@@ -6,13 +6,26 @@ import { GoogleLogin } from '../../components/auth/GoogleLogin';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, loginWithGoogle } = useAuth();
+  const { user, isAuthenticated, login, loginWithGoogle } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role) {
+      const role = user.role.toUpperCase();
+      if (role === 'COMPANY') {
+        navigate('/company/profile', { replace: true });
+      } else if (role === 'ADMIN') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/student', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

@@ -7,6 +7,7 @@ import com.pathfinder.backend.enums.UserRole;
 import com.pathfinder.backend.repository.CompanyProfileRepository;
 import com.pathfinder.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,19 +30,17 @@ public class CompanyProfileService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email not provided in authentication context");
         }
 
-        User initialUser = userRepository.findByEmail(email).orElse(null);
-        if (initialUser == null) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for email: " + email);
         }
 
-        // Ensure user has COMPANY role when managing company profile
-        if (initialUser.getRole() != UserRole.COMPANY && initialUser.getRole() != UserRole.ADMIN) {
-            initialUser.setRole(UserRole.COMPANY);
-            initialUser = userRepository.save(initialUser);
+        // Strictly verify user has COMPANY or ADMIN role
+        if (user.getRole() != UserRole.COMPANY && user.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Access denied: Company role required");
         }
-        final User user = initialUser;
 
-        // Auto-provision default CompanyProfile if not present (e.g. fresh account or DB reset)
+        // Auto-provision default CompanyProfile if not present (e.g. fresh company account)
         CompanyProfile profile = companyProfileRepository.findByUserId(user.getId())
                 .orElseGet(() -> {
                     String defaultName = user.getEmail() != null && user.getEmail().contains("@")
@@ -75,15 +74,13 @@ public class CompanyProfileService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email not provided in authentication context");
         }
 
-        User initialUser = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for email: " + email));
 
-        // Ensure user has COMPANY role when updating company profile
-        if (initialUser.getRole() != UserRole.COMPANY && initialUser.getRole() != UserRole.ADMIN) {
-            initialUser.setRole(UserRole.COMPANY);
-            initialUser = userRepository.save(initialUser);
+        // Strictly verify user has COMPANY or ADMIN role
+        if (user.getRole() != UserRole.COMPANY && user.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Access denied: Company role required");
         }
-        final User user = initialUser;
 
         CompanyProfile profile = companyProfileRepository.findByUserId(user.getId())
                 .orElseGet(() -> {

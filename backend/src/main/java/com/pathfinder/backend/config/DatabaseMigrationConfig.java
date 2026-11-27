@@ -212,12 +212,16 @@ public class DatabaseMigrationConfig {
             log.debug("student_profiles degree column check notice: {}", e.getMessage());
         }
 
-        // 14. Ensure COMPANY user roles and company_profiles consistency
+        // 14. Ensure strict role assignments and cleanup accidental company profiles
         try {
+            // Explicitly set nilkanhepzi@gmail.com as COMPANY
             jdbcTemplate.execute("UPDATE users SET role = 'COMPANY' WHERE email = 'nilkanhepzi@gmail.com'");
-            jdbcTemplate.execute("UPDATE users SET role = 'COMPANY' WHERE id IN (SELECT user_id FROM company_profiles) AND role != 'COMPANY'");
+
+            // Explicitly set periesprouser@gmail.com as STUDENT and remove any accidental company profile
+            jdbcTemplate.execute("UPDATE users SET role = 'STUDENT' WHERE email = 'periesprouser@gmail.com'");
+            jdbcTemplate.execute("DELETE FROM company_profiles WHERE user_id IN (SELECT id FROM users WHERE email = 'periesprouser@gmail.com')");
         } catch (Exception e) {
-            log.warn("Company user role migration notice: {}", e.getMessage());
+            log.warn("Role migration and company profile cleanup notice: {}", e.getMessage());
         }
     }
 }

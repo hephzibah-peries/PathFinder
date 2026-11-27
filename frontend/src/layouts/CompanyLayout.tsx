@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { companyApi, CompanyProfile } from '../services/api';
 
@@ -46,6 +46,11 @@ export default function CompanyLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Defense-in-depth: If authenticated with non-company role, redirect to student portal
+  if (user && user.role !== 'COMPANY' && user.role !== 'ADMIN') {
+    return <Navigate to="/student" replace />;
+  }
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);

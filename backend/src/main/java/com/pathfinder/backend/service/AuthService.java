@@ -170,4 +170,11 @@ public class AuthService {
         userRepository.save(user);
         logger.info("Password successfully reset for user: {}", email);
     }
+
+    public User getUserByEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        return userRepository.findByEmail(email.trim().toLowerCase()).orElse(null);
+    }
 }

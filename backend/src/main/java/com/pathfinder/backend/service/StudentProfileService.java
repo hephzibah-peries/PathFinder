@@ -3,9 +3,11 @@ package com.pathfinder.backend.service;
 import com.pathfinder.backend.dto.StudentProfileDto;
 import com.pathfinder.backend.entity.StudentProfile;
 import com.pathfinder.backend.entity.User;
+import com.pathfinder.backend.enums.UserRole;
 import com.pathfinder.backend.repository.StudentProfileRepository;
 import com.pathfinder.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +38,10 @@ public class StudentProfileService {
             return StudentProfileDto.builder().email(email).build();
         }
 
+        if (user.getRole() != UserRole.STUDENT && user.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Access denied: Student role required");
+        }
+
         StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
                 .orElseGet(() -> studentProfileRepository.save(
                         StudentProfile.builder()
@@ -51,6 +57,14 @@ public class StudentProfileService {
     public StudentProfileDto updateProfile(String email, StudentProfileDto dto) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (user.getRole() != UserRole.STUDENT && user.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Access denied: Student role required");
+        }
+
+        if (user.getRole() != UserRole.STUDENT && user.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Access denied: Student role required");
+        }
 
         StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
                 .orElseGet(() -> StudentProfile.builder().user(user).build());
@@ -82,6 +96,10 @@ public class StudentProfileService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (user.getRole() != UserRole.STUDENT && user.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Access denied: Student role required");
+        }
 
         StudentProfile profile = studentProfileRepository.findByUserId(user.getId())
                 .orElseGet(() -> StudentProfile.builder().user(user).build());

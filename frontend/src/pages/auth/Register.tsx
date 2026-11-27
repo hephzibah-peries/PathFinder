@@ -31,7 +31,7 @@ export default function Register() {
       const response = await register({ email, password, role });
       const userRole = response.role?.toUpperCase() || role;
       if (userRole === 'COMPANY') {
-        navigate('/company');
+        navigate('/company/profile');
       } else {
         navigate('/student');
       }

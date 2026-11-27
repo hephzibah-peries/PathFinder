@@ -31,7 +31,7 @@ export default function Login() {
       const response = await login({ email, password });
       const role = response.role?.toUpperCase() || 'STUDENT';
       if (role === 'COMPANY') {
-        navigate('/company');
+        navigate('/company/profile');
       } else if (role === 'ADMIN') {
         navigate('/admin');
       } else {
@@ -65,7 +65,7 @@ export default function Login() {
 
       const role = response.role?.toUpperCase() || 'STUDENT';
       if (role === 'COMPANY') {
-        navigate('/company');
+        navigate('/company/profile');
       } else if (role === 'ADMIN') {
         navigate('/admin');
       } else {

@@ -33,7 +33,7 @@ export default function OAuth2Redirect() {
 
       // 4. Redirect based on role
       if (role.toUpperCase().includes('COMPANY')) {
-        navigate('/company', { replace: true });
+        navigate('/company/profile', { replace: true });
       } else if (role.toUpperCase().includes('ADMIN')) {
         navigate('/admin', { replace: true });
       } else {

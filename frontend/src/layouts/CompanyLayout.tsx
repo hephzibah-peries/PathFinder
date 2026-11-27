@@ -19,7 +19,7 @@ const navItems = [
     ),
   },
   {
-    to: '/company',
+    to: '/company/internships',
     label: 'Manage Internships',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -126,11 +126,17 @@ export default function CompanyLayout() {
     .toUpperCase() || 'CO';
 
   const isItemActive = (itemTo: string) => {
-    if (itemTo === '/company') {
+    if (itemTo === '/company/profile') {
       return (
         location.pathname === '/company' ||
         location.pathname === '/company/' ||
-        location.pathname === '/company/internships'
+        location.pathname.startsWith('/company/profile')
+      );
+    }
+    if (itemTo === '/company/internships') {
+      return (
+        location.pathname === '/company/internships' ||
+        location.pathname.startsWith('/company/internships/')
       );
     }
     return location.pathname.startsWith(itemTo);

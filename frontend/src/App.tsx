@@ -53,7 +53,7 @@ export default function App() {
           </Route>
 
           <Route path="/company" element={<CompanyLayout />}>
-            <Route index element={<ManageInternships />} />
+            <Route index element={<Navigate to="/company/profile" replace />} />
             <Route path="internships" element={<ManageInternships />} />
             <Route path="applicants" element={<Applicants />} />
             <Route path="applicants/:id" element={<CandidateDetails />} />

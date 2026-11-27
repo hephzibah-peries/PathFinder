@@ -583,21 +583,13 @@ export default function ManageInternships() {
 
       {/* ── Always Visible Quick-Start Industry Role Templates ── */}
       <div className="mt-8 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E5D5CE] pb-3">
-          <div>
-            <h3 className="font-serif text-xl font-bold text-[#2B1B17]">
-              Quick-Start Internship Templates
-            </h3>
-            <p className="text-xs text-[#7A6A65] mt-0.5">
-              Launch pre-configured role postings with one click or customize them to your needs anytime
-            </p>
-          </div>
-          <button
-            onClick={openCreateModal}
-            className="btn btn-secondary py-1.5 px-3.5 text-xs font-semibold self-start sm:self-auto"
-          >
-            + Create from Scratch
-          </button>
+        <div className="border-b border-[#E5D5CE] pb-3">
+          <h3 className="font-serif text-xl font-bold text-[#2B1B17]">
+            Quick-Start Internship Templates
+          </h3>
+          <p className="text-xs text-[#7A6A65] mt-0.5">
+            Launch pre-configured role postings with one click or customize them to your needs anytime
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-left">

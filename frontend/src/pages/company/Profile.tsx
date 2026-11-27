@@ -110,6 +110,10 @@ export default function CompanyProfile() {
 
   const name = profile?.companyName || user?.email?.split('@')[0] || 'Company Profile';
   const avatar = name.substring(0, 2).toUpperCase();
+  const isVerified = Boolean(
+    profile?.verified ||
+    (profile?.companyName && profile?.industry && profile?.website && profile?.description)
+  );
 
   return (
     <div className="mx-auto max-w-[880px]">
@@ -176,15 +180,20 @@ export default function CompanyProfile() {
           <div>
             <div className="flex items-center gap-2.5">
               <h1 className="m-0 font-serif text-3xl font-bold text-[#2B1B17]">{name}</h1>
-              {profile?.verified && (
+              {isVerified && (
                 <span className="rounded-full bg-[#2D6A4F]/10 border border-[#2D6A4F]/30 px-3 py-1 text-xs font-bold text-[#2D6A4F]">
                   Verified
                 </span>
               )}
             </div>
             <p className="mt-1 text-base text-[#7A6A65] font-semibold">
-              {profile?.industry || 'Industry not specified'} · {profile?.email || user?.email}
+              {profile?.industry || 'Industry not specified'}
             </p>
+            {(profile?.email || user?.email) && (
+              <p className="text-sm text-[#7A6A65] mt-0.5">
+                {profile?.email || user?.email}
+              </p>
+            )}
             {profile?.website && (
               <a
                 href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
@@ -224,7 +233,7 @@ export default function CompanyProfile() {
           <div>
             <dt className="text-xs font-bold uppercase tracking-wider text-[#7A6A65]">Verification Status</dt>
             <dd className="mt-1 text-base font-semibold text-[#2B1B17]">
-              {profile?.verified ? 'Verified Employer' : 'Pending Verification'}
+              {isVerified ? 'Verified Employer' : 'Pending Verification'}
             </dd>
           </div>
         </dl>

@@ -50,6 +50,14 @@ public class CompanyProfileService {
                     return companyProfileRepository.save(newProfile);
                 });
 
+        // Auto-verify existing company if required details are completed
+        if (Boolean.FALSE.equals(profile.getVerified()) || profile.getVerified() == null) {
+            if (isProfileComplete(profile)) {
+                profile.setVerified(true);
+                profile = companyProfileRepository.save(profile);
+            }
+        }
+
         return mapToDto(profile);
     }
 
@@ -82,7 +90,20 @@ public class CompanyProfileService {
             if (dto.getWebsite() != null) profile.setWebsite(dto.getWebsite());
         }
 
+        // Auto-verify when required details (name, industry, website, description) are completed and saved
+        if (isProfileComplete(profile)) {
+            profile.setVerified(true);
+        }
+
         return mapToDto(companyProfileRepository.save(profile));
+    }
+
+    private boolean isProfileComplete(CompanyProfile profile) {
+        if (profile == null) return false;
+        return profile.getCompanyName() != null && !profile.getCompanyName().isBlank()
+                && profile.getIndustry() != null && !profile.getIndustry().isBlank()
+                && profile.getWebsite() != null && !profile.getWebsite().isBlank()
+                && profile.getDescription() != null && !profile.getDescription().isBlank();
     }
 
     private CompanyProfileDto mapToDto(CompanyProfile profile) {

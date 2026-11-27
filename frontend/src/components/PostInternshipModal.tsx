@@ -169,7 +169,12 @@ export default function PostInternshipModal({
       // Aggregate requirements
       const reqList: string[] = [];
       if (minGpa.trim()) {
-        reqList.push(`Minimum GPA: ${minGpa}`);
+        const parsed = parseFloat(minGpa.trim());
+        if (!isNaN(parsed)) {
+          reqList.push(`Minimum GPA: ${parsed}`);
+        } else {
+          reqList.push(`Minimum GPA: ${minGpa.trim()}`);
+        }
       }
       if (duration) {
         reqList.push(`Duration: ${duration}`);
@@ -415,12 +420,17 @@ export default function PostInternshipModal({
                   Min. Academic GPA <span className="text-[#7A6A65]">(Optional)</span>
                 </label>
                 <input
-                  type="number"
-                  step="0.1"
+                  type="text"
+                  inputMode="decimal"
                   className="form-input"
-                  placeholder="e.g. 3.0"
+                  placeholder="e.g. 3.0 or 3.25"
                   value={minGpa}
-                  onChange={(e) => setMinGpa(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                      setMinGpa(val);
+                    }
+                  }}
                 />
               </div>
 

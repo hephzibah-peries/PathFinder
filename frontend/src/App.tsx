@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext';
 import Landing from './pages/Landing';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import OAuth2Redirect from './pages/auth/OAuth2Redirect';
 
 import StudentLayout from './layouts/StudentLayout';
@@ -33,6 +35,8 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
 
           <Route path="/student" element={<StudentLayout />}>

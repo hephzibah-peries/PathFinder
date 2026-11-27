@@ -202,6 +202,28 @@ public class NotificationService {
         }
     }
 
+    public String getFrontendBaseUrl() {
+        String base = (this.frontendUrl != null && !this.frontendUrl.isBlank())
+                ? this.frontendUrl
+                : "http://localhost:5173";
+        String env = System.getenv("FRONTEND_URL");
+        if (env != null && !env.isBlank()) {
+            base = env;
+        }
+        return base.replaceAll("/+$", "");
+    }
+
+    public void sendPasswordResetEmail(String toEmail, String resetLink) {
+        String subject = "Reset Your PathFinder Password";
+        String body = "<p style=\"font-size: 15px; color: #2B1B17; line-height: 1.6;\">We received a request to reset your password for your PathFinder account.</p>" +
+                "<p style=\"font-size: 14px; color: #7A6A65; line-height: 1.6;\">Click the button below to choose a new password. This link is valid for <strong>30 minutes</strong>.</p>" +
+                "<p style=\"font-size: 13px; color: #7A6A65; line-height: 1.6; margin-top: 16px;\">If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>";
+
+        String recipientName = (toEmail != null && toEmail.contains("@")) ? toEmail.split("@")[0] : "User";
+        String htmlContent = buildEmailTemplate(recipientName, "Password Reset Request", body, resetLink, "Reset Password");
+        sendEmailAsync(toEmail, subject, htmlContent);
+    }
+
     @Async
     public void sendEmailAsync(String toEmail, String subject, String htmlContent) {
         String fromEmail = (mailFromEmail != null && !mailFromEmail.trim().isBlank())

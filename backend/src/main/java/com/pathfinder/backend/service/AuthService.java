@@ -1,9 +1,11 @@
 package com.pathfinder.backend.service;
 
 import com.pathfinder.backend.dto.AuthResponse;
+import com.pathfinder.backend.dto.ForgotPasswordRequest;
 import com.pathfinder.backend.dto.GoogleLoginRequest;
 import com.pathfinder.backend.dto.LoginRequest;
 import com.pathfinder.backend.dto.RegisterRequest;
+import com.pathfinder.backend.dto.ResetPasswordRequest;
 import com.pathfinder.backend.entity.StudentProfile;
 import com.pathfinder.backend.entity.User;
 import com.pathfinder.backend.enums.UserRole;
@@ -29,17 +31,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final GoogleIdTokenVerifier googleIdTokenVerifier;
+    private final NotificationService notificationService;
 
     public AuthService(UserRepository userRepository,
                        StudentProfileRepository studentProfileRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       GoogleIdTokenVerifier googleIdTokenVerifier) {
+                       GoogleIdTokenVerifier googleIdTokenVerifier,
+                       NotificationService notificationService) {
         this.userRepository = userRepository;
         this.studentProfileRepository = studentProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.googleIdTokenVerifier = googleIdTokenVerifier;
+        this.notificationService = notificationService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -125,5 +130,44 @@ public class AuthService {
         String roleStr = user.getRole() != null ? user.getRole().name() : UserRole.STUDENT.name();
         String token = jwtService.generateToken(user.getEmail(), roleStr);
         return new AuthResponse(token, user.getEmail(), roleStr);
+    }
+
+    public void forgotPassword(ForgotPasswordRequest request) {
+        if (request == null || request.getEmail() == null || request.getEmail().isBlank()) {
+            return;
+        }
+
+        String email = request.getEmail().trim().toLowerCase();
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            String token = jwtService.generatePasswordResetToken(email);
+            String resetLink = notificationService.getFrontendBaseUrl() + "/reset-password?token=" +
+                    java.net.URLEncoder.encode(token, java.nio.charset.StandardCharsets.UTF_8);
+            notificationService.sendPasswordResetEmail(email, resetLink);
+            logger.info("Sent password reset link to: {}", email);
+        } else {
+            logger.info("Password reset requested for non-existent email: {}", email);
+        }
+    }
+
+    public void resetPassword(ResetPasswordRequest request) {
+        if (request == null || request.getToken() == null || request.getToken().isBlank()) {
+            throw new IllegalArgumentException("Reset token is required");
+        }
+        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
+        }
+
+        String email = jwtService.validatePasswordResetToken(request.getToken());
+        if (email == null) {
+            throw new IllegalArgumentException("Invalid or expired password reset token. Please request a new link.");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        logger.info("Password successfully reset for user: {}", email);
     }
 }

@@ -1,9 +1,11 @@
 package com.pathfinder.backend.controller;
 
 import com.pathfinder.backend.dto.AuthResponse;
+import com.pathfinder.backend.dto.ForgotPasswordRequest;
 import com.pathfinder.backend.dto.GoogleLoginRequest;
 import com.pathfinder.backend.dto.LoginRequest;
 import com.pathfinder.backend.dto.RegisterRequest;
+import com.pathfinder.backend.dto.ResetPasswordRequest;
 import com.pathfinder.backend.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -51,6 +53,26 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Google authentication failed: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(Map.of(
+            "message", "If an account exists for that email, a password reset link has been sent."
+        ));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            authService.resetPassword(request);
+            return ResponseEntity.ok(Map.of(
+                "message", "Password has been reset successfully. You can now log in."
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 }

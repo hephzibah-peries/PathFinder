@@ -153,9 +153,12 @@ export default function Login() {
               <input type="checkbox" className="rounded bg-white border-[#E5D5CE] text-[#7A4B43] focus:ring-[#7A4B43]/20" />
               <span>Remember me</span>
             </label>
-            <span className="font-semibold text-[#7A4B43] hover:text-[#5E342D] cursor-pointer">
+            <Link
+              to={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ''}`}
+              className="font-semibold text-[#7A4B43] hover:text-[#5E342D] transition-colors"
+            >
               Forgot password?
-            </span>
+            </Link>
           </div>
 
           <button

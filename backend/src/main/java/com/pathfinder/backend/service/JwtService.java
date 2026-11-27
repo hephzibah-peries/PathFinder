@@ -51,6 +51,38 @@ public class JwtService {
         return extractUsername(token).equals(userEmail) && !isTokenExpired(token);
     }
 
+    public String generatePasswordResetToken(String email) {
+        long resetExpirationTime = 30 * 60 * 1000L; // 30 minutes
+        return Jwts.builder()
+                .subject(email)
+                .claim("purpose", "PASSWORD_RESET")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + resetExpirationTime))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public String validatePasswordResetToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            String purpose = claims.get("purpose", String.class);
+            if (!"PASSWORD_RESET".equals(purpose)) {
+                return null;
+            }
+            if (claims.getExpiration().before(new Date())) {
+                return null;
+            }
+            return claims.getSubject();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private boolean isTokenExpired(String token) {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }

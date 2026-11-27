@@ -1,12 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { GoogleLogin } from '../../components/auth/GoogleLogin';
+import { clearCompanyCache } from '../../services/api';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isAuthenticated, login, loginWithGoogle } = useAuth();
+
+  const searchParams = new URLSearchParams(location.search);
+  const roleParam = searchParams.get('role');
+  const roleFromQuery = roleParam?.toUpperCase();
+  const roleFromState = (location.state as any)?.requestedRole?.toUpperCase();
+
+  const requestedRole = (roleFromQuery === 'COMPANY' || roleFromQuery === 'STUDENT')
+    ? roleFromQuery
+    : (roleFromState === 'COMPANY' || roleFromState === 'STUDENT')
+    ? roleFromState
+    : null;
+
+  const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'COMPANY'>(
+    requestedRole || 'STUDENT'
+  );
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,8 +31,26 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Sync selectedRole if URL query param changes
+  useEffect(() => {
+    if (roleFromQuery === 'COMPANY' || roleFromQuery === 'STUDENT') {
+      setSelectedRole(roleFromQuery);
+    }
+  }, [roleFromQuery]);
+
+  const currentRole = user?.role?.toUpperCase();
+  const isSwitchingPortals =
+    isAuthenticated &&
+    !!currentRole &&
+    ((currentRole === 'STUDENT' && selectedRole === 'COMPANY') ||
+     (currentRole === 'COMPANY' && selectedRole === 'STUDENT'));
+
   useEffect(() => {
     if (isAuthenticated && user?.role) {
+      if (isSwitchingPortals) {
+        return;
+      }
+
       const role = user.role.toUpperCase();
       if (role === 'COMPANY') {
         navigate('/company/profile', { replace: true });
@@ -25,7 +60,7 @@ export default function Login() {
         navigate('/student', { replace: true });
       }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, isSwitchingPortals, navigate]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -41,8 +76,9 @@ export default function Login() {
     setLoading(true);
 
     try {
+      clearCompanyCache();
       const response = await login({ email, password });
-      const role = response.role?.toUpperCase() || 'STUDENT';
+      const role = response.role?.toUpperCase() || selectedRole || 'STUDENT';
       if (role === 'COMPANY') {
         navigate('/company/profile');
       } else if (role === 'ADMIN') {
@@ -68,6 +104,7 @@ export default function Login() {
 
     try {
       console.log('[PathFinder Auth] Received Google credential token, submitting via authApi.loginWithGoogle...');
+      clearCompanyCache();
       const response = await loginWithGoogle(credential.trim());
       console.log('[PathFinder Auth] Google login successful. Authenticated as:', response.email, response.role);
 
@@ -76,7 +113,7 @@ export default function Login() {
       const user = localStorage.getItem('pathfinder_user');
       console.log('[PathFinder Auth] Session storage verified:', { hasToken: !!token, hasUser: !!user });
 
-      const role = response.role?.toUpperCase() || 'STUDENT';
+      const role = response.role?.toUpperCase() || selectedRole || 'STUDENT';
       if (role === 'COMPANY') {
         navigate('/company/profile');
       } else if (role === 'ADMIN') {
@@ -116,6 +153,66 @@ export default function Login() {
           <p className="mt-1 text-sm text-[#7A6A65]">Sign in to your PathFinder account</p>
         </div>
 
+        {/* ── Portal Selector Tabs ── */}
+        <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl border border-[#E5D5CE] bg-[#FAF6F4] p-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedRole('STUDENT');
+              navigate('/login?role=student', { replace: true });
+            }}
+            className={`py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${
+              selectedRole === 'STUDENT'
+                ? 'bg-[#7A4B43] text-white shadow-xs'
+                : 'text-[#7A6A65] hover:text-[#2B1B17] hover:bg-white/60'
+            }`}
+          >
+            Student Portal
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedRole('COMPANY');
+              navigate('/login?role=company', { replace: true });
+            }}
+            className={`py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${
+              selectedRole === 'COMPANY'
+                ? 'bg-[#7A4B43] text-white shadow-xs'
+                : 'text-[#7A6A65] hover:text-[#2B1B17] hover:bg-white/60'
+            }`}
+          >
+            Company Portal
+          </button>
+        </div>
+
+        {/* ── Account-Switch Warning Banner ── */}
+        {isSwitchingPortals && (
+          <div className="mb-5 rounded-2xl border border-[#E6A694] bg-[#FDF2ED] p-4 text-sm text-[#7A4B43] shadow-xs animate-in fade-in">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E6A694]/50 text-[#7A4B43] font-bold text-xs">
+                !
+              </div>
+              <div className="space-y-1.5">
+                <p className="font-semibold text-[#5E342D]">
+                  Switching to {selectedRole === 'COMPANY' ? 'Company Portal' : 'Student Portal'}
+                </p>
+                <p className="text-xs leading-relaxed text-[#7A6A65]">
+                  You&apos;re currently signed in as <strong className="text-[#2B1B17]">{user?.email}</strong> ({currentRole?.toLowerCase()}). Sign in with a <span className="font-semibold text-[#7A4B43]">{selectedRole.toLowerCase()}</span> account to switch portals.
+                </p>
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => navigate(currentRole === 'COMPANY' ? '/company/profile' : '/student')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#7A4B43] hover:text-[#5E342D] hover:underline transition-colors"
+                  >
+                    ← Continue to {currentRole === 'COMPANY' ? 'Company Portal' : 'Student Portal'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="mb-4 rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm font-semibold text-rose-900 animate-in fade-in">
             {error}
@@ -131,7 +228,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="form-input text-sm"
-              placeholder="you@university.edu"
+              placeholder={selectedRole === 'COMPANY' ? 'contact@company.com' : 'you@university.edu'}
             />
           </div>
 
@@ -179,7 +276,7 @@ export default function Login() {
             disabled={loading}
             className="btn btn-primary w-full py-3 text-sm font-semibold"
           >
-            {loading ? 'Authenticating...' : 'Sign In'}
+            {loading ? 'Authenticating...' : `Sign In to ${selectedRole === 'COMPANY' ? 'Company' : 'Student'} Portal`}
           </button>
         </form>
 
@@ -200,7 +297,10 @@ export default function Login() {
 
         <p className="mt-6 text-center text-sm text-[#7A6A65]">
           Don&apos;t have an account yet?{' '}
-          <Link to="/register" className="font-bold text-[#7A4B43] hover:text-[#5E342D]">
+          <Link
+            to={`/register?role=${selectedRole.toLowerCase()}`}
+            className="font-bold text-[#7A4B43] hover:text-[#5E342D]"
+          >
             Create account
           </Link>
         </p>

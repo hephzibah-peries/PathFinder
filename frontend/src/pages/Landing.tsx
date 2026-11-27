@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Hero3DBackground from '../components/Hero3DBackground';
 
 const features = [
@@ -69,7 +70,27 @@ const features = [
 ];
 
 export default function Landing() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<'students' | 'companies'>('students');
+
+  const handlePortalClick = (targetRole: 'STUDENT' | 'COMPANY') => {
+    if (isAuthenticated && user?.role) {
+      const currentRole = user.role.toUpperCase();
+      if (currentRole === 'ADMIN') {
+        navigate(targetRole === 'COMPANY' ? '/company/profile' : '/student');
+        return;
+      }
+      if (currentRole === targetRole) {
+        navigate(targetRole === 'COMPANY' ? '/company/profile' : '/student');
+        return;
+      }
+    }
+    // If not authenticated or signed into opposite role, navigate to login with role intent
+    navigate(`/login?role=${targetRole.toLowerCase()}`, {
+      state: { requestedRole: targetRole },
+    });
+  };
 
   return (
     <div className="min-h-screen bg-[#FAF6F4] text-[#2B1B17] overflow-x-hidden selection:bg-[#E6A694]/30 selection:text-[#7A4B43]">
@@ -97,12 +118,27 @@ export default function Landing() {
           </nav>
 
           <div className="flex items-center">
-            <Link
-              to="/login"
-              className="rounded-xl border border-[#E5D5CE] bg-white px-5 py-2 text-sm font-semibold text-[#2B1B17] hover:bg-[#FDF2ED] hover:border-[#D6C1B8] transition-all shadow-2xs"
-            >
-              Sign In
-            </Link>
+            {isAuthenticated && user?.role ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const role = user.role.toUpperCase();
+                  if (role === 'COMPANY') navigate('/company/profile');
+                  else if (role === 'ADMIN') navigate('/admin');
+                  else navigate('/student');
+                }}
+                className="rounded-xl border border-[#7A4B43] bg-[#7A4B43] px-5 py-2 text-sm font-semibold text-white hover:bg-[#683C35] transition-all shadow-xs"
+              >
+                Go to Dashboard
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="rounded-xl border border-[#E5D5CE] bg-white px-5 py-2 text-sm font-semibold text-[#2B1B17] hover:bg-[#FDF2ED] hover:border-[#D6C1B8] transition-all shadow-2xs"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -123,13 +159,30 @@ export default function Landing() {
           </p>
 
           <div className="flex justify-center mb-12">
-            <Link
-              to="/login"
-              className="btn bg-[#7A4B43] text-white hover:bg-[#683C35] shadow-md px-8 py-3.5 text-base font-bold inline-flex items-center gap-2 group transition-all"
-            >
-              <span>Get Started</span>
-              <span className="transition-transform group-hover:translate-x-1">→</span>
-            </Link>
+            {isAuthenticated && user?.role ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const role = user.role.toUpperCase();
+                  if (role === 'COMPANY') navigate('/company/profile');
+                  else if (role === 'ADMIN') navigate('/admin');
+                  else navigate('/student');
+                }}
+                className="btn bg-[#7A4B43] text-white hover:bg-[#683C35] shadow-md px-8 py-3.5 text-base font-bold inline-flex items-center gap-2 group transition-all"
+              >
+                <span>Go to Dashboard</span>
+                <span className="transition-transform group-hover:translate-x-1">→</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handlePortalClick('STUDENT')}
+                className="btn bg-[#7A4B43] text-white hover:bg-[#683C35] shadow-md px-8 py-3.5 text-base font-bold inline-flex items-center gap-2 group transition-all"
+              >
+                <span>Get Started</span>
+                <span className="transition-transform group-hover:translate-x-1">→</span>
+              </button>
+            )}
           </div>
 
           {/* Bottom Feature Highlights */}
@@ -348,12 +401,20 @@ export default function Landing() {
             </p>
           </div>
           <div className="flex gap-4 shrink-0">
-            <Link to="/login" className="btn bg-[#E6A694] text-white hover:bg-[#CD8C7A] shadow-md px-8 py-3.5 text-base font-bold">
+            <button
+              type="button"
+              onClick={() => handlePortalClick('STUDENT')}
+              className="btn bg-[#E6A694] text-white hover:bg-[#CD8C7A] shadow-md px-8 py-3.5 text-base font-bold transition-all"
+            >
               Student Portal
-            </Link>
-            <Link to="/login" className="btn border-2 border-white/40 text-white hover:bg-white/10 px-7 py-3.5 text-base font-semibold">
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePortalClick('COMPANY')}
+              className="btn border-2 border-white/40 text-white hover:bg-white/10 px-7 py-3.5 text-base font-semibold transition-all"
+            >
               Company Portal
-            </Link>
+            </button>
           </div>
         </div>
       </section>

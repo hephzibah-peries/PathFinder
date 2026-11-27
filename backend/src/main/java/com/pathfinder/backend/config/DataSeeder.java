@@ -59,6 +59,7 @@ public class DataSeeder implements CommandLineRunner {
                     .user(studentUser)
                     .fullName("Alex Perera")
                     .university("University of Colombo")
+                    .degree("BSc (Hons) in Computer Science")
                     .gpa(3.85)
                     .skills("Java, Spring Boot, React, TypeScript, PostgreSQL, Docker, REST API")
                     .bio("Final-year Computer Science undergraduate passionate about building resilient full-stack applications and cloud microservices.")

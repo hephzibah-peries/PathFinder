@@ -6,6 +6,7 @@ public class StudentProfileDto {
     private String email;
     private String fullName;
     private String university;
+    private String degree;
     private Double gpa;
     private String bio;
     private String skills;
@@ -31,6 +32,12 @@ public class StudentProfileDto {
         this.profilePicture = profilePicture;
     }
 
+    public StudentProfileDto(Long id, Long userId, String email, String fullName, String university, String degree, Double gpa,
+                             String bio, String skills, String preferredLocation, String preferredWorkMode, String profilePicture) {
+        this(id, userId, email, fullName, university, gpa, bio, skills, preferredLocation, preferredWorkMode, profilePicture);
+        this.degree = degree;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getUserId() { return userId; }
@@ -41,6 +48,8 @@ public class StudentProfileDto {
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getUniversity() { return university; }
     public void setUniversity(String university) { this.university = university; }
+    public String getDegree() { return degree; }
+    public void setDegree(String degree) { this.degree = degree; }
     public Double getGpa() { return gpa; }
     public void setGpa(Double gpa) { this.gpa = gpa; }
     public String getBio() { return bio; }
@@ -62,6 +71,7 @@ public class StudentProfileDto {
         private String email;
         private String fullName;
         private String university;
+        private String degree;
         private Double gpa;
         private String bio;
         private String skills;
@@ -74,6 +84,7 @@ public class StudentProfileDto {
         public Builder email(String email) { this.email = email; return this; }
         public Builder fullName(String fullName) { this.fullName = fullName; return this; }
         public Builder university(String university) { this.university = university; return this; }
+        public Builder degree(String degree) { this.degree = degree; return this; }
         public Builder gpa(Double gpa) { this.gpa = gpa; return this; }
         public Builder bio(String bio) { this.bio = bio; return this; }
         public Builder skills(String skills) { this.skills = skills; return this; }
@@ -81,7 +92,7 @@ public class StudentProfileDto {
         public Builder preferredWorkMode(String preferredWorkMode) { this.preferredWorkMode = preferredWorkMode; return this; }
         public Builder profilePicture(String profilePicture) { this.profilePicture = profilePicture; return this; }
         public StudentProfileDto build() {
-            return new StudentProfileDto(id, userId, email, fullName, university, gpa, bio, skills, preferredLocation, preferredWorkMode, profilePicture);
+            return new StudentProfileDto(id, userId, email, fullName, university, degree, gpa, bio, skills, preferredLocation, preferredWorkMode, profilePicture);
         }
     }
 }

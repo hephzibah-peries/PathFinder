@@ -57,6 +57,7 @@ public class StudentProfileService {
 
         if (dto.getFullName() != null) profile.setFullName(dto.getFullName());
         if (dto.getUniversity() != null) profile.setUniversity(dto.getUniversity());
+        if (dto.getDegree() != null) profile.setDegree(dto.getDegree());
         if (dto.getGpa() != null) profile.setGpa(dto.getGpa());
         if (dto.getBio() != null) profile.setBio(dto.getBio());
         if (dto.getSkills() != null) profile.setSkills(dto.getSkills());
@@ -104,6 +105,7 @@ public class StudentProfileService {
                 .email(email)
                 .fullName(profile.getFullName())
                 .university(profile.getUniversity())
+                .degree(profile.getDegree())
                 .gpa(profile.getGpa())
                 .bio(profile.getBio())
                 .skills(profile.getSkills())

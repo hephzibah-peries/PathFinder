@@ -16,6 +16,10 @@ public class StudentProfile {
 
     private String fullName;
     private String university;
+
+    @Column(name = "degree")
+    private String degree;
+
     private Double gpa;
 
     @Column(columnDefinition = "TEXT")
@@ -53,6 +57,12 @@ public class StudentProfile {
         this.profilePicture = profilePicture;
     }
 
+    public StudentProfile(Long id, User user, String fullName, String university, String degree, Double gpa, String bio,
+                          String skills, String preferredLocation, String preferredWorkMode, String profilePicture) {
+        this(id, user, fullName, university, gpa, bio, skills, preferredLocation, preferredWorkMode, profilePicture);
+        this.degree = degree;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public User getUser() { return user; }
@@ -61,6 +71,8 @@ public class StudentProfile {
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getUniversity() { return university; }
     public void setUniversity(String university) { this.university = university; }
+    public String getDegree() { return degree; }
+    public void setDegree(String degree) { this.degree = degree; }
     public Double getGpa() { return gpa; }
     public void setGpa(Double gpa) { this.gpa = gpa; }
     public String getBio() { return bio; }
@@ -85,6 +97,7 @@ public class StudentProfile {
         private User user;
         private String fullName;
         private String university;
+        private String degree;
         private Double gpa;
         private String bio;
         private String skills;
@@ -97,6 +110,7 @@ public class StudentProfile {
         public Builder user(User user) { this.user = user; return this; }
         public Builder fullName(String fullName) { this.fullName = fullName; return this; }
         public Builder university(String university) { this.university = university; return this; }
+        public Builder degree(String degree) { this.degree = degree; return this; }
         public Builder gpa(Double gpa) { this.gpa = gpa; return this; }
         public Builder bio(String bio) { this.bio = bio; return this; }
         public Builder skills(String skills) { this.skills = skills; return this; }
@@ -105,7 +119,7 @@ public class StudentProfile {
         public Builder phone(String phone) { this.phone = phone; return this; }
         public Builder profilePicture(String profilePicture) { this.profilePicture = profilePicture; return this; }
         public StudentProfile build() {
-            StudentProfile profile = new StudentProfile(id, user, fullName, university, gpa, bio, skills, preferredLocation, preferredWorkMode, profilePicture);
+            StudentProfile profile = new StudentProfile(id, user, fullName, university, degree, gpa, bio, skills, preferredLocation, preferredWorkMode, profilePicture);
             profile.setPhone(phone);
             return profile;
         }

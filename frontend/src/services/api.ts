@@ -21,6 +21,7 @@ export interface StudentProfile {
   email?: string;
   fullName?: string;
   university?: string;
+  degree?: string;
   gpa?: number;
   bio?: string;
   skills?: string;

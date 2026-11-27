@@ -40,6 +40,7 @@ export default function StudentProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editFullName, setEditFullName] = useState('');
   const [editUniversity, setEditUniversity] = useState('');
+  const [editDegree, setEditDegree] = useState('');
   const [editGpa, setEditGpa] = useState('');
   const [editBio, setEditBio] = useState('');
   const [editProfilePicture, setEditProfilePicture] = useState<string | null>(null);
@@ -68,6 +69,7 @@ export default function StudentProfile() {
         setProfile(data);
         setEditFullName(data.fullName || '');
         setEditUniversity(data.university || '');
+        setEditDegree(data.degree || '');
         setEditGpa(data.gpa != null ? (Number.isInteger(Number(data.gpa)) ? Number(data.gpa).toFixed(2) : String(data.gpa)) : '');
         setEditBio(data.bio || '');
         setEditProfilePicture(data.profilePicture || null);
@@ -187,6 +189,7 @@ export default function StudentProfile() {
       const updated = await studentApi.updateProfile({
         fullName: editFullName.trim(),
         university: editUniversity.trim(),
+        degree: editDegree.trim(),
         gpa: editGpa.trim() ? parseFloat(editGpa.trim()) : undefined,
         bio: editBio.trim(),
         skills: profile?.skills,
@@ -292,6 +295,11 @@ export default function StudentProfile() {
                 {profile.university.trim()}
               </p>
             ) : null}
+            {profile?.degree && profile.degree.trim() ? (
+              <p className="mt-0.5 text-sm text-[#7A6A65] font-medium">
+                {profile.degree.trim()}
+              </p>
+            ) : null}
             {formattedGpa ? (
               <p className="mt-0.5 text-sm text-[#7A6A65] font-medium">
                 GPA {formattedGpa}
@@ -307,6 +315,18 @@ export default function StudentProfile() {
           Edit Profile
         </button>
       </div>
+
+      {/* ── Bio Section (Immediately below header) ── */}
+      {profile?.bio && profile.bio.trim() ? (
+        <div className="card mt-5">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="m-0 font-serif text-xl font-bold text-[#2B1B17]">Bio</h2>
+          </div>
+          <p className="text-base text-[#7A6A65] leading-relaxed whitespace-pre-line">
+            {profile.bio.trim()}
+          </p>
+        </div>
+      ) : null}
 
       {/* ── CV Management Section ── */}
       <div className="card mt-5 space-y-5">
@@ -452,17 +472,6 @@ export default function StudentProfile() {
         )}
       </div>
 
-      {/* ── About & Bio (Only displayed if student filled it in) ── */}
-      {profile?.bio && profile.bio.trim() ? (
-        <div className="card mt-5">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="m-0 text-base font-serif font-bold text-[#2B1B17]">About & Bio</h3>
-          </div>
-          <p className="text-base text-[#7A6A65] leading-relaxed whitespace-pre-line">
-            {profile.bio.trim()}
-          </p>
-        </div>
-      ) : null}
 
       {/* ── Full CV Document Viewer Modal ── */}
       {viewingFile && (
@@ -602,28 +611,27 @@ export default function StudentProfile() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">University / Institution</label>
+                <input
+                  type="text"
+                  value={editUniversity}
+                  onChange={(e) => setEditUniversity(e.target.value)}
+                  className="form-input"
+                  placeholder="e.g. University of Moratuwa"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">University / Institution & Degree</label>
+                  <label className="form-label">Degree</label>
                   <input
                     type="text"
-                    value={editUniversity}
-                    onChange={(e) => setEditUniversity(e.target.value)}
+                    value={editDegree}
+                    onChange={(e) => setEditDegree(e.target.value)}
                     className="form-input"
-                    list="field-of-study-suggestions"
-                    placeholder="e.g. University of Colombo · Engineering / Business / CS"
+                    placeholder="e.g. BSc (Hons) in Information Technology"
                   />
-                  <datalist id="field-of-study-suggestions">
-                    <option value="Computer Science / IT" />
-                    <option value="Engineering (Mechanical, Civil, Electrical)" />
-                    <option value="Business & Management" />
-                    <option value="Finance & Economics" />
-                    <option value="Biological & Health Sciences" />
-                    <option value="Physical Sciences" />
-                    <option value="Arts, Design & Media" />
-                    <option value="Law & Social Sciences" />
-                    <option value="Other" />
-                  </datalist>
                 </div>
                 <div>
                   <label className="form-label">GPA</label>
@@ -639,13 +647,13 @@ export default function StudentProfile() {
               </div>
 
               <div>
-                <label className="form-label">About / Bio & Disciplines</label>
+                <label className="form-label">Bio</label>
                 <textarea
                   rows={4}
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
                   className="form-input"
-                  placeholder="Tell recruiters about your field of study, skills (e.g. Financial Modeling, AutoCAD, Python, Clinical Research, Digital Marketing), and career aspirations..."
+                  placeholder="Tell recruiters about your background, career aspirations, and key strengths..."
                 />
               </div>
 

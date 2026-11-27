@@ -142,7 +142,13 @@ const TOKEN_KEY = 'pathfinder_token';
 const USER_KEY = 'pathfinder_user';
 
 export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY) || localStorage.getItem('token');
+  const t = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('token');
+  if (!t) return null;
+  let clean = t.trim();
+  if (clean.startsWith('"') && clean.endsWith('"') && clean.length > 2) {
+    clean = clean.substring(1, clean.length - 1).trim();
+  }
+  return clean;
 }
 
 export function setToken(token: string): void {
@@ -193,7 +199,8 @@ export function getBackendHost(): string {
     return 'http://localhost:8080';
   }
 
-  return '';
+  // Default production fallback for Render backend:
+  return 'https://pathfinder-6rly.onrender.com';
 }
 
 /**
@@ -248,7 +255,8 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
   }
 
   if (token && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${token}`);
+    const authVal = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    headers.set('Authorization', authVal);
   }
 
   const url = buildApiUrl(endpoint);

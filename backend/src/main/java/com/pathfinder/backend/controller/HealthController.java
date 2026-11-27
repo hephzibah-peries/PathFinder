@@ -74,4 +74,13 @@ public class HealthController {
             return ResponseEntity.ok(response);
         }
     }
+
+    @GetMapping("/version")
+    public ResponseEntity<Map<String, String>> getVersion() {
+        return ResponseEntity.ok(Map.of(
+            "status", "UP",
+            "version", "2026.11.27-company-profile-live-fix",
+            "time", java.time.LocalDateTime.now().toString()
+        ));
+    }
 }

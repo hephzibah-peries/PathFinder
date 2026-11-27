@@ -30,6 +30,7 @@ public class DatabaseMigrationConfig {
                 "user_id BIGINT NOT NULL UNIQUE, " +
                 "full_name VARCHAR(255), " +
                 "university VARCHAR(255), " +
+                "degree VARCHAR(255), " +
                 "gpa DOUBLE PRECISION, " +
                 "bio TEXT, " +
                 "skills TEXT, " +
@@ -64,6 +65,7 @@ public class DatabaseMigrationConfig {
             jdbcTemplate.execute("ALTER TABLE IF EXISTS student_profiles ADD COLUMN IF NOT EXISTS profile_picture TEXT");
             jdbcTemplate.execute("ALTER TABLE IF EXISTS student_profiles ADD COLUMN IF NOT EXISTS bio TEXT");
             jdbcTemplate.execute("ALTER TABLE IF EXISTS student_profiles ADD COLUMN IF NOT EXISTS skills TEXT");
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS student_profiles ADD COLUMN IF NOT EXISTS degree VARCHAR(255)");
             jdbcTemplate.execute("ALTER TABLE IF EXISTS student_resumes ADD COLUMN IF NOT EXISTS file_data BYTEA");
         } catch (Exception e) {
             log.warn("Column addition check notice: {}", e.getMessage());
@@ -201,6 +203,13 @@ public class DatabaseMigrationConfig {
             jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read)");
         } catch (Exception e) {
             log.warn("notifications table create check notice: {}", e.getMessage());
+        }
+
+        // 13. Ensure student_profiles degree column exists
+        try {
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS student_profiles ADD COLUMN IF NOT EXISTS degree VARCHAR(255)");
+        } catch (Exception e) {
+            log.debug("student_profiles degree column check notice: {}", e.getMessage());
         }
     }
 }

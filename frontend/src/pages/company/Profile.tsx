@@ -41,6 +41,11 @@ export default function CompanyProfile() {
         setLogoUrl(dataUrl);
         const storageKey = `company_logo_${user?.email || 'default'}`;
         localStorage.setItem(storageKey, dataUrl);
+        window.dispatchEvent(
+          new CustomEvent('company-profile-updated', {
+            detail: { logoUrl: dataUrl }
+          })
+        );
       }
     };
     reader.readAsDataURL(file);
@@ -50,6 +55,11 @@ export default function CompanyProfile() {
     setLogoUrl(null);
     const storageKey = `company_logo_${user?.email || 'default'}`;
     localStorage.removeItem(storageKey);
+    window.dispatchEvent(
+      new CustomEvent('company-profile-updated', {
+        detail: { logoUrl: null }
+      })
+    );
   };
 
   // Edit Modal State
@@ -93,6 +103,11 @@ export default function CompanyProfile() {
       });
       setProfile(updated);
       setIsEditing(false);
+      window.dispatchEvent(
+        new CustomEvent('company-profile-updated', {
+          detail: { companyName: updated.companyName, logoUrl }
+        })
+      );
     } catch (err: any) {
       alert(err.message || 'Failed to update company profile');
     } finally {

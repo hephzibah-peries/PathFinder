@@ -5,6 +5,20 @@ import { companyApi, CompanyProfile } from '../services/api';
 
 const navItems = [
   {
+    to: '/company/profile',
+    label: 'Company Profile',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 21h18" />
+        <path d="M5 21V7l8-4v18" />
+        <path d="M19 21V11l-6-4" />
+        <line x1="9" y1="9" x2="9" y2="9.01" />
+        <line x1="9" y1="13" x2="9" y2="13.01" />
+        <line x1="9" y1="17" x2="9" y2="17.01" />
+      </svg>
+    ),
+  },
+  {
     to: '/company',
     label: 'Manage Internships',
     icon: (
@@ -26,20 +40,6 @@ const navItems = [
       </svg>
     ),
   },
-  {
-    to: '/company/profile',
-    label: 'Company Profile',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 21h18" />
-        <path d="M5 21V7l8-4v18" />
-        <path d="M19 21V11l-6-4" />
-        <line x1="9" y1="9" x2="9" y2="9.01" />
-        <line x1="9" y1="13" x2="9" y2="13.01" />
-        <line x1="9" y1="17" x2="9" y2="17.01" />
-      </svg>
-    ),
-  },
 ];
 
 export default function CompanyLayout() {
@@ -47,23 +47,63 @@ export default function CompanyLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+    const storageKey = `company_logo_${user?.email || 'default'}`;
+    const savedLogo = localStorage.getItem(storageKey);
+    if (savedLogo) {
+      setLogoUrl(savedLogo);
+      setImgError(false);
+    }
+
     companyApi
       .getProfile()
       .then((data) => {
         if (isMounted && data) {
           setProfile(data);
+          if ((data as any).logoUrl) {
+            setLogoUrl((data as any).logoUrl);
+            setImgError(false);
+          }
         }
       })
       .catch(() => {
         // Silently keep default user info
       });
+
+    const handleProfileUpdate = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail;
+      if (detail) {
+        if (detail.logoUrl !== undefined) {
+          setLogoUrl(detail.logoUrl);
+          setImgError(false);
+        }
+        if (detail.companyName !== undefined) {
+          setProfile((prev) =>
+            prev
+              ? { ...prev, companyName: detail.companyName }
+              : ({ companyName: detail.companyName } as CompanyProfile)
+          );
+        }
+      } else {
+        const currentLogo = localStorage.getItem(storageKey);
+        setLogoUrl(currentLogo);
+        setImgError(false);
+      }
+    };
+
+    window.addEventListener('company-profile-updated', handleProfileUpdate);
+    window.addEventListener('storage', handleProfileUpdate);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('company-profile-updated', handleProfileUpdate);
+      window.removeEventListener('storage', handleProfileUpdate);
     };
-  }, []);
+  }, [user?.email]);
 
   const handleLogout = () => {
     logout();
@@ -129,9 +169,18 @@ export default function CompanyLayout() {
 
         <div className="sidebar-footer">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FDF2ED] border border-[#E5D5CE] text-sm font-bold text-[#7A4B43] shadow-xs">
-              {initials}
-            </div>
+            {logoUrl && !imgError ? (
+              <img
+                src={logoUrl}
+                alt={companyDisplayName}
+                onError={() => setImgError(true)}
+                className="h-10 w-10 shrink-0 rounded-xl object-cover border border-[#E5D5CE] shadow-xs"
+              />
+            ) : (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FDF2ED] border border-[#E5D5CE] text-sm font-bold text-[#7A4B43] shadow-xs">
+                {initials}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-bold text-[#2B1B17]" title={companyDisplayName}>
                 {companyDisplayName}

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { studentApi } from '../services/api';
-import NotificationBell from '../components/NotificationBell';
 
 export default function StudentLayout() {
   const { user, logout } = useAuth();
@@ -156,16 +155,6 @@ export default function StudentLayout() {
 
       {/* ── Main content wrapper ── */}
       <div className="ml-[270px] flex-1 flex flex-col min-h-screen">
-        {/* Sticky top bar with Notification Bell */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#E5D5CE] bg-[#FAF6F4]/90 backdrop-blur-md px-8">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#7A4B43]">PathFinder Student Portal</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-          </div>
-        </header>
-
         {/* Page body */}
         <main className="flex-1 mx-auto w-full max-w-[1240px] px-8 py-8">
           <Outlet />

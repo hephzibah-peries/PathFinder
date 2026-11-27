@@ -24,7 +24,7 @@ class GoogleAuthControllerTest {
         public boolean shouldThrowInvalidToken = false;
 
         public TestAuthService() {
-            super(null, null, null, null, null);
+            super(null, null, null, null, null, null);
         }
 
         @Override

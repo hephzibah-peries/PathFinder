@@ -82,10 +82,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         log.debug("Could not extract role claim from JWT: {}", ex.getMessage());
                     }
 
-                    // Fallback to database user role if token claim was omitted or empty
-                    if ((role == null || role.isBlank()) && userRepository != null) {
+                    // Always check current database role when userRepository is available to prevent stale token roles
+                    String dbRole = null;
+                    if (userRepository != null) {
                         try {
-                            role = userRepository.findByEmail(userEmail)
+                            dbRole = userRepository.findByEmail(userEmail)
                                     .map(u -> u.getRole() != null ? u.getRole().name() : null)
                                     .orElse(null);
                         } catch (Exception ex) {
@@ -93,14 +94,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         }
                     }
 
-                    String cleanRole = (role != null && !role.isBlank())
-                            ? role.toUpperCase().replace("ROLE_", "").trim()
+                    // Prefer DB role if present, else fallback to JWT claim, else default to STUDENT
+                    String effectiveRole = (dbRole != null && !dbRole.isBlank()) ? dbRole : role;
+                    String cleanRole = (effectiveRole != null && !effectiveRole.isBlank())
+                            ? effectiveRole.toUpperCase().replace("ROLE_", "").trim()
                             : "STUDENT";
 
                     // Provide both "ROLE_<ROLE>" and bare "<ROLE>" so hasRole and hasAuthority both match
                     List<GrantedAuthority> authorities = new ArrayList<>();
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + cleanRole));
                     authorities.add(new SimpleGrantedAuthority(cleanRole));
+
+                    // If token had a different role, also include it so nothing breaks
+                    if (role != null && !role.isBlank()) {
+                        String cleanTokenRole = role.toUpperCase().replace("ROLE_", "").trim();
+                        if (!cleanTokenRole.equalsIgnoreCase(cleanRole)) {
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + cleanTokenRole));
+                            authorities.add(new SimpleGrantedAuthority(cleanTokenRole));
+                        }
+                    }
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userEmail,

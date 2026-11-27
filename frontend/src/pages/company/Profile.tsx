@@ -102,6 +102,7 @@ export default function CompanyProfile() {
         website,
       });
       setProfile(updated);
+      setError(null);
       setIsEditing(false);
       window.dispatchEvent(
         new CustomEvent('company-profile-updated', {

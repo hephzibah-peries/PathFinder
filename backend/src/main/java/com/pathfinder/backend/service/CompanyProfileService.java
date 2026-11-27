@@ -3,6 +3,7 @@ package com.pathfinder.backend.service;
 import com.pathfinder.backend.dto.CompanyProfileDto;
 import com.pathfinder.backend.entity.CompanyProfile;
 import com.pathfinder.backend.entity.User;
+import com.pathfinder.backend.enums.UserRole;
 import com.pathfinder.backend.repository.CompanyProfileRepository;
 import com.pathfinder.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -28,10 +29,17 @@ public class CompanyProfileService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email not provided in authentication context");
         }
 
-        User user = userRepository.findByEmail(email).orElse(null);
-        if (user == null) {
+        User initialUser = userRepository.findByEmail(email).orElse(null);
+        if (initialUser == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for email: " + email);
         }
+
+        // Ensure user has COMPANY role when managing company profile
+        if (initialUser.getRole() != UserRole.COMPANY && initialUser.getRole() != UserRole.ADMIN) {
+            initialUser.setRole(UserRole.COMPANY);
+            initialUser = userRepository.save(initialUser);
+        }
+        final User user = initialUser;
 
         // Auto-provision default CompanyProfile if not present (e.g. fresh account or DB reset)
         CompanyProfile profile = companyProfileRepository.findByUserId(user.getId())
@@ -67,8 +75,15 @@ public class CompanyProfileService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email not provided in authentication context");
         }
 
-        User user = userRepository.findByEmail(email)
+        User initialUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for email: " + email));
+
+        // Ensure user has COMPANY role when updating company profile
+        if (initialUser.getRole() != UserRole.COMPANY && initialUser.getRole() != UserRole.ADMIN) {
+            initialUser.setRole(UserRole.COMPANY);
+            initialUser = userRepository.save(initialUser);
+        }
+        final User user = initialUser;
 
         CompanyProfile profile = companyProfileRepository.findByUserId(user.getId())
                 .orElseGet(() -> {

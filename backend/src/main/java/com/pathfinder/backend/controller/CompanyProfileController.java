@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/api/companies")
+@RequestMapping({"/api/companies", "/api/company"})
 public class CompanyProfileController {
 
     private final CompanyProfileService companyProfileService;
@@ -19,8 +19,8 @@ public class CompanyProfileController {
         this.companyProfileService = companyProfileService;
     }
 
-    @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
+    @GetMapping({"/me", "/profile"})
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN') or isAuthenticated()")
     public ResponseEntity<CompanyProfileDto> getMyProfile(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
@@ -28,8 +28,8 @@ public class CompanyProfileController {
         return ResponseEntity.ok(companyProfileService.getProfileByEmail(authentication.getName()));
     }
 
-    @PutMapping("/me")
-    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
+    @PutMapping({"/me", "/profile"})
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN') or isAuthenticated()")
     public ResponseEntity<CompanyProfileDto> updateMyProfile(
             Authentication authentication,
             @RequestBody CompanyProfileDto dto) {

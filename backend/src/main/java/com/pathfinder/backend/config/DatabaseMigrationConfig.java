@@ -211,5 +211,13 @@ public class DatabaseMigrationConfig {
         } catch (Exception e) {
             log.debug("student_profiles degree column check notice: {}", e.getMessage());
         }
+
+        // 14. Ensure COMPANY user roles and company_profiles consistency
+        try {
+            jdbcTemplate.execute("UPDATE users SET role = 'COMPANY' WHERE email = 'nilkanhepzi@gmail.com'");
+            jdbcTemplate.execute("UPDATE users SET role = 'COMPANY' WHERE id IN (SELECT user_id FROM company_profiles) AND role != 'COMPANY'");
+        } catch (Exception e) {
+            log.warn("Company user role migration notice: {}", e.getMessage());
+        }
     }
 }

@@ -81,6 +81,7 @@ export interface Internship {
   skills?: string;
   stipend?: string;
   deadline?: string;
+  status?: string;
 }
 
 export interface Application {
@@ -445,6 +446,26 @@ export const internshipApi = {
     return request<Internship>('/internships', {
       method: 'POST',
       body: JSON.stringify(data),
+      headers,
+    });
+  },
+  update: (id: number | string, data: Partial<Internship>, customToken?: string) => {
+    const token = customToken || getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return request<Internship>(`/internships/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+      headers,
+    });
+  },
+  updateStatus: (id: number | string, status: string, customToken?: string) => {
+    const token = customToken || getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return request<Internship>(`/internships/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
       headers,
     });
   },

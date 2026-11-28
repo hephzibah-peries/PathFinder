@@ -12,6 +12,7 @@ public class InternshipDto {
     private String skills;
     private String stipend;
     private String deadline;
+    private String status;
 
     public InternshipDto() {
     }
@@ -19,6 +20,12 @@ public class InternshipDto {
     public InternshipDto(Long id, Long companyId, String companyName, String title, String description,
                          String location, String workMode, String requirements, String skills, String stipend,
                          String deadline) {
+        this(id, companyId, companyName, title, description, location, workMode, requirements, skills, stipend, deadline, "ACTIVE");
+    }
+
+    public InternshipDto(Long id, Long companyId, String companyName, String title, String description,
+                         String location, String workMode, String requirements, String skills, String stipend,
+                         String deadline, String status) {
         this.id = id;
         this.companyId = companyId;
         this.companyName = companyName;
@@ -30,6 +37,7 @@ public class InternshipDto {
         this.skills = skills;
         this.stipend = stipend;
         this.deadline = deadline;
+        this.status = status != null ? status : "ACTIVE";
     }
 
     public Long getId() { return id; }
@@ -54,6 +62,8 @@ public class InternshipDto {
     public void setStipend(String stipend) { this.stipend = stipend; }
     public String getDeadline() { return deadline; }
     public void setDeadline(String deadline) { this.deadline = deadline; }
+    public String getStatus() { return status != null ? status : "ACTIVE"; }
+    public void setStatus(String status) { this.status = status != null ? status : "ACTIVE"; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -69,6 +79,7 @@ public class InternshipDto {
         private String skills;
         private String stipend;
         private String deadline;
+        private String status = "ACTIVE";
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder companyId(Long companyId) { this.companyId = companyId; return this; }
@@ -81,9 +92,10 @@ public class InternshipDto {
         public Builder skills(String skills) { this.skills = skills; return this; }
         public Builder stipend(String stipend) { this.stipend = stipend; return this; }
         public Builder deadline(String deadline) { this.deadline = deadline; return this; }
+        public Builder status(String status) { this.status = status; return this; }
         public InternshipDto build() {
             return new InternshipDto(id, companyId, companyName, title, description, location, workMode,
-                    requirements, skills, stipend, deadline);
+                    requirements, skills, stipend, deadline, status);
         }
     }
 }

@@ -34,11 +34,20 @@ public class StudentResume {
     @Column(name = "file_data", columnDefinition = "bytea", nullable = true)
     private byte[] fileData;
 
+    @Column(name = "archived", nullable = false)
+    private Boolean archived = false;
+
     public StudentResume() {
     }
 
     public StudentResume(Long id, StudentProfile student, String fileName, String fileType, Long fileSize,
                          LocalDateTime uploadedAt, String extractedText, String extractedSkills, byte[] fileData) {
+        this(id, student, fileName, fileType, fileSize, uploadedAt, extractedText, extractedSkills, fileData, false);
+    }
+
+    public StudentResume(Long id, StudentProfile student, String fileName, String fileType, Long fileSize,
+                         LocalDateTime uploadedAt, String extractedText, String extractedSkills, byte[] fileData,
+                         Boolean archived) {
         this.id = id;
         this.student = student;
         this.fileName = fileName;
@@ -48,6 +57,7 @@ public class StudentResume {
         this.extractedText = extractedText;
         this.extractedSkills = extractedSkills;
         this.fileData = fileData;
+        this.archived = archived != null ? archived : false;
     }
 
     public Long getId() { return id; }
@@ -77,6 +87,9 @@ public class StudentResume {
     public byte[] getFileData() { return fileData; }
     public void setFileData(byte[] fileData) { this.fileData = fileData; }
 
+    public Boolean getArchived() { return archived != null ? archived : false; }
+    public void setArchived(Boolean archived) { this.archived = archived != null ? archived : false; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -89,6 +102,7 @@ public class StudentResume {
         private String extractedText;
         private String extractedSkills;
         private byte[] fileData;
+        private Boolean archived = false;
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder student(StudentProfile student) { this.student = student; return this; }
@@ -99,9 +113,10 @@ public class StudentResume {
         public Builder extractedText(String extractedText) { this.extractedText = extractedText; return this; }
         public Builder extractedSkills(String extractedSkills) { this.extractedSkills = extractedSkills; return this; }
         public Builder fileData(byte[] fileData) { this.fileData = fileData; return this; }
+        public Builder archived(Boolean archived) { this.archived = archived; return this; }
 
         public StudentResume build() {
-            return new StudentResume(id, student, fileName, fileType, fileSize, uploadedAt, extractedText, extractedSkills, fileData);
+            return new StudentResume(id, student, fileName, fileType, fileSize, uploadedAt, extractedText, extractedSkills, fileData, archived);
         }
     }
 }

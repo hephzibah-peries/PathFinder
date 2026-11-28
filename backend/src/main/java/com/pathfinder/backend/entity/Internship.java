@@ -34,6 +34,9 @@ public class Internship {
     private String stipend;
     private String deadline;
 
+    @Column(name = "status", length = 30)
+    private String status = "ACTIVE";
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public Internship() {
@@ -42,6 +45,12 @@ public class Internship {
     public Internship(Long id, CompanyProfile company, String title, String description, String location,
                       String workMode, String requirements, String skills, String stipend, String deadline,
                       LocalDateTime createdAt) {
+        this(id, company, title, description, location, workMode, requirements, skills, stipend, deadline, createdAt, "ACTIVE");
+    }
+
+    public Internship(Long id, CompanyProfile company, String title, String description, String location,
+                      String workMode, String requirements, String skills, String stipend, String deadline,
+                      LocalDateTime createdAt, String status) {
         this.id = id;
         this.company = company;
         this.title = title;
@@ -52,7 +61,8 @@ public class Internship {
         this.skills = skills;
         this.stipend = stipend;
         this.deadline = deadline;
-        this.createdAt = createdAt;
+        this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
+        this.status = status != null ? status : "ACTIVE";
     }
 
     public Long getId() { return id; }
@@ -75,6 +85,8 @@ public class Internship {
     public void setStipend(String stipend) { this.stipend = stipend; }
     public String getDeadline() { return deadline; }
     public void setDeadline(String deadline) { this.deadline = deadline; }
+    public String getStatus() { return status != null ? status : "ACTIVE"; }
+    public void setStatus(String status) { this.status = status != null ? status : "ACTIVE"; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -91,6 +103,7 @@ public class Internship {
         private String skills;
         private String stipend;
         private String deadline;
+        private String status = "ACTIVE";
         private LocalDateTime createdAt = LocalDateTime.now();
 
         public Builder id(Long id) { this.id = id; return this; }
@@ -103,9 +116,10 @@ public class Internship {
         public Builder skills(String skills) { this.skills = skills; return this; }
         public Builder stipend(String stipend) { this.stipend = stipend; return this; }
         public Builder deadline(String deadline) { this.deadline = deadline; return this; }
+        public Builder status(String status) { this.status = status; return this; }
         public Builder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
         public Internship build() {
-            return new Internship(id, company, title, description, location, workMode, requirements, skills, stipend, deadline, createdAt);
+            return new Internship(id, company, title, description, location, workMode, requirements, skills, stipend, deadline, createdAt, status);
         }
     }
 }

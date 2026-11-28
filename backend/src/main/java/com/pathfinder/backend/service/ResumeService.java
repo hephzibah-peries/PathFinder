@@ -9,6 +9,7 @@ import com.pathfinder.backend.entity.Internship;
 import com.pathfinder.backend.entity.StudentProfile;
 import com.pathfinder.backend.entity.StudentResume;
 import com.pathfinder.backend.entity.User;
+import com.pathfinder.backend.repository.ApplicationRepository;
 import com.pathfinder.backend.repository.InternshipRepository;
 import com.pathfinder.backend.repository.StudentProfileRepository;
 import com.pathfinder.backend.repository.StudentResumeRepository;
@@ -68,21 +69,24 @@ public class ResumeService {
     private final StudentResumeRepository studentResumeRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
+    private final ApplicationRepository applicationRepository;
     private final Tika tika;
 
     public ResumeService(InternshipRepository internshipRepository) {
-        this(internshipRepository, null, null, null);
+        this(internshipRepository, null, null, null, null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     public ResumeService(InternshipRepository internshipRepository,
                          StudentResumeRepository studentResumeRepository,
                          StudentProfileRepository studentProfileRepository,
-                         UserRepository userRepository) {
+                         UserRepository userRepository,
+                         @org.springframework.beans.factory.annotation.Autowired(required = false) ApplicationRepository applicationRepository) {
         this.internshipRepository = internshipRepository;
         this.studentResumeRepository = studentResumeRepository;
         this.studentProfileRepository = studentProfileRepository;
         this.userRepository = userRepository;
+        this.applicationRepository = applicationRepository;
         this.tika = new Tika();
         this.tika.setMaxStringLength(MAX_EXTRACTED_CHARACTERS);
     }
@@ -228,6 +232,7 @@ public class ResumeService {
             return List.of();
         }
         return studentResumeRepository.findByStudentIdOrderByUploadedAtDesc(student.getId()).stream()
+                .filter(r -> r.getArchived() == null || !r.getArchived())
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -242,7 +247,15 @@ public class ResumeService {
         StudentResume resume = studentResumeRepository.findByIdAndStudentId(resumeId, student.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resume not found"));
 
-        studentResumeRepository.delete(resume);
+        boolean isReferenced = applicationRepository != null && applicationRepository.existsByResumeId(resumeId);
+        if (isReferenced) {
+            resume.setArchived(true);
+            studentResumeRepository.save(resume);
+            log.info("Archived submitted resume id {} for student '{}' (referenced in applications)", resumeId, email);
+        } else {
+            studentResumeRepository.delete(resume);
+            log.info("Deleted unreferenced resume id {} for student '{}'", resumeId, email);
+        }
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)

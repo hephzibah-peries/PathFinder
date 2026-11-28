@@ -1,11 +1,17 @@
 # Active Spring profile: 'dev' (In-Memory H2), 'local' (Local PostgreSQL), or 'supabase' (Remote Cloud PostgreSQL)
-spring.profiles.active=dev
+spring.profiles.active=${SPRING_PROFILES_ACTIVE:dev}
+server.port=${PORT:8080}
 
 # H2 In-Memory Development Database (Default Fallback)
 spring.datasource.url=jdbc:h2:mem:pathfinderdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
 spring.datasource.driverClassName=org.h2.Driver
 spring.datasource.username=sa
 spring.datasource.password=
+
+# Remote / Local PostgreSQL Connection Settings (when profile is local or supabase)
+# spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pathfinder_db}
+# spring.datasource.username=${SPRING_DATASOURCE_USERNAME:postgres}
+# spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:your-password}
 
 # Hibernate DDL Settings
 spring.jpa.hibernate.ddl-auto=update
@@ -18,17 +24,24 @@ spring.h2.console.path=/h2-console
 spring.h2.console.settings.web-allow-others=true
 
 # Google OAuth2 Credentials
-spring.security.oauth2.client.registration.google.client-id=YOUR_GOOGLE_CLIENT_ID
-spring.security.oauth2.client.registration.google.client-secret=YOUR_GOOGLE_CLIENT_SECRET
+spring.security.oauth2.client.registration.google.client-id=${GOOGLE_CLIENT_ID:YOUR_GOOGLE_CLIENT_ID}
+spring.security.oauth2.client.registration.google.client-secret=${GOOGLE_CLIENT_SECRET:YOUR_GOOGLE_CLIENT_SECRET}
 spring.security.oauth2.client.registration.google.scope=profile,email
-spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:8080/login/oauth2/code/google
+spring.security.oauth2.client.registration.google.redirect-uri=${GOOGLE_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google}
+
+# Frontend URL (for CORS and OAuth redirect)
+frontend.url=${FRONTEND_URL:http://localhost:5173}
+
+# JWT Configuration
+jwt.secret=${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+jwt.expiration=${JWT_EXPIRATION:86400000}
 
 # Gemini LLM API Configuration
-gemini.api.key=YOUR_GEMINI_API_KEY
-gemini.model=gemini-1.5-flash
+gemini.api.key=${GEMINI_API_KEY:YOUR_GEMINI_API_KEY}
+gemini.model=${GEMINI_MODEL:gemini-1.5-flash}
 
 # ML Matching Microservice Configuration
-ml.service.url=http://localhost:8000
+ml.service.url=${ML_SERVICE_URL:http://localhost:8000}
 
 # Email & Notification Settings (Async SMTP)
 spring.mail.host=${MAIL_HOST:smtp.gmail.com}

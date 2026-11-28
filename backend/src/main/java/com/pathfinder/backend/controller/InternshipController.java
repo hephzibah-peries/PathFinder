@@ -42,4 +42,23 @@ public class InternshipController {
     public ResponseEntity<List<InternshipDto>> getMyInternships(Authentication authentication) {
         return ResponseEntity.ok(internshipService.getMyInternships(authentication.getName()));
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
+    public ResponseEntity<InternshipDto> updateInternship(
+            Authentication authentication,
+            @PathVariable Long id,
+            @RequestBody InternshipDto dto) {
+        return ResponseEntity.ok(internshipService.updateInternship(id, authentication.getName(), dto));
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
+    public ResponseEntity<InternshipDto> updateInternshipStatus(
+            Authentication authentication,
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body) {
+        String status = body != null ? body.get("status") : "ACTIVE";
+        return ResponseEntity.ok(internshipService.updateInternshipStatus(id, authentication.getName(), status));
+    }
 }

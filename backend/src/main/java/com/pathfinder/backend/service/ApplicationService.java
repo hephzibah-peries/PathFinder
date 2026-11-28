@@ -158,9 +158,32 @@ public class ApplicationService {
 
     @Transactional(readOnly = true)
     public List<ApplicationDto> getApplicationsForInternship(Long internshipId) {
+        return getApplicationsForInternship(internshipId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ApplicationDto> getApplicationsForInternship(Long internshipId, String companyEmail) {
         if (internshipId == null) {
             return List.of();
         }
+
+        Internship internship = internshipRepository.findById(internshipId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Internship not found: " + internshipId));
+
+        if (companyEmail != null && !companyEmail.isBlank()) {
+            User authUser = userRepository.findByEmail(companyEmail).orElse(null);
+            boolean isAdmin = authUser != null && authUser.getRole() != null && "ADMIN".equalsIgnoreCase(authUser.getRole().name());
+            if (!isAdmin) {
+                String ownerEmail = null;
+                if (internship.getCompany() != null && internship.getCompany().getUser() != null) {
+                    ownerEmail = internship.getCompany().getUser().getEmail();
+                }
+                if (ownerEmail == null || !ownerEmail.equalsIgnoreCase(companyEmail)) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: You do not own this internship");
+                }
+            }
+        }
+
         return applicationRepository.findByInternshipId(internshipId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -168,16 +191,37 @@ public class ApplicationService {
 
     @Transactional
     public ApplicationDto updateApplicationStatus(Long applicationId, String status) {
-        return updateApplicationStatus(applicationId, status, null);
+        return updateApplicationStatus(applicationId, status, null, null);
     }
 
     @Transactional
     public ApplicationDto updateApplicationStatus(Long applicationId, String status, String note) {
+        return updateApplicationStatus(applicationId, status, note, null);
+    }
+
+    @Transactional
+    public ApplicationDto updateApplicationStatus(Long applicationId, String status, String note, String companyEmail) {
         if (applicationId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Application ID must be provided");
         }
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found: " + applicationId));
+
+        if (companyEmail != null && !companyEmail.isBlank()) {
+            User authUser = userRepository.findByEmail(companyEmail).orElse(null);
+            boolean isAdmin = authUser != null && authUser.getRole() != null && "ADMIN".equalsIgnoreCase(authUser.getRole().name());
+            if (!isAdmin) {
+                String ownerEmail = null;
+                if (application.getInternship() != null && application.getInternship().getCompany() != null
+                        && application.getInternship().getCompany().getUser() != null) {
+                    ownerEmail = application.getInternship().getCompany().getUser().getEmail();
+                }
+                if (ownerEmail == null || !ownerEmail.equalsIgnoreCase(companyEmail)) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: You cannot modify applications for another company's internship");
+                }
+            }
+        }
+
         application.setStatus(status != null ? status : "PENDING");
         Application saved = applicationRepository.save(application);
 

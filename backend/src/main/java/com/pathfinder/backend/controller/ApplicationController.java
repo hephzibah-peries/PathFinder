@@ -70,9 +70,12 @@ public class ApplicationController {
 
     @GetMapping("/internship/{internshipId}")
     @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
-    public ResponseEntity<?> getApplicationsForInternship(@PathVariable Long internshipId) {
+    public ResponseEntity<?> getApplicationsForInternship(
+            Authentication authentication,
+            @PathVariable Long internshipId) {
         try {
-            List<ApplicationDto> dtos = applicationService.getApplicationsForInternship(internshipId);
+            String companyEmail = authentication != null ? authentication.getName() : null;
+            List<ApplicationDto> dtos = applicationService.getApplicationsForInternship(internshipId, companyEmail);
             return ResponseEntity.ok(dtos);
         } catch (ResponseStatusException rse) {
             log.warn("ResponseStatusException in getApplicationsForInternship: {} - {}", rse.getStatusCode(), rse.getReason());
@@ -86,12 +89,14 @@ public class ApplicationController {
     @PutMapping("/{applicationId}/status")
     @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN') or hasAnyAuthority('COMPANY', 'ROLE_COMPANY', 'ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<?> updateStatus(
+            Authentication authentication,
             @PathVariable Long applicationId,
             @RequestBody ApplicationStatusUpdateRequest request) {
         try {
+            String companyEmail = authentication != null ? authentication.getName() : null;
             String newStatus = request != null ? request.getStatus() : null;
             String note = request != null ? request.getNote() : null;
-            ApplicationDto updated = applicationService.updateApplicationStatus(applicationId, newStatus, note);
+            ApplicationDto updated = applicationService.updateApplicationStatus(applicationId, newStatus, note, companyEmail);
             return ResponseEntity.ok(updated);
         } catch (ResponseStatusException rse) {
             log.warn("ResponseStatusException in updateStatus: {} - {}", rse.getStatusCode(), rse.getReason());

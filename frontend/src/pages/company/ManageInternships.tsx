@@ -77,7 +77,7 @@ export default function ManageInternships() {
     }
   }, []);
 
-  const saveStatus = (id: number, status: InternshipStatus) => {
+  const saveStatus = async (id: number, status: InternshipStatus) => {
     setStatusMap((prev) => {
       const next = { ...prev, [id]: status };
       try {
@@ -87,6 +87,12 @@ export default function ManageInternships() {
       }
       return next;
     });
+
+    try {
+      await internshipApi.updateStatus(id, status.toUpperCase(), token || undefined);
+    } catch (err: any) {
+      console.warn('Could not persist internship status to backend:', err);
+    }
   };
 
   // Handle ?post=true query parameter from top bar button
@@ -108,6 +114,20 @@ export default function ManageInternships() {
       // Fetch company's own internships
       const jobs = await internshipApi.getMyInternships(token || undefined);
       setInternships(jobs || []);
+
+      // Initialize statusMap from backend jobs
+      const newStatusMap: Record<number, InternshipStatus> = {};
+      (jobs || []).forEach((job) => {
+        if (job.status) {
+          const upper = job.status.toUpperCase();
+          if (upper === 'PAUSED') newStatusMap[job.id] = 'Paused';
+          else if (upper === 'CLOSED') newStatusMap[job.id] = 'Closed';
+          else newStatusMap[job.id] = 'Active';
+        } else {
+          newStatusMap[job.id] = 'Active';
+        }
+      });
+      setStatusMap((prev) => ({ ...prev, ...newStatusMap }));
 
       // Fetch applications for each job to compute metrics & applicant counts
       const appsMap: Record<number, Application[]> = {};
@@ -133,10 +153,23 @@ export default function ManageInternships() {
     fetchData();
   }, [token]);
 
-  const handleCreated = (newJob: Internship) => {
-    setInternships((prev) => [newJob, ...prev]);
-    setApplicationsMap((prev) => ({ ...prev, [newJob.id]: [] }));
-    saveStatus(newJob.id, 'Active');
+  const handleCreated = (savedJob: Internship) => {
+    setInternships((prev) => {
+      const exists = prev.some((j) => j.id === savedJob.id);
+      if (exists) {
+        return prev.map((j) => (j.id === savedJob.id ? savedJob : j));
+      }
+      return [savedJob, ...prev];
+    });
+    setApplicationsMap((prev) => ({ ...prev, [savedJob.id]: prev[savedJob.id] || [] }));
+    const st: InternshipStatus = savedJob.status
+      ? savedJob.status.toUpperCase() === 'PAUSED'
+        ? 'Paused'
+        : savedJob.status.toUpperCase() === 'CLOSED'
+        ? 'Closed'
+        : 'Active'
+      : 'Active';
+    saveStatus(savedJob.id, st);
   };
 
   const openCreateModal = () => {

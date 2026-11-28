@@ -67,6 +67,10 @@ public class DatabaseMigrationConfig {
             jdbcTemplate.execute("ALTER TABLE IF EXISTS student_profiles ADD COLUMN IF NOT EXISTS skills TEXT");
             jdbcTemplate.execute("ALTER TABLE IF EXISTS student_profiles ADD COLUMN IF NOT EXISTS degree VARCHAR(255)");
             jdbcTemplate.execute("ALTER TABLE IF EXISTS student_resumes ADD COLUMN IF NOT EXISTS file_data BYTEA");
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS student_resumes ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE");
+            jdbcTemplate.execute("UPDATE student_resumes SET archived = FALSE WHERE archived IS NULL");
+            jdbcTemplate.execute("ALTER TABLE IF EXISTS internships ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'ACTIVE'");
+            jdbcTemplate.execute("UPDATE internships SET status = 'ACTIVE' WHERE status IS NULL");
         } catch (Exception e) {
             log.warn("Column addition check notice: {}", e.getMessage());
         }

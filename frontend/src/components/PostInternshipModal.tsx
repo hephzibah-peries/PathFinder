@@ -204,15 +204,20 @@ export default function PostInternshipModal({
         deadline: finalDeadline,
       };
 
-      const created = await internshipApi.create(payload, token || undefined);
+      let result: Internship;
+      if (mode === 'edit' && initialData?.id) {
+        result = await internshipApi.update(initialData.id, payload, token || undefined);
+      } else {
+        result = await internshipApi.create(payload, token || undefined);
+      }
 
       if (onCreated) {
-        onCreated(created);
+        onCreated(result);
       }
 
       handleClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to post internship. Please verify your company session and try again.');
+      setError(err.message || (mode === 'edit' ? 'Failed to update internship.' : 'Failed to post internship.'));
     } finally {
       setLoading(false);
     }
